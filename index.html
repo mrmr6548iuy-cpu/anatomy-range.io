@@ -842,7 +842,34 @@ function onEv(e){
  if(e.t==='h'){const t=ents.find(x=>x.nid===e.n&&x.net==null);if(t)_hurt(t,e.si,V3(e.pt),V3(e.d),e.D,e.ty,e.imp,e.tt)}
  else if(e.t==='x'){MP.ax=true;try{_expl(e.x,e.y,e.z,e.R,e.dm)}finally{MP.ax=false}}
  else if(e.t==='g')gfx(e.i,e.a,e.b);else if(e.t==='k')feed(e.v,e.s,e.w);else if(e.t==='m')feedRaw(e.m);else if(e.t==='f')flameFx(V3(e.p),V3(e.d));
- else if(e.t==='a')bleed(V3(e.pt),V3(e.d),Math.min(10,2+e.D*.1|0),Math.min(4,1.5+e.D*.03))}
+ else if(e.t==='a')bleed(V3(e.pt),V3(e.d),Math.min(10,2+e.D*.1|0),Math.min(4,1.5+e.D*.03));
+ else if(e.t==='ph')phantomEffect(e.k)}
+/* ---------- PHANTOM: owner-triggered, synchronized visual pranks ---------- */
+const phStyle=document.createElement('style');
+phStyle.textContent='@keyframes ph-wobble{0%,100%{transform:translate(0,0) rotate(0)}20%{transform:translate(7px,-4px) rotate(.4deg)}40%{transform:translate(-6px,3px) rotate(-.5deg)}60%{transform:translate(4px,5px) rotate(.3deg)}80%{transform:translate(-4px,-3px) rotate(-.2deg)}}@keyframes ph-flash{0%,100%{opacity:.08}50%{opacity:.65}}@keyframes ph-shake{0%,100%{transform:translate(0)}25%{transform:translate(8px,-4px)}50%{transform:translate(-7px,5px)}75%{transform:translate(4px,4px)}}@keyframes ph-confetti{to{transform:translateY(110vh) rotate(900deg);opacity:.1}}';
+document.head.appendChild(phStyle);
+const phOverlay=document.createElement('div');phOverlay.id='phantom-fx';phOverlay.style.cssText='position:fixed;inset:0;z-index:99990;pointer-events:none;display:none;align-items:center;justify-content:center;text-align:center;font:700 clamp(26px,6vw,68px) "Barlow Condensed",sans-serif;color:white;text-shadow:0 3px 18px #000';document.body.appendChild(phOverlay);
+let phTimer=0;
+function phantomEffect(k){
+ const valid=['glitch','disco','blackout','alert','wobble','mono','rainbow','confetti','bigtext','static'];if(!valid.includes(k))return;
+ clearTimeout(phTimer);phOverlay.replaceChildren();phOverlay.style.display='none';phOverlay.style.background='transparent';phOverlay.style.animation='none';ren.domElement.style.animation='none';ren.domElement.style.filter='';document.body.style.filter='';
+ const msg=(t)=>{const d=document.createElement('div');d.textContent=t;phOverlay.appendChild(d);phOverlay.style.display='flex'};
+ if(k==='glitch'){phOverlay.style.display='block';phOverlay.style.background='repeating-linear-gradient(0deg,transparent 0 5px,rgba(255,255,255,.13) 6px 7px),linear-gradient(90deg,rgba(255,0,80,.18),transparent,rgba(0,220,255,.2))';phOverlay.style.animation='ph-flash .12s infinite';msg('SIGNAL CORRUPTED');}
+ if(k==='disco'){phOverlay.style.display='block';phOverlay.style.background='linear-gradient(135deg,#f04,#0ff,#ff0,#a0f)';phOverlay.style.mixBlendMode='screen';phOverlay.style.animation='ph-flash .28s infinite';msg('DISCO MODE');}
+ if(k==='blackout'){phOverlay.style.display='flex';phOverlay.style.background='#000';msg('PHANTOM HAS ENTERED THE CHAT');}
+ if(k==='alert'){phOverlay.style.display='flex';phOverlay.style.background='rgba(4,8,12,.9)';msg('⚠ SYSTEM OVERRIDE\nPHANTOM SESSION DETECTED');}
+ if(k==='wobble'){ren.domElement.style.animation='ph-wobble .7s 5';phOverlay.style.display='flex';phOverlay.style.fontSize='28px';msg('THE WORLD IS WOBBLING');}
+ if(k==='mono'){document.body.style.filter='grayscale(1) contrast(1.15)';phOverlay.style.display='flex';phOverlay.style.fontSize='34px';msg('MONOCHROME REALITY');}
+ if(k==='rainbow'){document.body.style.filter='hue-rotate(160deg) saturate(2)';phOverlay.style.display='flex';phOverlay.style.fontSize='34px';msg('COLOR OVERRIDE');}
+ if(k==='bigtext'){phOverlay.style.display='flex';msg('YOU HAVE BEEN PHANTOMED');}
+ if(k==='static'){phOverlay.style.display='block';phOverlay.style.background='repeating-radial-gradient(circle at 20% 30%,rgba(255,255,255,.22) 0 1px,transparent 2px 5px),rgba(0,0,0,.28)';phOverlay.style.animation='ph-flash .16s infinite';msg('NO SIGNAL');}
+ if(k==='confetti'){
+  phOverlay.style.display='block';phOverlay.style.overflow='hidden';
+  for(let i=0;i<65;i++){const p=document.createElement('i');p.style.cssText=`position:absolute;left:${Math.random()*100}%;top:-18px;width:8px;height:13px;background:hsl(${Math.random()*360},90%,60%);transform:rotate(${Math.random()*180}deg);animation:ph-confetti ${2+Math.random()*2}s linear ${Math.random()}s forwards`;phOverlay.appendChild(p)}
+  const t=document.createElement('b');t.textContent='CONFETTI ATTACK';t.style.cssText='position:absolute;left:0;right:0;top:42%;font-size:clamp(28px,6vw,64px);text-shadow:0 3px 18px #000';phOverlay.appendChild(t);
+ }
+ phTimer=setTimeout(()=>{phOverlay.style.display='none';phOverlay.replaceChildren();phOverlay.style.background='transparent';phOverlay.style.animation='none';ren.domElement.style.animation='none';document.body.style.filter='';},k==='blackout'?1800:4200);
+}
 function clientMsg(m){
  if(m.t==='ch')clientHello(m);else if(m.t==='no'){toast(m.why||'Disconnected');if(isC())leave();else abortJoin()}
  else if(m.t==='tp'){pl.p.set(m.x,m.y,m.z);pl.v.set(0,0,0)}else if(m.t==='heal'){pl.hp=100;pl.dead=0}else if(m.t==='kl'){MP.last={s:-2,w:null,t:performance.now()};_hitP(9999)}else if(m.t==='say')toast(m.m)
@@ -1056,5 +1083,12 @@ function closeAdm(){admOn=false;adm.style.display='none'}
 const admBtn=btn('Admin panel (F2)',openAdm);admBtn.style.display='none';box.querySelector('.g').appendChild(admBtn);
 setInterval(()=>{admBtn.style.display=isH()?'':'none';if(admOn&&!isH())closeAdm();else if(admOn&&(tab==='players'||tab==='bans'))renderAdm()},1000);
 window.addEventListener('keydown',e=>{if(e.code==='F2'&&isH()){e.preventDefault();admOn?closeAdm():openAdm()}},true);
+/* PHANTOM handshake: a same-page bookmarklet requests the host-only control panel. */
+const phPanel=document.createElement('div');phPanel.id='phantom-host-panel';phPanel.style.cssText='position:fixed;left:18px;top:70px;width:min(340px,92vw);max-height:78vh;overflow:auto;z-index:100000;display:none;background:rgba(8,12,16,.97);color:#edf3f7;border:1px solid #465664;border-top:3px solid #b36bff;padding:12px;font:600 15px "Barlow Condensed",sans-serif;box-shadow:0 8px 30px #000b';
+document.body.appendChild(phPanel);
+const phNames=[['SIGNAL GLITCH','glitch'],['DISCO SCREEN','disco'],['FAKE SYSTEM ALERT','alert'],['BLACKOUT 1.8s','blackout'],['WORLD WOBBLE','wobble'],['MONOCHROME','mono'],['RAINBOW FILTER','rainbow'],['CONFETTI RAIN','confetti'],['GIANT MESSAGE','bigtext'],['STATIC SCREEN','static']];
+function phBroadcast(k){if(!isH()||!MP.phantomConnected||!phNames.some(x=>x[1]===k))return;phantomEffect(k);MP.ev.push({t:'ph',k,o:-1});}
+function phRender(){phPanel.textContent='';const h=document.createElement('div');h.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px';const title=document.createElement('b');title.textContent='PHANTOM // GLOBAL PRANKS';const close=btn('×',()=>{phPanel.style.display='none'});h.append(title,close);phPanel.appendChild(h);const st=document.createElement('div');st.textContent='CONNECTED · HOST CONTROLS · effects visible to everyone';st.style.cssText='color:#a9b7c2;margin-bottom:8px';phPanel.appendChild(st);const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:5px';phNames.forEach(([label,key])=>{const b=btn(label,()=>phBroadcast(key));b.style.cssText='font-size:14px;padding:9px 5px;border-left-color:#b36bff';grid.appendChild(b)});phPanel.appendChild(grid);const foot=document.createElement('p');foot.textContent='Visual-only pranks. Each effect automatically resets.';foot.style.cssText='color:#91a2af;margin:10px 0 0';phPanel.appendChild(foot)}
+window.addEventListener('message',e=>{const d=e.data;if(e.source!==window||e.origin!==location.origin||!d||d.channel!=='ANATOMY_PHANTOM')return;if(!isH())return;if(d.action==='connect'){MP.phantomConnected=true;phRender();phPanel.style.display='block';toast('PHANTOM connected — host controls ready');window.postMessage({channel:'ANATOMY_PHANTOM',action:'connected'},location.origin)}else if(d.action==='disconnect'){MP.phantomConnected=false;phPanel.style.display='none';toast('PHANTOM disconnected')}else if(d.action==='effect'&&MP.phantomConnected)phBroadcast(String(d.effect||''))});
 })();
 </script></body></html>
