@@ -685,9 +685,9 @@ if(S){if(S.rk>0){S.rk-=dt;S.sl=Math.sin(Math.max(0,S.rk)/.25*Math.PI)}else if(S.
 mags.forEach(m=>{m.v.y-=9.8*dt;m.m.position.addScaledVector(m.v,dt);if(m.m.position.y<.055){m.m.position.y=.055;m.v.multiplyScalar(0);m.m.rotation.z=1.5;if(!m.d){m.d=1;sfx('magdrop',m.m.position)}}else m.m.rotation.x+=m.w*dt});kick*=.8;spr*=.93;stp2+=dt*Math.hypot(pl.v.x,pl.v.z)*.45;if(stp2>1){stp2=0;if(pl.p.y<1.75)sfx('step')}chainS(cur===8&&md&&locked);spin+=((cur===6&&md&&locked?1:0)-spin)*Math.min(1,dt*2.2);if(u.rot)u.rot.rotation.z+=spin*dt*28;if(u.chn&&cur===8&&md)u.chn.position.z=-((performance.now()*.0006)%.04);if(u.cl)u.cl.forEach(c=>{c.rotation.y+=(-(grab?.55:.12)-c.rotation.y)*.2});if(u.glow)u.glow.material.emissiveIntensity=1.2+Math.sin(performance.now()*.01)*.6;bob+=dt*Math.hypot(pl.v.x,pl.v.z)*1.5;const ads=adsOn&&!W[cur].k,rp=rel>0?Math.sin((1-rel/RT)*Math.PI):0;if(!xrOn)gun.position.set((ads?0:.22)+Math.sin(bob)*.006*(ads?.2:1),(ads?-.115:-.2)+Math.abs(Math.cos(bob))*.005-rp*.15,(ads?-.4:-.45)+kick*.07);if(!xrOn)gun.rotation.set(kick*.15-rp*.7,0,rp*.5);if(!xrOn)cam.fov+=((ads?zf:75)-cam.fov)*.2;if(fsT>0&&(fsT-=dt)<=0)gun.userData.fs.visible=false;trs.forEach(t=>{if(t.t>0&&(t.t-=dt)<=0)t.l.visible=false;else t.l.material.opacity=t.t/.07})}
  if(pl.dead>0){pl.dead-=dt;if(pl.dead<=0){pl.hp=100;pl.p.set(0,1.7,10)}}else{
   const w=W[cur];if(locked&&md&&!fcam&&!cin&&w.k!=='g'&&(w.a||sem)){fire();sem=false}
-  const crouch=!xrOn&&keys.KeyC&&!fcam;eyeH+=((crouch?1:1.7)-eyeH)*Math.min(1,dt*10);const f=(fcam||cin)?0:(keys.KeyW?1:0)-(keys.KeyS?1:0)+vr.f,s=(fcam||cin)?0:(keys.KeyD?1:0)-(keys.KeyA?1:0)+vr.s,sp=crouch?2.6:keys.ShiftLeft?9:5.5,sy=Math.sin(pl.yaw),cy=Math.cos(pl.yaw);
-  pl.v.x=(-sy*f+cy*s)*sp;pl.v.z=(-cy*f-sy*s)*sp;pl.v.y-=22*dt;if(keys.Space&&!fcam&&!cin&&pl.p.y<=gh(pl.p.x,pl.p.z)+eyeH+.01&&!crouch)pl.v.y=7;
-  {const ft=pl.p.y-eyeH;if(gh(pl.p.x+pl.v.x*dt,pl.p.z)-ft>.75)pl.v.x=0;if(gh(pl.p.x,pl.p.z+pl.v.z*dt)-ft>.75)pl.v.z=0}pl.p.addScaledVector(pl.v,dt);{const gy=gh(pl.p.x,pl.p.z)+eyeH;if(pl.p.y<gy){if(pl.v.y<-9&&!xrOn){hitP(Math.min(95,(-pl.v.y-9)*9));shake=Math.max(shake,.5);sfx('thud')}pl.p.y=gy;pl.v.y=0}}pl.p.x=Math.max(-AR+.5,Math.min(AR-.5,pl.p.x));pl.p.z=Math.max(-AR+.5,Math.min(AR-.5,pl.p.z))}
+  const phFlying=window.__AR_PHANTOM_FLY__===true;const crouch=!xrOn&&keys.KeyC&&!fcam&&!phFlying;eyeH+=((crouch?1:1.7)-eyeH)*Math.min(1,dt*10);const f=(fcam||cin)?0:(keys.KeyW?1:0)-(keys.KeyS?1:0)+vr.f,s=(fcam||cin)?0:(keys.KeyD?1:0)-(keys.KeyA?1:0)+vr.s,sp=crouch?2.6:keys.ShiftLeft?9:5.5,sy=Math.sin(pl.yaw),cy=Math.cos(pl.yaw);
+  pl.v.x=(-sy*f+cy*s)*sp;pl.v.z=(-cy*f-sy*s)*sp;if(phFlying){pl.v.y=(keys.Space?7:0)+(keys.KeyC?-7:0)}else{pl.v.y-=22*dt;if(keys.Space&&!fcam&&!cin&&pl.p.y<=gh(pl.p.x,pl.p.z)+eyeH+.01&&!crouch)pl.v.y=7}
+  {const ft=pl.p.y-eyeH;if(!phFlying){if(gh(pl.p.x+pl.v.x*dt,pl.p.z)-ft>.75)pl.v.x=0;if(gh(pl.p.x,pl.p.z+pl.v.z*dt)-ft>.75)pl.v.z=0}}pl.p.addScaledVector(pl.v,dt);if(!phFlying){const gy=gh(pl.p.x,pl.p.z)+eyeH;if(pl.p.y<gy){if(pl.v.y<-9&&!xrOn){hitP(Math.min(95,(-pl.v.y-9)*9));shake=Math.max(shake,.5);sfx('thud')}pl.p.y=gy;pl.v.y=0}}pl.p.x=Math.max(-AR+.5,Math.min(AR-.5,pl.p.x));pl.p.z=Math.max(-AR+.5,Math.min(AR-.5,pl.p.z))}
  shake*=.9;if(fcam&&!xrOn){const cp=Math.cos(pl.pit),fwd=V(-Math.sin(pl.yaw)*cp,Math.sin(pl.pit),-Math.cos(pl.yaw)*cp),rt=V(Math.cos(pl.yaw),0,-Math.sin(pl.yaw)),mv=V();if(keys.KeyW)mv.add(fwd);if(keys.KeyS)mv.sub(fwd);if(keys.KeyD)mv.add(rt);if(keys.KeyA)mv.sub(rt);if(keys.Space)mv.y+=1;if(keys.KeyC)mv.y-=1;if(mv.lengthSq())mv.normalize();fpos.addScaledVector(mv,fsp*(keys.ShiftLeft?3:1)*dt);fpos.y=Math.max(.15,fpos.y);pmark.position.set(pl.p.x,pl.p.y-eyeH,pl.p.z)}
 if(!xrOn){if(fcam)cam.position.copy(fpos);else{cam.position.copy(pl.p).add(V(rr(-1,1),rr(-1,1),0).multiplyScalar(shake*.2));if(pl.dead>0)cam.position.y=.3}}
  if(!xrOn)cam.rotation.set(pl.pit,pl.yaw,pl.dead>0?.8:0,'YXZ');
@@ -1016,7 +1016,7 @@ function refreshList(quiet){if(!quiet)$('#publ').textContent='Searching…';let 
  $('#pubh').onclick=()=>startHost({pub:true,name:$('#pubn').value.trim()||'Public server',max:8});$('#pubr').onclick=()=>refreshList();
  setTimeout(()=>refreshList(),900);setInterval(()=>{if(MP.mode==='solo'&&$('#menu').style.display!=='none')refreshList(true)},20000)}
 /* ---------- accounts: a password-protected keypair kept in this browser; servers recognise you by public key ---------- */
-const loadJ=k=>{try{return JSON.parse(localStorage.getItem(k)||'{}')}catch(e){return{}}},saveJ=(k,o)=>{try{localStorage.setItem(k,JSON.stringify(o))}catch(e){}};
+const loadJ=k=>{try{const v=JSON.parse(localStorage.getItem(k)||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(e){return{}}},saveJ=(k,o)=>{try{localStorage.setItem(k,JSON.stringify(o));return true}catch(e){return false}};
 MP.bans=loadJ('ar_bans_v1');
 const enc=new TextEncoder(),dec=new TextDecoder(),b64=u=>btoa(String.fromCharCode(...new Uint8Array(u))),ub64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
 const rhex=n=>[...crypto.getRandomValues(new Uint8Array(n))].map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -1027,12 +1027,14 @@ function touchStats(id,name,ev){const S=loadJ('ar_stats_v1'),r=S[id]||(S[id]={na
 async function sha(str){const h=await crypto.subtle.digest('SHA-256',enc.encode(str));return[...new Uint8Array(h)].slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('')}
 async function pkey(pw,salt){const k=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
 async function createAcct(name,pw){
+ if(!window.isSecureContext||!window.crypto||!crypto.subtle)throw new Error('Accounts require a secure HTTPS page. Open the GitHub Pages https:// address.');
  if(!/^[A-Za-z0-9_]{3,16}$/.test(name))throw new Error('Username: 3–16 letters, numbers or _');
- if(pw.length<6)throw new Error('Password must be at least 6 characters');
+ if(typeof pw!=='string'||pw.length<6)throw new Error('Password must be at least 6 characters');
+ try{localStorage.setItem('__ar_storage_test','1');localStorage.removeItem('__ar_storage_test')}catch(e){throw new Error('Browser storage is blocked. Allow site storage for this page, then try again.')}
  const A=loadJ('ar_accts_v1'),key=name.toLowerCase();if(A[key])throw new Error('That username already exists in this browser');
- const kp=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']),pub=await crypto.subtle.exportKey('jwk',kp.publicKey),prv=await crypto.subtle.exportKey('jwk',kp.privateKey),salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await pkey(pw,salt),enc.encode(JSON.stringify(prv)));
- A[key]={name,pub:{kty:pub.kty,crv:pub.crv,x:pub.x,y:pub.y},salt:b64(salt),iv:b64(iv),ct:b64(ct)};saveJ('ar_accts_v1',A);return loginAcct(name,pw)}
-async function loginAcct(name,pw){const r=loadJ('ar_accts_v1')[name.toLowerCase()];if(!r)throw new Error('No such account in this browser (use Import)');
+ let kp,pub,prv,salt,iv,ct;try{kp=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);pub=await crypto.subtle.exportKey('jwk',kp.publicKey);prv=await crypto.subtle.exportKey('jwk',kp.privateKey);salt=crypto.getRandomValues(new Uint8Array(16));iv=crypto.getRandomValues(new Uint8Array(12));ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await pkey(pw,salt),enc.encode(JSON.stringify(prv)))}catch(e){throw new Error('Could not create the account keys: '+(e.message||e))}
+ A[key]={name,pub:{kty:pub.kty,crv:pub.crv,x:pub.x,y:pub.y},salt:b64(salt),iv:b64(iv),ct:b64(ct)};if(!saveJ('ar_accts_v1',A)||!loadJ('ar_accts_v1')[key])throw new Error('Account could not be saved in this browser. Check site storage permissions.');return loginAcct(name,pw)}
+async function loginAcct(name,pw){if(!window.isSecureContext||!window.crypto||!crypto.subtle)throw new Error('Accounts require HTTPS and browser cryptography.');const r=loadJ('ar_accts_v1')[String(name||'').toLowerCase()];if(!r)throw new Error('No account with that username is saved in this browser. Use Import if you have its account file.');
  let prv;try{prv=JSON.parse(dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(r.iv)},await pkey(pw,ub64(r.salt)),ub64(r.ct))))}catch(e){throw new Error('Wrong password')}
  const priv=await crypto.subtle.importKey('jwk',prv,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);MP.acct={name:r.name,pub:r.pub,priv,id:await sha(r.pub.x+r.pub.y)};acctUI();return MP.acct}
 async function verifyAcct(pub,nonce,sig){if(!pub||pub.kty!=='EC'||pub.crv!=='P-256'||typeof pub.x!=='string'||typeof pub.y!=='string'||typeof sig!=='string')return false;
@@ -1058,9 +1060,9 @@ function feedRaw(t){const r=document.createElement('div');r.style.cssText='backg
 function feedMsg(t){feedRaw(t);if(MP.peers.size)MP.ev.push({t:'m',m:t,o:-1})}
 /* account menu */
 {const ab=document.createElement('div');ab.style.cssText=box.style.cssText;
- ab.innerHTML=`<b>Account</b> <i id="acs" style="color:var(--mut);font-style:normal"></i><div class="g"><input id="acn" maxlength="16" placeholder="username" style="width:120px;${IS}"><input id="acp" type="password" placeholder="password" style="width:120px;${IS}"><button id="acc">Create</button><button id="acl">Log in</button><button id="aco">Log out</button><button id="ace">Export</button><button id="aci">Import</button></div><input id="acf" type="file" accept=".json" style="display:none">`;box.after(ab);
+ ab.innerHTML=`<b>Account</b> <i id="acs" style="color:var(--mut);font-style:normal"></i><div class="g"><input id="acn" maxlength="16" placeholder="username" style="width:120px;${IS}"><input id="acp" type="password" placeholder="password" style="width:120px;${IS}"><button id="acc">Create</button><button id="acl">Log in</button><button id="aco">Log out</button><button id="ace">Export</button><button id="aci">Import</button></div><input id="acf" type="file" accept=".json" style="display:none"><p style="font-size:13px">Accounts are saved in this browser. Use Export / Import to move an account to another device. PeerJS connects players; it does not store accounts.</p>`;box.after(ab);
  const say=e=>toast(e.message||String(e));
- window.acctUI=()=>{$('#acs').textContent=!window.crypto||!crypto.subtle?'accounts need HTTPS':MP.acct?'signed in as '+MP.acct.name+' #'+MP.acct.id.slice(0,4):'not signed in — you play as a guest';$('#aco').style.display=MP.acct?'':'none'};
+ window.acctUI=()=>{$('#acs').textContent=!window.isSecureContext||!window.crypto||!crypto.subtle?'accounts need HTTPS':MP.acct?'signed in as '+MP.acct.name+' #'+MP.acct.id.slice(0,4):'not signed in — you play as a guest';$('#aco').style.display=MP.acct?'':'none'};
  $('#acc').onclick=()=>createAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Account created — you are signed in')}).catch(say);
  $('#acl').onclick=()=>loginAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Signed in')}).catch(say);
  $('#aco').onclick=()=>{MP.acct=null;acctUI()};
@@ -1133,7 +1135,7 @@ function phCreateEnemy(kind,x,z,morph,nid){
 function phSpawn(kind,morph=''){
  if(!isH()||!MP.phantomConnected)return;
  const [x,z]=place(),e=phCreateEnemy(kind,x,z,morph);
- if(e)MP.ev.push({t:'ps',k:kind,x,z,pm:morph,n:e.nid,o:-1});
+ if(e){const ev={t:'ps',k:kind,x,z,pm:morph,n:e.nid,o:-1};for(const P of MP.peers.values())send(P.conn,{t:'e',e:[ev]});}
 }
 function phWave(kind,count,morph=''){
  if(!isH()||!MP.phantomConnected)return;
@@ -1142,7 +1144,7 @@ function phWave(kind,count,morph=''){
 const phPanel=document.createElement('div');phPanel.id='phantom-host-panel';phPanel.style.cssText='position:fixed;left:18px;top:70px;width:min(340px,92vw);max-height:78vh;overflow:auto;z-index:100000;display:none;background:rgba(8,12,16,.97);color:#edf3f7;border:1px solid #465664;border-top:3px solid #b36bff;padding:12px;font:600 15px "Barlow Condensed",sans-serif;box-shadow:0 8px 30px #000b';
 document.body.appendChild(phPanel);
 const phNames=[['SIGNAL GLITCH','glitch'],['DISCO SCREEN','disco'],['FAKE SYSTEM ALERT','alert'],['BLACKOUT 1.8s','blackout'],['WORLD WOBBLE','wobble'],['MONOCHROME','mono'],['RAINBOW FILTER','rainbow'],['CONFETTI RAIN','confetti'],['GIANT MESSAGE','bigtext'],['STATIC SCREEN','static'],['PULSE CANNON FX','pulse'],['FREEZE FIELD FX','freeze'],['PORTAL BREACH FX','portal'],['SCREEN FLIP','flip'],['MIRROR SCREEN','mirror'],['EXTREME FOV','fovwide'],['SCOPE FOV','fovscope'],['FAKE BLUE SCREEN','fakebsod'],['FAKE 99% LOAD','fake99'],['2D-ISH MODE','flat2d'],['CLONE SCREEN','clones'],['FAKE FOOTSTEPS','fakefoot'],['FAKE NOTIFICATION','notif'],['FAKE LEVEL-UP','loot']];
-function phBroadcast(k){if(!isH()||!MP.phantomConnected||!phNames.some(x=>x[1]===k))return;phantomEffect(k);MP.ev.push({t:'ph',k,o:-1});}
+function phBroadcast(k){if(!isH()||!MP.phantomConnected||!phNames.some(x=>x[1]===k))return;phantomEffect(k);const ev={t:'ph',k,o:-1};for(const P of MP.peers.values())send(P.conn,{t:'e',e:[ev]});}
 function phSection(label){const h=document.createElement('div');h.textContent=label;h.style.cssText='margin:12px 0 5px;padding-bottom:3px;border-bottom:1px solid #465664;color:#c8a5ff;letter-spacing:.08em';phPanel.appendChild(h);return h}
 function phButtonGrid(items){
  const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:5px';
@@ -1155,6 +1157,8 @@ function phRender(){
  const title=document.createElement('b');title.textContent='PHANTOM // CHAOS CONTROL';
  const close=btn('×',()=>{phPanel.style.display='none'});h.append(title,close);phPanel.appendChild(h);
  const st=document.createElement('div');st.textContent='HOST CONNECTED · SYNCED NPC EVENTS · VISUAL GADGETS';st.style.cssText='color:#a9b7c2;margin-bottom:8px';phPanel.appendChild(st);
+ phSection('HOST MOVEMENT');
+ phButtonGrid([[window.__AR_PHANTOM_FLY__?'DISABLE HOST FLIGHT':'ENABLE HOST FLIGHT',()=>{if(!isH())return;window.__AR_PHANTOM_FLY__=!window.__AR_PHANTOM_FLY__;if(!window.__AR_PHANTOM_FLY__)pl.v.y=0;toast(window.__AR_PHANTOM_FLY__?'PHANTOM FLIGHT ENABLED · WASD move · SPACE up · C down':'PHANTOM FLIGHT DISABLED');phRender();phPanel.style.display='block'}]]);
  phSection('WORLD EVENTS & SCREEN PRANKS');
  phButtonGrid(phNames.map(([label,key])=>[label,()=>phBroadcast(key)]));
  phSection('MORPH SPAWNS');
