@@ -796,7 +796,7 @@ function snap(){
  for(const e of ents){if(e.net!=null)continue;const n=e.nid||(e.nid=++MP.nid);ids.push(n);
   const p=[];for(const q of e.pts)p.push(qz(q.p.x),qz(q.p.y),qz(q.p.z));
   const f=[];for(const s of e.seg){let b=(s.gone?1:0)|(s.cut?2:0)|(s.open?4:0)|(s.brk?8:0)|(s.burn>0?16:0);s.org.forEach((o,k)=>{if(o.dead)b|=32<<k});f.push(b,s.cut?Math.round((s.ct||.5)*100):0)}
-  const m={n,ty:e.type,a:e.alive?1:0,b:Math.round(e.blood),u:e.aim?1:0,c:e.cause||'',f,p},sg=JSON.stringify(m);
+  const m={n,ty:e.type,a:e.alive?1:0,b:Math.round(e.blood),u:e.aim?1:0,c:e.cause||'',f,p,pm:e.phm||''},sg=JSON.stringify(m);
   if(!full&&e.sig===sg)continue;e.sig=sg;E.push(m)}
  const dvl=DEV.filter(o=>o.mpk),L={p:PROPS.filter(o=>o.mpk).map(o=>[o.mpk,+o.x.toFixed(2),+o.z.toFixed(2),+o.mpr.toFixed(3)]),d:dvl.map(o=>[o.k,+o.x.toFixed(2),+o.z.toFixed(2),+o.ry.toFixed(3)])},ls=JSON.stringify(L);for(const i of [0,...MP.peers.keys()])MP.sc[i]||(MP.sc[i]=[0,0]);
  const msg={t:'s',pl:plist(),ids,e:E,dv:dvl.map(o=>o.on?1:0),sc:MP.sc,nm:MP.nmz,b:barrels.map(b=>[b.id||(b.id=++MP.bid),+b.x.toFixed(2),+b.y.toFixed(2),+b.z.toFixed(2)]),j:proj.map(q=>[q.id||(q.id=++MP.bid),q.k,...v3(q.m.position)])};
@@ -825,7 +825,7 @@ function applySnap(m){
  const have=new Map(),keep=new Set(m.ids);
  for(const e of ents.slice())if(e.net==null&&e.nid){if(keep.has(e.nid))have.set(e.nid,e);else{kill(e);ents.splice(ents.indexOf(e),1)}}
  for(const d of m.e){let e=have.get(d.n);const first=!e;if(first){e=mk(d.ty,d.p[9]/100,d.p[11]/100);e.nid=d.n;have.set(d.n,e)}
-  e.alive=!!d.a;e.blood=d.b;e.aim=!!d.u;e.cause=d.c;
+  e.alive=!!d.a;e.blood=d.b;e.aim=!!d.u;e.cause=d.c;if(d.pm)applyPhMorph(e,d.pm);
   e.seg.forEach((s,i)=>{const f=d.f[i*2];s.gone=!!(f&1);s.cut=!!(f&2);s.open=!!(f&4);s.brk=!!(f&8);s.burn=(f&16)?6:0;if(s.cut)s.ct=d.f[i*2+1]/100;s.org.forEach((o,k)=>{if((f&(32<<k))&&!o.dead){o.dead=true;o.m.material.color.multiplyScalar(.35);o.m.scale.multiplyScalar(.8)}})});
   e.tg=d.p;if(first)for(let i=0;i<16;i++){const q=e.pts[i];q.p.set(d.p[i*3]/100,d.p[i*3+1]/100,d.p[i*3+2]/100);q.q.copy(q.p)}}
  const bm=new Map(barrels.filter(b=>b.id).map(b=>[b.id,b])),bs=new Set();
@@ -843,7 +843,7 @@ function onEv(e){
  else if(e.t==='x'){MP.ax=true;try{_expl(e.x,e.y,e.z,e.R,e.dm)}finally{MP.ax=false}}
  else if(e.t==='g')gfx(e.i,e.a,e.b);else if(e.t==='k')feed(e.v,e.s,e.w);else if(e.t==='m')feedRaw(e.m);else if(e.t==='f')flameFx(V3(e.p),V3(e.d));
  else if(e.t==='a')bleed(V3(e.pt),V3(e.d),Math.min(10,2+e.D*.1|0),Math.min(4,1.5+e.D*.03));
- else if(e.t==='ph')phantomEffect(e.k)}
+ else if(e.t==='ph')phantomEffect(e.k);else if(e.t==='ps')phCreateEnemy(e.k,e.x,e.z,e.pm,e.n)}
 /* ---------- PHANTOM: owner-triggered, synchronized visual pranks ---------- */
 const phStyle=document.createElement('style');
 phStyle.textContent='@keyframes ph-wobble{0%,100%{transform:translate(0,0) rotate(0)}20%{transform:translate(7px,-4px) rotate(.4deg)}40%{transform:translate(-6px,3px) rotate(-.5deg)}60%{transform:translate(4px,5px) rotate(.3deg)}80%{transform:translate(-4px,-3px) rotate(-.2deg)}}@keyframes ph-flash{0%,100%{opacity:.08}50%{opacity:.65}}@keyframes ph-shake{0%,100%{transform:translate(0)}25%{transform:translate(8px,-4px)}50%{transform:translate(-7px,5px)}75%{transform:translate(4px,4px)}}@keyframes ph-confetti{to{transform:translateY(110vh) rotate(900deg);opacity:.1}}';
@@ -851,8 +851,8 @@ document.head.appendChild(phStyle);
 const phOverlay=document.createElement('div');phOverlay.id='phantom-fx';phOverlay.style.cssText='position:fixed;inset:0;z-index:99990;pointer-events:none;display:none;align-items:center;justify-content:center;text-align:center;font:700 clamp(26px,6vw,68px) "Barlow Condensed",sans-serif;color:white;text-shadow:0 3px 18px #000';document.body.appendChild(phOverlay);
 let phTimer=0;
 function phantomEffect(k){
- const valid=['glitch','disco','blackout','alert','wobble','mono','rainbow','confetti','bigtext','static'];if(!valid.includes(k))return;
- clearTimeout(phTimer);phOverlay.replaceChildren();phOverlay.style.display='none';phOverlay.style.background='transparent';phOverlay.style.animation='none';ren.domElement.style.animation='none';ren.domElement.style.filter='';document.body.style.filter='';
+ const valid=['glitch','disco','blackout','alert','wobble','mono','rainbow','confetti','bigtext','static','pulse','freeze','portal'];if(!valid.includes(k))return;
+ clearTimeout(phTimer);phOverlay.replaceChildren();phOverlay.style.display='none';phOverlay.style.background='transparent';phOverlay.style.animation='none';phOverlay.style.mixBlendMode='normal';ren.domElement.style.animation='none';ren.domElement.style.filter='';document.body.style.filter='';
  const msg=(t)=>{const d=document.createElement('div');d.textContent=t;phOverlay.appendChild(d);phOverlay.style.display='flex'};
  if(k==='glitch'){phOverlay.style.display='block';phOverlay.style.background='repeating-linear-gradient(0deg,transparent 0 5px,rgba(255,255,255,.13) 6px 7px),linear-gradient(90deg,rgba(255,0,80,.18),transparent,rgba(0,220,255,.2))';phOverlay.style.animation='ph-flash .12s infinite';msg('SIGNAL CORRUPTED');}
  if(k==='disco'){phOverlay.style.display='block';phOverlay.style.background='linear-gradient(135deg,#f04,#0ff,#ff0,#a0f)';phOverlay.style.mixBlendMode='screen';phOverlay.style.animation='ph-flash .28s infinite';msg('DISCO MODE');}
@@ -863,12 +863,15 @@ function phantomEffect(k){
  if(k==='rainbow'){document.body.style.filter='hue-rotate(160deg) saturate(2)';phOverlay.style.display='flex';phOverlay.style.fontSize='34px';msg('COLOR OVERRIDE');}
  if(k==='bigtext'){phOverlay.style.display='flex';msg('YOU HAVE BEEN PHANTOMED');}
  if(k==='static'){phOverlay.style.display='block';phOverlay.style.background='repeating-radial-gradient(circle at 20% 30%,rgba(255,255,255,.22) 0 1px,transparent 2px 5px),rgba(0,0,0,.28)';phOverlay.style.animation='ph-flash .16s infinite';msg('NO SIGNAL');}
+ if(k==='pulse'){phOverlay.style.display='flex';phOverlay.style.background='radial-gradient(circle,rgba(80,235,255,.55),rgba(0,30,70,.12) 65%,transparent)';phOverlay.style.animation='ph-flash .32s 4';msg('⚡ PULSE CANNON');}
+ if(k==='freeze'){phOverlay.style.display='flex';phOverlay.style.background='linear-gradient(135deg,rgba(80,210,255,.3),rgba(220,250,255,.16))';phOverlay.style.color='#d8f8ff';msg('❄ FREEZE FIELD');}
+ if(k==='portal'){phOverlay.style.display='flex';phOverlay.style.background='radial-gradient(ellipse at center,rgba(190,80,255,.55),rgba(20,0,55,.22) 45%,transparent 72%)';phOverlay.style.animation='ph-flash .5s 3';msg('PORTAL BREACH');}
  if(k==='confetti'){
   phOverlay.style.display='block';phOverlay.style.overflow='hidden';
   for(let i=0;i<65;i++){const p=document.createElement('i');p.style.cssText=`position:absolute;left:${Math.random()*100}%;top:-18px;width:8px;height:13px;background:hsl(${Math.random()*360},90%,60%);transform:rotate(${Math.random()*180}deg);animation:ph-confetti ${2+Math.random()*2}s linear ${Math.random()}s forwards`;phOverlay.appendChild(p)}
   const t=document.createElement('b');t.textContent='CONFETTI ATTACK';t.style.cssText='position:absolute;left:0;right:0;top:42%;font-size:clamp(28px,6vw,64px);text-shadow:0 3px 18px #000';phOverlay.appendChild(t);
  }
- phTimer=setTimeout(()=>{phOverlay.style.display='none';phOverlay.replaceChildren();phOverlay.style.background='transparent';phOverlay.style.animation='none';ren.domElement.style.animation='none';document.body.style.filter='';},k==='blackout'?1800:4200);
+ phTimer=setTimeout(()=>{phOverlay.style.display='none';phOverlay.replaceChildren();phOverlay.style.background='transparent';phOverlay.style.animation='none';phOverlay.style.mixBlendMode='normal';ren.domElement.style.animation='none';document.body.style.filter='';},k==='blackout'?1800:4200);
 }
 function clientMsg(m){
  if(m.t==='ch')clientHello(m);else if(m.t==='no'){toast(m.why||'Disconnected');if(isC())leave();else abortJoin()}
@@ -1084,11 +1087,81 @@ const admBtn=btn('Admin panel (F2)',openAdm);admBtn.style.display='none';box.que
 setInterval(()=>{admBtn.style.display=isH()?'':'none';if(admOn&&!isH())closeAdm();else if(admOn&&(tab==='players'||tab==='bans'))renderAdm()},1000);
 window.addEventListener('keydown',e=>{if(e.code==='F2'&&isH()){e.preventDefault();admOn?closeAdm():openAdm()}},true);
 /* PHANTOM handshake: a same-page bookmarklet requests the host-only control panel. */
+
+/* PHANTOM expansion: host-authoritative NPC variants. These affect NPCs only. */
+function applyPhMorph(e,kind){
+ if(!e||!kind)return;
+ e.phm=kind;
+ const palettes={
+  gold:{skin:0xffd45a,cloth:0x9a6b12,glow:0xffb020},
+  neon:{skin:0x75fff0,cloth:0x153b83,glow:0x00eaff},
+  shadow:{skin:0x454052,cloth:0x101018,glow:0x8d55ff},
+  chrome:{skin:0xc8e2ee,cloth:0x596875,glow:0x8bdcff},
+  boss:{skin:0xff765c,cloth:0x45121b,glow:0xff2a35}
+ };
+ const c=palettes[kind];if(!c)return;
+ e.jm.forEach((m,i)=>{m.material.color.setHex(i===0?c.skin:c.cloth);m.material.emissive.setHex(c.glow);m.material.emissiveIntensity=kind==='boss'?0.48:.22});
+ e.seg.forEach(seg=>{seg.mat.color.setHex(c.cloth);seg.mat.emissive.setHex(c.glow);seg.mat.emissiveIntensity=kind==='boss'?.38:.16});
+ if(kind==='boss'){e.blood=Math.max(e.blood,220);e.seg.forEach(seg=>{seg.hp*=2;seg.max*=2;seg.bone*=1.5})}
+}
+function phCreateEnemy(kind,x,z,morph,nid){
+ if(!['civilian','gunman','brute'].includes(kind))return null;
+ if(ents.filter(e=>e.net==null).length>=44)return null;
+ const e=mk(kind,x,z);if(nid)e.nid=nid;else if(isH())e.nid=++MP.nid;
+ if(morph)applyPhMorph(e,morph);
+ return e;
+}
+function phSpawn(kind,morph=''){
+ if(!isH()||!MP.phantomConnected)return;
+ const [x,z]=place(),e=phCreateEnemy(kind,x,z,morph);
+ if(e)MP.ev.push({t:'ps',k:kind,x,z,pm:morph,n:e.nid,o:-1});
+}
+function phWave(kind,count,morph=''){
+ if(!isH()||!MP.phantomConnected)return;
+ for(let i=0;i<count;i++)phSpawn(kind,morph);
+}
 const phPanel=document.createElement('div');phPanel.id='phantom-host-panel';phPanel.style.cssText='position:fixed;left:18px;top:70px;width:min(340px,92vw);max-height:78vh;overflow:auto;z-index:100000;display:none;background:rgba(8,12,16,.97);color:#edf3f7;border:1px solid #465664;border-top:3px solid #b36bff;padding:12px;font:600 15px "Barlow Condensed",sans-serif;box-shadow:0 8px 30px #000b';
 document.body.appendChild(phPanel);
-const phNames=[['SIGNAL GLITCH','glitch'],['DISCO SCREEN','disco'],['FAKE SYSTEM ALERT','alert'],['BLACKOUT 1.8s','blackout'],['WORLD WOBBLE','wobble'],['MONOCHROME','mono'],['RAINBOW FILTER','rainbow'],['CONFETTI RAIN','confetti'],['GIANT MESSAGE','bigtext'],['STATIC SCREEN','static']];
+const phNames=[['SIGNAL GLITCH','glitch'],['DISCO SCREEN','disco'],['FAKE SYSTEM ALERT','alert'],['BLACKOUT 1.8s','blackout'],['WORLD WOBBLE','wobble'],['MONOCHROME','mono'],['RAINBOW FILTER','rainbow'],['CONFETTI RAIN','confetti'],['GIANT MESSAGE','bigtext'],['STATIC SCREEN','static'],['PULSE CANNON FX','pulse'],['FREEZE FIELD FX','freeze'],['PORTAL BREACH FX','portal']];
 function phBroadcast(k){if(!isH()||!MP.phantomConnected||!phNames.some(x=>x[1]===k))return;phantomEffect(k);MP.ev.push({t:'ph',k,o:-1});}
-function phRender(){phPanel.textContent='';const h=document.createElement('div');h.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px';const title=document.createElement('b');title.textContent='PHANTOM // GLOBAL PRANKS';const close=btn('×',()=>{phPanel.style.display='none'});h.append(title,close);phPanel.appendChild(h);const st=document.createElement('div');st.textContent='CONNECTED · HOST CONTROLS · effects visible to everyone';st.style.cssText='color:#a9b7c2;margin-bottom:8px';phPanel.appendChild(st);const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:5px';phNames.forEach(([label,key])=>{const b=btn(label,()=>phBroadcast(key));b.style.cssText='font-size:14px;padding:9px 5px;border-left-color:#b36bff';grid.appendChild(b)});phPanel.appendChild(grid);const foot=document.createElement('p');foot.textContent='Visual-only pranks. Each effect automatically resets.';foot.style.cssText='color:#91a2af;margin:10px 0 0';phPanel.appendChild(foot)}
+function phSection(label){const h=document.createElement('div');h.textContent=label;h.style.cssText='margin:12px 0 5px;padding-bottom:3px;border-bottom:1px solid #465664;color:#c8a5ff;letter-spacing:.08em';phPanel.appendChild(h);return h}
+function phButtonGrid(items){
+ const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:5px';
+ items.forEach(([label,fn])=>{const b=btn(label,fn);b.style.cssText='font-size:14px;padding:9px 5px;border-left-color:#b36bff';grid.appendChild(b)});
+ phPanel.appendChild(grid);
+}
+function phRender(){
+ phPanel.textContent='';
+ const h=document.createElement('div');h.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px';
+ const title=document.createElement('b');title.textContent='PHANTOM // CHAOS CONTROL';
+ const close=btn('×',()=>{phPanel.style.display='none'});h.append(title,close);phPanel.appendChild(h);
+ const st=document.createElement('div');st.textContent='HOST CONNECTED · SYNCED NPC EVENTS · VISUAL GADGETS';st.style.cssText='color:#a9b7c2;margin-bottom:8px';phPanel.appendChild(st);
+ phSection('WORLD EVENTS & SCREEN PRANKS');
+ phButtonGrid(phNames.map(([label,key])=>[label,()=>phBroadcast(key)]));
+ phSection('MORPH SPAWNS');
+ phButtonGrid([
+  ['GOLD BRUTE',()=>phSpawn('brute','gold')],
+  ['NEON GUNMAN',()=>phSpawn('gunman','neon')],
+  ['SHADOW BRUTE',()=>phSpawn('brute','shadow')],
+  ['CHROME GUNMAN',()=>phSpawn('gunman','chrome')],
+  ['BOSS BRUTE',()=>phSpawn('brute','boss')]
+ ]);
+ phSection('NPC INVASIONS');
+ phButtonGrid([
+  ['GUNMAN SQUAD ×3',()=>phWave('gunman',3)],
+  ['BRUTE WAVE ×3',()=>phWave('brute',3)],
+  ['MIXED INVASION ×5',()=>{phWave('gunman',3);phWave('brute',2)}],
+  ['BOSS + ESCORT',()=>{phSpawn('brute','boss');phWave('gunman',2)}]
+ ]);
+ phSection('SPECIAL GADGET EFFECTS');
+ phButtonGrid([
+  ['PULSE CANNON',()=>phBroadcast('pulse')],
+  ['FREEZE RAY',()=>phBroadcast('freeze')],
+  ['PORTAL BLASTER',()=>phBroadcast('portal')],
+  ['CONFETTI BURST',()=>phBroadcast('confetti')]
+ ]);
+ const foot=document.createElement('p');foot.textContent='NPC spawns are host-controlled and synchronized. Gadget buttons are visual-only effects; no connection flooding or game-crashing tricks.';foot.style.cssText='color:#91a2af;margin:10px 0 0';phPanel.appendChild(foot);
+}
 window.addEventListener('message',e=>{const d=e.data;if(e.source!==window||e.origin!==location.origin||!d||d.channel!=='ANATOMY_PHANTOM')return;if(!isH())return;if(d.action==='connect'){MP.phantomConnected=true;phRender();phPanel.style.display='block';toast('PHANTOM connected — host controls ready');window.postMessage({channel:'ANATOMY_PHANTOM',action:'connected'},location.origin)}else if(d.action==='disconnect'){MP.phantomConnected=false;phPanel.style.display='none';toast('PHANTOM disconnected')}else if(d.action==='effect'&&MP.phantomConnected)phBroadcast(String(d.effect||''))});
 })();
 </script></body></html>
