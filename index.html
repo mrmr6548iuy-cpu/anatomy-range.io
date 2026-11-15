@@ -747,7 +747,23 @@ const hud=document.createElement('div');hud.style.cssText='position:fixed;top:6p
 const box=document.createElement('div');box.style.cssText='margin:12px 0;padding:8px 10px;border:1px solid var(--line);border-left:3px solid #3aa0d8';
 box.innerHTML='<b>Multiplayer</b> <i id="mps" style="color:var(--mut);font-style:normal">offline</i><div class="g"><button id="mph">Host a game</button><input id="mpc" maxlength="8" placeholder="ROOM CODE" style="width:110px;font:600 16px \'Barlow Condensed\',sans-serif;text-transform:uppercase;color:var(--ink);background:#1d2327;border:1px solid var(--line);padding:6px 8px"><button id="mpj">Join</button></div>';
 {const m=document.querySelector('#menu .mode');m.parentNode.insertBefore(box,m)}
-const status=s=>{$('#mps').textContent=s;hud.textContent=MP.mode==='solo'?'':s;hud.style.display=MP.mode==='solo'?'none':'block'};
+const status=s=>{$('#mps').textContent=s;hud.textContent=MP.mode==='solo'?'':s;hud.style.display=MP.mode==='solo'?'none':'block';chatToggle.style.display=MP.mode==='solo'?'none':'';if(MP.mode==='solo')setChat(false)};
+/* ---------- text chat: PeerJS data-channel relay, no microphone required ---------- */
+const chat=document.createElement('section');chat.id='ar-chat';chat.style.cssText='position:fixed;left:12px;bottom:48px;width:min(340px,calc(100vw - 24px));z-index:80;background:rgba(10,13,16,.94);border:1px solid #354047;border-top:2px solid #3aa0d8;padding:8px;display:none;font:15px "Barlow Condensed",sans-serif;color:#eee';
+const chatHead=document.createElement('div');chatHead.textContent='SERVER CHAT';chatHead.style.cssText='font-weight:700;letter-spacing:.12em;margin-bottom:5px';
+const chatLog=document.createElement('div');chatLog.style.cssText='height:150px;overflow-y:auto;overflow-wrap:anywhere;background:rgba(0,0,0,.22);padding:5px;margin-bottom:6px';
+const chatRow=document.createElement('div');chatRow.style.cssText='display:flex;gap:5px';
+const chatInput=document.createElement('input');chatInput.type='text';chatInput.maxLength=180;chatInput.placeholder='Type a message…';chatInput.autocomplete='off';chatInput.style.cssText='min-width:0;flex:1;font:15px "Barlow Condensed",sans-serif;color:#eee;background:#1d2327;border:1px solid #354047;padding:7px';
+const chatSend=document.createElement('button');chatSend.textContent='Send';chatRow.append(chatInput,chatSend);chat.append(chatHead,chatLog,chatRow);document.body.appendChild(chat);
+const chatToggle=document.createElement('button');chatToggle.textContent='Chat · Enter';chatToggle.style.cssText='position:fixed;left:12px;bottom:12px;z-index:80';document.body.appendChild(chatToggle);
+let chatOpen=false,chatLast=0;
+function chatLine(name,msg,system=false){const d=document.createElement('div');d.style.cssText='padding:2px 0;border-bottom:1px solid rgba(255,255,255,.07)';const b=document.createElement('b');b.textContent=system?'[SERVER] ':name+': ';const t=document.createElement('span');t.textContent=msg;d.append(b,t);chatLog.appendChild(d);while(chatLog.children.length>80)chatLog.firstChild.remove();chatLog.scrollTop=chatLog.scrollHeight}
+function setChat(open){chatOpen=!!open;chat.style.display=chatOpen?'block':'none';if(chatOpen){chatInput.focus();chatLog.scrollTop=chatLog.scrollHeight}}
+function sendChat(){const msg=chatInput.value.trim().replace(/[\u0000-\u001f\u007f]/g,'').slice(0,180);if(!msg)return;if(MP.mode==='solo'){toast('Join or host a multiplayer room to use chat');return}const now=Date.now();if(now-chatLast<650){toast('Please wait a moment before sending another message');return}chatLast=now;chatInput.value='';if(isH()){chatLine(myName(),msg);for(const P of MP.peers.values())send(P.conn,{t:'chat',name:myName(),m:msg})}else send(MP.conn,{t:'chat',m:msg})}
+chatToggle.onclick=()=>setChat(!chatOpen);chatSend.onclick=sendChat;chatInput.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'){e.preventDefault();sendChat()}else if(e.key==='Escape'){e.preventDefault();setChat(false)}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&MP.mode!=='solo'&&document.activeElement!==chatInput&&!e.repeat){e.preventDefault();setChat(true)}});
+function receiveChat(name,msg){if(typeof msg!=='string')return;msg=msg.replace(/[\u0000-\u001f\u007f]/g,'').slice(0,180).trim();if(!msg)return;chatLine(String(name||'Player').slice(0,24),msg)}
+function hostChat(P,msg){if(!P||!P.ok||typeof msg!=='string')return;const now=Date.now();if(now-(P.chatAt||0)<650)return;P.chatAt=now;msg=msg.replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,180);if(!msg)return;receiveChat(P.name,msg);for(const Q of MP.peers.values())if(Q!==P)send(Q.conn,{t:'chat',name:P.name,m:msg})}
 const count=()=>status(isH()?'HOSTING'+(MP.pub?' PUBLIC "'+MP.name+'"':'')+' · room '+MP.code.toUpperCase()+' · '+(MP.peers.size+1)+' player(s) · hold V: talk · hold Y: scores':isC()?'CONNECTED · room '+MP.code.toUpperCase()+' · you are Player '+(MP.id+1)+' · hold V: talk · hold Y: scores':'offline');
 $('#mph').onclick=()=>startHost({});$('#mpj').onclick=()=>{const c=$('#mpc').value.trim().toLowerCase();if(c)join(c)};
 const noPeer=()=>{if(typeof Peer==='undefined'){toast('PeerJS failed to load (check your connection)');return true}return false};
@@ -808,7 +824,7 @@ const spawnAt=(k,x,z)=>{if(k==='barrel')barrel(x,z);else{const i=ents.findIndex(
 const gfx=(i,a,b)=>{gunSfx(i,V3(a));_tracer(V3(a),V3(b))};
 function hostShot(P,s){const av=MP.av.get(P.pid);if(!av||!ents.includes(av))return;const[o,d,dmg,ty,imp,pierce,rng,wi]=s,sc=cur,b=BAL[wi]||[.009,2];cur=wi;CAL=b[0];EXF=b[1];MP.origin=P.pid;
  try{_shoot(V3(o),V3(d).normalize(),dmg,ty,imp,pierce,rng,av)}finally{cur=sc;MP.origin=0}noise(o[0],o[2],ty==='b'?45:8)}
-function hostMsg(P,m){if(!m||m.t!=='i')return;P.st=m.st;
+function hostMsg(P,m){if(!m)return;if(m.t==='chat'){hostChat(P,m.m);return}if(m.t!=='i')return;P.st=m.st;
  (m.s||[]).forEach(s=>hostShot(P,s));
  (m.g||[]).forEach(g=>{gfx(g[0],g[1],g[2]);MP.ev.push({t:'g',i:g[0],a:g[1],b:g[2],o:P.pid})});
  (m.pj||[]).forEach(addProj);(m.sp||[]).forEach(s=>spawnAt(s[0],s[1],s[2]));
@@ -893,6 +909,7 @@ function phantomEffect(k){
  phTimer=setTimeout(()=>{phOverlay.style.display='none';phOverlay.replaceChildren();phOverlay.style.background='transparent';phOverlay.style.animation='none';phOverlay.style.mixBlendMode='normal';ren.domElement.style.animation='none';ren.domElement.style.transform='';ren.domElement.style.filter='';document.body.style.filter='';if(cam&&cam.isPerspectiveCamera){cam.fov=phBaseFov;cam.updateProjectionMatrix()}phClearClones();},k==='blackout'?1800:4200);
 }
 function clientMsg(m){
+ if(m.t==='chat'){receiveChat(m.name,m.m);return}
  if(m.t==='ch')clientHello(m);else if(m.t==='no'){toast(m.why||'Disconnected');if(isC())leave();else abortJoin()}
  else if(m.t==='tp'){pl.p.set(m.x,m.y,m.z);pl.v.set(0,0,0)}else if(m.t==='heal'){pl.hp=100;pl.dead=0}else if(m.t==='kl'){MP.last={s:-2,w:null,t:performance.now()};_hitP(9999)}else if(m.t==='say')toast(m.m)
  else if(m.t==='w'){MP.id=m.id;MP.mode='client';ents.splice(0).forEach(kill);barrels.splice(0).forEach(b=>scene.remove(b.m));proj.splice(0).forEach(q=>scene.remove(q.m));MP.av.clear();count();toast('Joined — you are Player '+(m.id+1))}
