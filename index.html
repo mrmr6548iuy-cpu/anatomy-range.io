@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><title>Anatomy Range</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&display=swap">
 <style>
 :root{--bg:#101315;--ink:#ece7de;--mut:#8d9498;--blood:#c2121a;--pan:rgba(16,19,21,.88);--line:#2c3236;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -45,6 +44,7 @@ button:hover,button:focus-visible{background:#283036;outline:none}
 <p>WASD move, Shift run, Space jump, mouse aim, click fire, R reload (drops the mag, loads a new one, racks the slide), Z rack the slide or pump, right click aim down sights (or launch a grabbed body part), K heal, P free camera (fly anywhere while your body stays put and can't be hurt), Tab edit mode (pauses time so you can place props and contraptions and spawn people while you keep moving), U use the nearest contraption, C crouch, N clear all, mouse wheel zooms while aiming (the sniper scope zooms furthest). VR: trigger fires (or curl your index finger with hand tracking), B or A drops the mag, pinch or grip a fresh mag from the pouch at your belt with your other hand and push it into the gun, then pull the slide back to chamber a round. Off-hand stick moves, gun-hand stick snap-turns. 1-9 and 0 pick weapons, Q/E or wheel cycle through all 15. Esc opens this menu. Needs keyboard and mouse.</p>
 <div class="mode"><button id="go">Play on PC<small>keyboard and mouse</small></button><button id="vrb">Play in VR<small>controllers or hand tracking</small></button></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const T=THREE,V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z),R=Math.random,rr=(a,b)=>a+(b-a)*R(),$=s=>document.querySelector(s),Y=V(0,1,0);
 const ad=(a,b)=>{let d=a-b;while(d>Math.PI)d-=6.2832;while(d<-Math.PI)d+=6.2832;return d};
@@ -1053,7 +1053,10 @@ function refreshList(quiet){if(!quiet)$('#publ').textContent='Searching…';let 
 {const pb=document.createElement('div');pb.style.cssText=box.style.cssText;pb.innerHTML='<b>Public servers</b><div class="g"><input id="pubn" maxlength="24" placeholder="Your server name" style="width:170px;font:600 16px \'Barlow Condensed\',sans-serif;color:var(--ink);background:#1d2327;border:1px solid var(--line);padding:6px 8px"><button id="pubh">Host public</button><button id="pubr">Refresh</button></div><div id="publ" style="margin-top:6px;font-size:15px;color:var(--mut)"></div>';box.after(pb);
  $('#pubh').onclick=()=>startHost({pub:true,name:$('#pubn').value.trim()||'Public server',max:8});$('#pubr').onclick=()=>refreshList();
  setTimeout(()=>refreshList(),900);setInterval(()=>{if(MP.mode==='solo'&&$('#menu').style.display!=='none')refreshList(true)},20000)}
-/* ---------- accounts: a password-protected keypair kept in this browser; servers recognise you by public key ---------- */
+/* ---------- Supabase cloud accounts ---------- */
+const SUPABASE_URL='https://gjiseuhdrstlpkugmyfc.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_RAJPNGYhuZBA44w81_G9jg_qSkzVQwH';
+const ARSB=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const loadJ=k=>{try{const v=JSON.parse(localStorage.getItem(k)||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(e){return{}}},saveJ=(k,o)=>{try{localStorage.setItem(k,JSON.stringify(o));return true}catch(e){return false}};
 MP.bans=loadJ('ar_bans_v1');
 const enc=new TextEncoder(),dec=new TextDecoder(),b64=u=>btoa(String.fromCharCode(...new Uint8Array(u))),ub64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
@@ -1064,51 +1067,28 @@ const acctOfPid=pid=>pid===0?MP.acct:(MP.peers.get(pid)||{}).acct;
 function touchStats(id,name,ev){const S=loadJ('ar_stats_v1'),r=S[id]||(S[id]={name,k:0,d:0,j:0,last:0});r.name=name;r.last=Date.now();if(ev==='join')r.j++;if(ev==='k')r.k++;if(ev==='d')r.d++;saveJ('ar_stats_v1',S)}
 async function sha(str){const h=await crypto.subtle.digest('SHA-256',enc.encode(str));return[...new Uint8Array(h)].slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('')}
 async function pkey(pw,salt){const k=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
-async function createLocalAcct(name,pw){
- if(!window.isSecureContext||!window.crypto||!crypto.subtle)throw new Error('Accounts require a secure HTTPS page. Open the GitHub Pages https:// address.');
+const cloudEmail=name=>String(name).toLowerCase()+'@accounts.anatomyrange.invalid';
+function cloudError(e){const m=e&&e.message?e.message:String(e);if(/fetch|network/i.test(m))return 'Could not reach Supabase. Check your connection and project settings.';if(/Invalid login credentials/i.test(m))return 'Wrong username or password.';if(/User already registered/i.test(m))return 'That username is already taken.';if(/relation .* does not exist|schema cache/i.test(m))return 'Cloud database is not set up yet. Run the SQL setup shown in the Cloud Accounts section of the game.';return m}
+async function createAcct(name,pw){
+ if(!window.isSecureContext||!crypto.subtle)throw new Error('Accounts require HTTPS.');
  if(!/^[A-Za-z0-9_]{3,16}$/.test(name))throw new Error('Username: 3–16 letters, numbers or _');
  if(typeof pw!=='string'||pw.length<6)throw new Error('Password must be at least 6 characters');
- try{localStorage.setItem('__ar_storage_test','1');localStorage.removeItem('__ar_storage_test')}catch(e){throw new Error('Browser storage is blocked. Allow site storage for this page, then try again.')}
- const A=loadJ('ar_accts_v1'),key=name.toLowerCase();if(A[key])throw new Error('That username already exists in this browser');
- let kp,pub,prv,salt,iv,ct;try{kp=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);pub=await crypto.subtle.exportKey('jwk',kp.publicKey);prv=await crypto.subtle.exportKey('jwk',kp.privateKey);salt=crypto.getRandomValues(new Uint8Array(16));iv=crypto.getRandomValues(new Uint8Array(12));ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await pkey(pw,salt),enc.encode(JSON.stringify(prv)))}catch(e){throw new Error('Could not create the account keys: '+(e.message||e))}
- A[key]={name,pub:{kty:pub.kty,crv:pub.crv,x:pub.x,y:pub.y},salt:b64(salt),iv:b64(iv),ct:b64(ct)};if(!saveJ('ar_accts_v1',A)||!loadJ('ar_accts_v1')[key])throw new Error('Account could not be saved in this browser. Check site storage permissions.');return loginLocalAcct(name,pw)}
-const REMEMBER_DB='ar_remember_v1';
-function rememberDB(){return new Promise((resolve,reject)=>{if(!indexedDB)return reject(new Error('Browser storage unavailable'));const q=indexedDB.open(REMEMBER_DB,1);q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains('session'))q.result.createObjectStore('session')};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error||new Error('Could not open browser storage'))})}
-async function saveRemember(acct){const db=await rememberDB();return new Promise((resolve,reject)=>{const tx=db.transaction('session','readwrite');tx.objectStore('session').put({name:acct.name,pub:acct.pub,priv:acct.priv},'active');tx.oncomplete=()=>{db.close();resolve(true)};tx.onerror=()=>{db.close();reject(tx.error||new Error('Could not save sign-in'))}})}
-async function clearRemember(){try{const db=await rememberDB();await new Promise((resolve,reject)=>{const tx=db.transaction('session','readwrite');tx.objectStore('session').delete('active');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}catch(e){}}
-async function restoreRemember(){try{const db=await rememberDB(),saved=await new Promise((resolve,reject)=>{const q=db.transaction('session','readonly').objectStore('session').get('active');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)});db.close();if(saved&&saved.priv&&saved.pub){MP.acct={name:saved.name,pub:saved.pub,priv:saved.priv,id:await sha(saved.pub.x+saved.pub.y)};acctUI();toast('Welcome back, '+saved.name)}}catch(e){}}
-async function loginLocalAcct(name,pw){if(!window.isSecureContext||!window.crypto||!crypto.subtle)throw new Error('Accounts require HTTPS and browser cryptography.');const r=loadJ('ar_accts_v1')[String(name||'').toLowerCase()];if(!r)throw new Error('No account with that username is saved in this browser. Use Import if you have its account file.');
- let prv;try{prv=JSON.parse(dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(r.iv)},await pkey(pw,ub64(r.salt)),ub64(r.ct))))}catch(e){throw new Error('Wrong password')}
- const priv=await crypto.subtle.importKey('jwk',prv,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);MP.acct={name:r.name,pub:r.pub,priv,id:await sha(r.pub.x+r.pub.y)};if($('#acremember')&&$('#acremember').checked){try{await saveRemember(MP.acct)}catch(e){toast('Signed in, but Remember me could not be saved')}}else await clearRemember();acctUI();return MP.acct}
-/* ---------- Supabase cloud identity layer ----------
-   Configure a Supabase project in the Cloud Account setup panel. The database
-   enforces global username uniqueness; creator role is assigned only by SQL. */
-const CLOUD_CFG_KEY='ar_supabase_cfg_v1';
-let cloudClient=null,cloudProfile=null;
-function cloudCfg(){try{return JSON.parse(localStorage.getItem(CLOUD_CFG_KEY)||'null')}catch(e){return null}}
-function setCloudCfg(url,key){localStorage.setItem(CLOUD_CFG_KEY,JSON.stringify({url,key}));cloudClient=null}
-function getCloud(){const c=cloudCfg();if(!c||!c.url||!c.key)throw new Error('Set your Supabase Project URL and anon/public key in Cloud Account Setup first.');if(!window.supabase?.createClient)throw new Error('Supabase library did not load. Check your internet connection.');if(!cloudClient)cloudClient=window.supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return cloudClient}
-async function cloudProfileFor(user){const sb=getCloud();const {data,error}=await sb.from('profiles').select('id,username,role').eq('id',user.id).single();if(error)throw new Error('Cloud profile unavailable. Run the setup SQL shown in Cloud Account Setup. '+error.message);return data}
-async function createAcct(name,pw){
- if(!/^[A-Za-z0-9_]{3,16}$/.test(name))throw new Error('Username: 3–16 letters, numbers or _');
- if(name.toLowerCase()==='mrmr')throw new Error('MRMR is reserved. Create your account with a temporary username, then use the creator-promotion SQL in Cloud Account Setup to reserve MRMR for it.');
- const sb=getCloud();const {data,error}=await sb.auth.signUp({email:(name.toLowerCase()+'@accounts.anatomyrange.invalid'),password:pw,options:{data:{username:name}}});
- if(error)throw new Error(error.message);
- if(!data.user)throw new Error('Cloud signup did not return an account.');
- // Keep the existing signed game challenge working on this device. Cloud auth is the global identity;
- // this local keypair remains a device-specific multiplayer proof until a trusted game relay is added.
- let local=loadJ('ar_accts_v1')[name.toLowerCase()];if(!local)await createLocalAcct(name,pw);else await loginLocalAcct(name,pw);
- cloudProfile=await cloudProfileFor(data.user).catch(()=>null);
- MP.acct.cloudUid=data.user.id;MP.acct.role=cloudProfile?.role||'player';MP.acct.global=true;
- acctUI();return MP.acct;
+ const {data,error}=await ARSB.auth.signUp({email:cloudEmail(name),password:pw});if(error)throw new Error(cloudError(error));
+ if(!data.session)throw new Error('Supabase email confirmation is enabled. In Supabase, open Authentication → Providers → Email and turn off Confirm email, then create the account again.');
+ let kp,pub,prv,salt,iv,ct;try{kp=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);pub=await crypto.subtle.exportKey('jwk',kp.publicKey);prv=await crypto.subtle.exportKey('jwk',kp.privateKey);salt=crypto.getRandomValues(new Uint8Array(16));iv=crypto.getRandomValues(new Uint8Array(12));ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await pkey(pw,salt),enc.encode(JSON.stringify(prv)))}catch(e){throw new Error('Could not create account keys: '+(e.message||e))}
+ const row={id:data.user.id,username:name,pub:{kty:pub.kty,crv:pub.crv,x:pub.x,y:pub.y},salt:b64(salt),iv:b64(iv),ct:b64(ct)};
+ const ins=await ARSB.from('ar_profiles').insert(row);if(ins.error)throw new Error(cloudError(ins.error));
+ return loginAcct(name,pw)
 }
 async function loginAcct(name,pw){
- const sb=getCloud();const {data,error}=await sb.auth.signInWithPassword({email:(name.toLowerCase()+'@accounts.anatomyrange.invalid'),password:pw});if(error)throw new Error(error.message);
- const profile=await cloudProfileFor(data.user);cloudProfile=profile;
- let local=loadJ('ar_accts_v1')[name.toLowerCase()];if(local)await loginLocalAcct(name,pw);else await createLocalAcct(name,pw);
- MP.acct.cloudUid=data.user.id;MP.acct.role=profile.role||'player';MP.acct.global=true;acctUI();return MP.acct;
+ if(!window.isSecureContext||!crypto.subtle)throw new Error('Accounts require HTTPS and browser cryptography.');
+ if(!/^[A-Za-z0-9_]{3,16}$/.test(name))throw new Error('Enter a valid username.');
+ const auth=await ARSB.auth.signInWithPassword({email:cloudEmail(name),password:pw});if(auth.error)throw new Error(cloudError(auth.error));
+ const got=await ARSB.from('ar_profiles').select('username,pub,salt,iv,ct').eq('id',auth.data.user.id).single();if(got.error)throw new Error(cloudError(got.error));
+ const r=got.data;let prv;try{prv=JSON.parse(dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(r.iv)},await pkey(pw,ub64(r.salt)),ub64(r.ct))))}catch(e){throw new Error('Could not unlock account keys. Check your password.')}
+ const priv=await crypto.subtle.importKey('jwk',prv,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);MP.acct={name:r.username,pub:r.pub,priv,id:await sha(r.pub.x+r.pub.y)};acctUI();return MP.acct
 }
-async function cloudLogout(){try{await getCloud().auth.signOut()}catch(e){}cloudProfile=null}
+async function restoreRemember(){try{const {data}=await ARSB.auth.getSession();if(!data.session)return;const u=data.session.user;const got=await ARSB.from('ar_profiles').select('username').eq('id',u.id).maybeSingle();if(got.data)$('#acs').textContent='cloud account '+got.data.username+' · sign in to unlock';}catch(e){}}
 async function verifyAcct(pub,nonce,sig){if(!pub||pub.kty!=='EC'||pub.crv!=='P-256'||typeof pub.x!=='string'||typeof pub.y!=='string'||typeof sig!=='string')return false;
  const k=await crypto.subtle.importKey('jwk',{kty:'EC',crv:'P-256',x:pub.x,y:pub.y},{name:'ECDSA',namedCurve:'P-256'},false,['verify']);return crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},k,ub64(sig),enc.encode('anatomyrange|'+MP.code+'|'+nonce))}
 function abortJoin(){status('offline');try{MP.peer.destroy()}catch(x){}MP.peer=null;MP.conn=null}
@@ -1132,22 +1112,13 @@ function feedRaw(t){const r=document.createElement('div');r.style.cssText='backg
 function feedMsg(t){feedRaw(t);if(MP.peers.size)MP.ev.push({t:'m',m:t,o:-1})}
 /* account menu */
 {const ab=document.createElement('div');ab.style.cssText=box.style.cssText;
- ab.innerHTML=`<b>Account</b> <i id="acs" style="color:var(--mut);font-style:normal"></i><div class="g"><input id="acn" maxlength="16" placeholder="username" style="width:120px;${IS}"><input id="acp" type="password" placeholder="password" style="width:120px;${IS}"><button id="acc">Create</button><button id="acl">Log in</button><label style="font-size:13px;display:flex;align-items:center;gap:4px"><input id="acremember" type="checkbox" checked> Remember me</label><button id="aco">Log out</button><button id="ace">Export</button><button id="aci">Import</button></div><input id="acf" type="file" accept=".json" style="display:none"><p style="font-size:13px">Cloud accounts use Supabase for global usernames and password sign-in. The game still uses a device-local signed key for its PeerJS challenge; cross-device trusted player identity requires a server-side game relay. Remember me keeps this device signed in.</p>`;box.after(ab);
+ ab.innerHTML=`<b>Cloud Account</b> <i id="acs" style="color:var(--mut);font-style:normal"></i><div class="g"><input id="acn" maxlength="16" placeholder="username" style="width:120px;${IS}"><input id="acp" type="password" placeholder="password" style="width:120px;${IS}"><button id="acc">Create</button><button id="acl">Log in</button><button id="aco">Log out</button></div><p style="font-size:13px">Accounts are stored in Supabase and can be used across browsers and computers. Your private game key is encrypted with your password before it is uploaded. PeerJS only handles live rooms.</p><details style="font-size:13px"><summary>One-time database setup</summary><p>Open Supabase → SQL Editor → New query, then run the setup SQL provided with this game. Also turn off email confirmation under Authentication → Providers → Email.</p></details>`;box.after(ab);
  const say=e=>toast(e.message||String(e));
- window.acctUI=()=>{$('#acs').textContent=!window.isSecureContext||!window.crypto||!crypto.subtle?'accounts need HTTPS':MP.acct?'signed in as '+MP.acct.name+' · '+(MP.acct.role==='creator'?'CREATOR':MP.acct.role||'local')+' #'+MP.acct.id.slice(0,4):'not signed in — you play as a guest';$('#aco').style.display=MP.acct?'':'none'};
- $('#acc').onclick=()=>createAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Account created — you are signed in')}).catch(say);
- $('#acl').onclick=()=>loginAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Signed in')}).catch(say);
- $('#aco').onclick=()=>{cloudLogout();MP.acct=null;clearRemember();acctUI()};
- $('#ace').onclick=()=>{const n=($('#acn').value.trim()||(MP.acct&&MP.acct.name)||'').toLowerCase(),r=loadJ('ar_accts_v1')[n];if(!r){toast('Type the username of the account to export');return}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(r)],{type:'application/json'}));a.download='anatomy-range-account-'+r.name+'.json';a.click()};
- $('#aci').onclick=()=>$('#acf').click();
- $('#acf').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{const r=JSON.parse(t);if(!r.name||!r.pub||!r.salt||!r.iv||!r.ct)throw new Error('Not an account file');const A=loadJ('ar_accts_v1');A[String(r.name).toLowerCase()]=r;saveJ('ar_accts_v1',A);toast('Imported '+r.name+' — now log in')}).catch(say);e.target.value=''};
+ window.acctUI=()=>{$('#acs').textContent=!window.isSecureContext||!window.crypto||!crypto.subtle?'accounts need HTTPS':MP.acct?'signed in as '+MP.acct.name+' #'+MP.acct.id.slice(0,4):'not signed in — you play as a guest';$('#aco').style.display=MP.acct?'':'none'};
+ $('#acc').onclick=()=>createAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Cloud account created — signed in')}).catch(say);
+ $('#acl').onclick=()=>loginAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Signed in to cloud account')}).catch(say);
+ $('#aco').onclick=async()=>{MP.acct=null;await ARSB.auth.signOut();acctUI()};
  acctUI();restoreRemember()}
-/* Cloud setup: credentials are the public anon key only, never a service-role key. */
-{const cbox=document.createElement('div');cbox.style.cssText=box.style.cssText;cbox.innerHTML=`<details><summary style="cursor:pointer;font-weight:700">Cloud Account Setup · Supabase</summary><p>Enter your Supabase Project URL and anon/public key. These are public client settings; NEVER paste a service-role key or password here.</p><div class="g"><input id="ar-sb-url" placeholder="https://your-project.supabase.co" style="min-width:230px;flex:1;${IS}"><input id="ar-sb-key" placeholder="Supabase anon / publishable key" style="min-width:230px;flex:1;${IS}"><button id="ar-sb-save">Save config</button></div><p id="ar-sb-state">Not configured</p><button id="ar-sb-sql-show">Show database setup SQL</button><textarea id="ar-sb-sql" readonly style="display:none;width:100%;height:220px;${IS}"></textarea><p>Run the database SQL first. In Supabase Auth settings, disable email confirmation for this username-only login setup. Create an account with a temporary username, then run the creator-promotion SQL below in the SQL Editor.</p><textarea id="ar-sb-promote" readonly style="width:100%;height:48px;${IS}">-- Replace YOUR_TEMP_USERNAME with the username you registered. Run once in Supabase SQL Editor.
-update public.profiles set username = 'MRMR', role = 'creator' where lower(username) = 'YOUR_TEMP_USERNAME';
-update auth.users set email = 'mrmr@accounts.anatomyrange.invalid', raw_user_meta_data = jsonb_set(coalesce(raw_user_meta_data, '{}'::jsonb), '{username}', '"MRMR"'::jsonb) where id = (select id from public.profiles where lower(username) = 'mrmr');</textarea></details>`;ab.after(cbox);
- const sql=`create table if not exists public.profiles (id uuid primary key references auth.users(id) on delete cascade, username text not null unique, role text not null default 'player' check (role in ('player','admin','creator')), created_at timestamptz not null default now());\ncreate unique index if not exists profiles_username_lower_unique on public.profiles (lower(username));\nalter table public.profiles enable row level security;\ncreate or replace function public.ar_username_valid() returns trigger language plpgsql security definer set search_path=public as $$ begin if new.raw_user_meta_data->>'username' is null or new.raw_user_meta_data->>'username' !~ '^[A-Za-z0-9_]{3,16}$' or lower(new.raw_user_meta_data->>'username') = 'mrmr' then raise exception 'Invalid or reserved username'; end if; insert into public.profiles(id,username) values(new.id,new.raw_user_meta_data->>'username'); return new; end; $$;\ndrop trigger if exists ar_create_profile on auth.users;\ncreate trigger ar_create_profile after insert on auth.users for each row execute procedure public.ar_username_valid();\ncreate policy "Profiles readable by authenticated users" on public.profiles for select to authenticated using (true);\nrevoke insert, update, delete on public.profiles from anon, authenticated;`;
- $('#ar-sb-url').value=cloudCfg()?.url||'';$('#ar-sb-key').value=cloudCfg()?.key||'';$('#ar-sb-state').textContent=cloudCfg()?'Cloud settings saved on this browser':'Not configured';$('#ar-sb-save').onclick=()=>{const u=$('#ar-sb-url').value.trim(),k=$('#ar-sb-key').value.trim();if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(u)||!k){toast('Enter a valid Supabase URL and anon/public key');return}setCloudCfg(u,k);$('#ar-sb-state').textContent='Saved. Cloud authentication is ready to test.';toast('Supabase settings saved')};$('#ar-sb-sql-show').onclick=()=>{const t=$('#ar-sb-sql');t.value=sql;t.style.display=t.style.display==='none'?'block':'none';};}
 /* ---------- admin panel (host only: F2 or the menu button) ---------- */
 const kick=(P,why)=>{send(P.conn,{t:'no',why:why||'Kicked by the host'});setTimeout(()=>{try{P.conn.close()}catch(x){}},300)};
 const ban=(P,why)=>{if(!P.acct){toast('Guests cannot be banned — kick them, or switch on "Require account"');return}MP.bans[P.acct.id]={name:P.acct.name,why:why||'',t:Date.now()};saveJ('ar_bans_v1',MP.bans);kick(P,'Banned'+(why?': '+why:''))};
