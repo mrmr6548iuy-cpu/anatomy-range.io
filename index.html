@@ -577,7 +577,7 @@ function drawMM(){if(!mmx)return;if(!mmBuilt)mmStatic();mmx.drawImage(mmS,0,0);e
 /* ---------- cinematics ---------- */
 let cin=null,cinOn=true,tsPrev=1;const CINS=new Set(['pu','dom','cle','red']),ease=u=>u<0?0:u>1?1:u*u*(3-2*u),mix=(a,b,u)=>a+(b-a)*u,fxEl=$('#fx');
 function mkAvatar(){
- const g=new T.Group(),suit=new T.MeshStandardMaterial({color:0x202a38,roughness:.72,metalness:.18}),armor=new T.MeshStandardMaterial({color:0x394b60,roughness:.42,metalness:.55}),trim=new T.MeshStandardMaterial({color:0x64d9ef,emissive:0x164b60,emissiveIntensity:.65,metalness:.45,roughness:.25}),skin=new T.MeshStandardMaterial({color:0xc99578,roughness:.68}),visor=new T.MeshStandardMaterial({color:0x0b1b29,metalness:.8,roughness:.12,emissive:0x123c55,emissiveIntensity:.5}),boot=new T.MeshStandardMaterial({color:0x10151d,roughness:.85});
+ const g=new T.Group(),suit=new T.MeshStandardMaterial({color:0x202a38,roughness:.72,metalness:.18}),armor=new T.MeshStandardMaterial({color:0x394b60,roughness:.42,metalness:.55}),trim=new T.MeshStandardMaterial({color:0x64d9ef,emissive:0x164b60,emissiveIntensity:.65,metalness:.45,roughness:.25}),skin=new T.MeshStandardMaterial({color:0xc99578,roughness:.68}),visor=new T.MeshStandardMaterial({color:0x0b1b29,metalness:.8,roughness:.12,emissive:0x123c55,emissiveIntensity:.5}),boot=new T.MeshStandardMaterial({color:0x10151d,roughness:.85});g.userData.customMats={suit,armor,trim,skin,visor,boot};
  const M=(geo,mat,x,y,z,sx,sy,sz,parent=g)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m};
  M(new T.CylinderGeometry(.19,.19,.62,18),suit,0,1.12,0,.95,1,0.72);M(new T.SphereGeometry(1,20,14),armor,0,1.2,.09,.19,.22,.09);
  M(new T.BoxGeometry(.31,.35,.07),armor,0,1.2,.13,1,1,1);M(new T.BoxGeometry(.23,.025,.012),trim,0,1.31,.17,1,1,1);M(new T.BoxGeometry(.13,.025,.012),trim,0,1.13,.17,1,1,1);
@@ -1058,13 +1058,45 @@ const SUPABASE_URL='https://gjiseuhdrstlpkugmyfc.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_RAJPNGYhuZBA44w81_G9jg_qSkzVQwH';
 const ARSB=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const loadJ=k=>{try{const v=JSON.parse(localStorage.getItem(k)||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(e){return{}}},saveJ=(k,o)=>{try{localStorage.setItem(k,JSON.stringify(o));return true}catch(e){return false}};
+/* Account data sync: cloud copy follows the signed-in account across devices;
+   localStorage remains a fast offline cache. Passwords/private keys are never saved in plaintext. */
+let arCloudSaveTimer=null,arCloudPending={};
+function queueAccountDataSave(patch){
+ if(!MP.acct||!patch||typeof patch!=='object')return;
+ arCloudPending=Object.assign({},arCloudPending,patch);
+ if(arCloudSaveTimer)clearTimeout(arCloudSaveTimer);
+ arCloudSaveTimer=setTimeout(async()=>{
+  const pending=arCloudPending;arCloudPending={};arCloudSaveTimer=null;
+  try{
+   const ss=await ARSB.auth.getSession(),u=ss.data&&ss.data.session&&ss.data.session.user;
+   if(!u)return;
+   const old=await ARSB.from('ar_account_data').select('data').eq('id',u.id).maybeSingle();
+   if(old.error)throw old.error;
+   const merged=Object.assign({},old.data&&old.data.data||{},pending);
+   const up=await ARSB.from('ar_account_data').upsert({id:u.id,data:merged,updated_at:new Date().toISOString()});
+   if(up.error)throw up.error;
+  }catch(e){console.warn('Account cloud save failed:',e);toast('Cloud save failed — local copy kept')}
+ },700);
+}
+async function loadAccountData(){
+ if(!MP.acct)return;
+ try{
+  const ss=await ARSB.auth.getSession(),u=ss.data&&ss.data.session&&ss.data.session.user;if(!u)return;
+  const got=await ARSB.from('ar_account_data').select('data').eq('id',u.id).maybeSingle();
+  if(got.error)throw got.error;
+  const d=got.data&&got.data.data||{};
+  if(d.avatar&&typeof d.avatar==='object')saveJ('ar_ph_avatar_v1',d.avatar);
+  if(d.stats&&typeof d.stats==='object'){const all=loadJ('ar_stats_v1');all[MP.acct.id]=Object.assign({},all[MP.acct.id]||{},d.stats);saveJ('ar_stats_v1',all)}
+  if(d.avatar||d.stats)toast('Account data restored from cloud');
+ }catch(e){console.warn('Could not restore cloud account data:',e);toast('Signed in; cloud data could not be loaded')}
+}
 MP.bans=loadJ('ar_bans_v1');
 const enc=new TextEncoder(),dec=new TextDecoder(),b64=u=>btoa(String.fromCharCode(...new Uint8Array(u))),ub64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
 const rhex=n=>[...crypto.getRandomValues(new Uint8Array(n))].map(b=>b.toString(16).padStart(2,'0')).join('');
 const IS='font:600 16px "Barlow Condensed",sans-serif;color:var(--ink);background:#1d2327;border:1px solid var(--line);padding:5px 8px;';
 const myName=()=>MP.acct?MP.acct.name:(isH()?'Host':'Guest'),myAcctId=()=>MP.acct?MP.acct.id:null;
 const acctOfPid=pid=>pid===0?MP.acct:(MP.peers.get(pid)||{}).acct;
-function touchStats(id,name,ev){const S=loadJ('ar_stats_v1'),r=S[id]||(S[id]={name,k:0,d:0,j:0,last:0});r.name=name;r.last=Date.now();if(ev==='join')r.j++;if(ev==='k')r.k++;if(ev==='d')r.d++;saveJ('ar_stats_v1',S)}
+function touchStats(id,name,ev){const S=loadJ('ar_stats_v1'),r=S[id]||(S[id]={name,k:0,d:0,j:0,last:0});r.name=name;r.last=Date.now();if(ev==='join')r.j++;if(ev==='k')r.k++;if(ev==='d')r.d++;saveJ('ar_stats_v1',S);if(MP.acct&&MP.acct.id===id)queueAccountDataSave({stats:r})}
 async function sha(str){const h=await crypto.subtle.digest('SHA-256',enc.encode(str));return[...new Uint8Array(h)].slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('')}
 async function pkey(pw,salt){const k=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
 const cloudEmail=name=>String(name).toLowerCase()+'@accounts.anatomyrange.invalid';
@@ -1086,7 +1118,7 @@ async function loginAcct(name,pw){
  const auth=await ARSB.auth.signInWithPassword({email:cloudEmail(name),password:pw});if(auth.error)throw new Error(cloudError(auth.error));
  const got=await ARSB.from('ar_profiles').select('username,pub,salt,iv,ct').eq('id',auth.data.user.id).single();if(got.error)throw new Error(cloudError(got.error));
  const r=got.data;let prv;try{prv=JSON.parse(dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(r.iv)},await pkey(pw,ub64(r.salt)),ub64(r.ct))))}catch(e){throw new Error('Could not unlock account keys. Check your password.')}
- const priv=await crypto.subtle.importKey('jwk',prv,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);MP.acct={name:r.username,pub:r.pub,priv,id:await sha(r.pub.x+r.pub.y)};acctUI();return MP.acct
+ const priv=await crypto.subtle.importKey('jwk',prv,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);MP.acct={name:r.username,pub:r.pub,priv,id:await sha(r.pub.x+r.pub.y)};acctUI();await loadAccountData();return MP.acct
 }
 async function restoreRemember(){try{const {data}=await ARSB.auth.getSession();if(!data.session)return;const u=data.session.user;const got=await ARSB.from('ar_profiles').select('username').eq('id',u.id).maybeSingle();if(got.data)$('#acs').textContent='cloud account '+got.data.username+' · sign in to unlock';}catch(e){}}
 async function verifyAcct(pub,nonce,sig){if(!pub||pub.kty!=='EC'||pub.crv!=='P-256'||typeof pub.x!=='string'||typeof pub.y!=='string'||typeof sig!=='string')return false;
@@ -1112,7 +1144,7 @@ function feedRaw(t){const r=document.createElement('div');r.style.cssText='backg
 function feedMsg(t){feedRaw(t);if(MP.peers.size)MP.ev.push({t:'m',m:t,o:-1})}
 /* account menu */
 {const ab=document.createElement('div');ab.style.cssText=box.style.cssText;
- ab.innerHTML=`<b>Cloud Account</b> <i id="acs" style="color:var(--mut);font-style:normal"></i><div class="g"><input id="acn" maxlength="16" placeholder="username" style="width:120px;${IS}"><input id="acp" type="password" placeholder="password" style="width:120px;${IS}"><button id="acc">Create</button><button id="acl">Log in</button><button id="aco">Log out</button></div><p style="font-size:13px">Accounts are stored in Supabase and can be used across browsers and computers. Your private game key is encrypted with your password before it is uploaded. PeerJS only handles live rooms.</p><details style="font-size:13px"><summary>One-time database setup</summary><p>Open Supabase → SQL Editor → New query, then run the setup SQL provided with this game. Also turn off email confirmation under Authentication → Providers → Email.</p></details>`;box.after(ab);
+ ab.innerHTML=`<b>Cloud Account</b> <i id="acs" style="color:var(--mut);font-style:normal"></i><div class="g"><input id="acn" maxlength="16" placeholder="username" style="width:120px;${IS}"><input id="acp" type="password" placeholder="password" style="width:120px;${IS}"><button id="acc">Create</button><button id="acl">Log in</button><button id="aco">Log out</button></div><p style="font-size:13px">Accounts and saved character looks/account stats are stored in Supabase and follow your login across browsers and computers. Your private game key is encrypted with your password before upload; passwords and private keys are never stored in plaintext. PeerJS only handles live rooms.</p><details style="font-size:13px"><summary>One-time database setup</summary><p>Open Supabase → SQL Editor → New query, then run the setup SQL provided with this game. Also turn off email confirmation under Authentication → Providers → Email.</p></details>`;box.after(ab);
  const say=e=>toast(e.message||String(e));
  window.acctUI=()=>{$('#acs').textContent=!window.isSecureContext||!window.crypto||!crypto.subtle?'accounts need HTTPS':MP.acct?'signed in as '+MP.acct.name+' #'+MP.acct.id.slice(0,4):'not signed in — you play as a guest';$('#aco').style.display=MP.acct?'':'none'};
  $('#acc').onclick=()=>createAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Cloud account created — signed in')}).catch(say);
@@ -1200,12 +1232,31 @@ function phButtonGrid(items){
  items.forEach(([label,fn])=>{const b=btn(label,fn);b.style.cssText='font-size:14px;padding:9px 5px;border-left-color:#b36bff';grid.appendChild(b)});
  phPanel.appendChild(grid);
 }
+function phColorInput(label,key,def){
+ const row=document.createElement('label');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 2px;color:#dce4eb';row.textContent=label;
+ const input=document.createElement('input');input.type='color';input.value=def;input.style.cssText='width:52px;height:28px;background:transparent;border:0;cursor:pointer';
+ input.addEventListener('input',()=>{const m=av.userData.customMats&&av.userData.customMats[key];if(m)m.color.set(input.value)});row.appendChild(input);phPanel.appendChild(row);return input;
+}
+function phCustomization(){
+ phSection('CHARACTER CUSTOMIZATION');
+ const mats=av.userData.customMats||{};
+ const defaults={suit:'#202a38',armor:'#394b60',trim:'#64d9ef',skin:'#c99578',visor:'#0b1b29',boot:'#10151d'};
+ const inputs={};Object.keys(defaults).forEach(k=>{const m=mats[k];inputs[k]=phColorInput(k.toUpperCase(),k,m?'#'+m.color.getHexString():defaults[k])});
+ const saved=(()=>{try{return JSON.parse(localStorage.getItem('ar_ph_avatar_v1')||'null')}catch(e){return null}})();
+ if(saved)Object.keys(inputs).forEach(k=>{if(saved[k]){inputs[k].value=saved[k];if(mats[k])mats[k].color.set(saved[k])}});
+ phButtonGrid([
+  ['SAVE LOOK',async()=>{const data={};Object.keys(inputs).forEach(k=>data[k]=inputs[k].value);saveJ('ar_ph_avatar_v1',data);if(MP.acct){queueAccountDataSave({avatar:data});toast('Look saved to your account and this device')}else toast('Look saved on this device — log in to sync it across devices')}],
+  ['RESET LOOK',()=>{Object.keys(inputs).forEach(k=>{inputs[k].value=defaults[k];if(mats[k])mats[k].color.set(defaults[k])});localStorage.removeItem('ar_ph_avatar_v1');if(MP.acct)queueAccountDataSave({avatar:defaults});toast('Character look reset')}]
+ ]);
+ const note=document.createElement('small');note.textContent='Customization changes your first-person avatar. Save Look stores it locally and, when signed in, syncs it to your cloud account.';note.style.cssText='display:block;color:#91a2af;margin-top:6px';phPanel.appendChild(note);
+}
 function phRender(){
  phPanel.textContent='';
  const h=document.createElement('div');h.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px';
  const title=document.createElement('b');title.textContent='PHANTOM // CHAOS CONTROL';
  const close=btn('×',()=>{phPanel.style.display='none'});h.append(title,close);phPanel.appendChild(h);
  const st=document.createElement('div');st.textContent='HOST CONNECTED · SYNCED NPC EVENTS · VISUAL GADGETS';st.style.cssText='color:#a9b7c2;margin-bottom:8px';phPanel.appendChild(st);
+ phCustomization();
  phSection('HOST MOVEMENT');
  phButtonGrid([[window.__AR_PHANTOM_FLY__?'DISABLE HOST FLIGHT':'ENABLE HOST FLIGHT',()=>{if(!isH())return;window.__AR_PHANTOM_FLY__=!window.__AR_PHANTOM_FLY__;if(!window.__AR_PHANTOM_FLY__)pl.v.y=0;toast(window.__AR_PHANTOM_FLY__?'PHANTOM FLIGHT ENABLED · WASD move · SPACE up · C down':'PHANTOM FLIGHT DISABLED');phRender();phPanel.style.display='block'}]]);
  phSection('WORLD EVENTS & SCREEN PRANKS');
@@ -1236,5 +1287,6 @@ function phRender(){
  const foot=document.createElement('p');foot.textContent='NPC spawns are host-controlled and synchronized. Screen, FOV, fake error, clone-snapshot and sound pranks auto-reset. NPC waves are capped; no real crash, connection flooding, forced chat or player-control hijacking.';foot.style.cssText='color:#91a2af;margin:10px 0 0';phPanel.appendChild(foot);
 }
 window.addEventListener('message',e=>{const d=e.data;if(e.source!==window||e.origin!==location.origin||!d||d.channel!=='ANATOMY_PHANTOM')return;if(!isH())return;if(d.action==='connect'){MP.phantomConnected=true;phRender();phPanel.style.display='block';toast('PHANTOM connected — host controls ready');window.postMessage({channel:'ANATOMY_PHANTOM',action:'connected'},location.origin)}else if(d.action==='disconnect'){MP.phantomConnected=false;phPanel.style.display='none';toast('PHANTOM disconnected')}else if(d.action==='effect'&&MP.phantomConnected)phBroadcast(String(d.effect||''))});
+window.addEventListener('keydown',e=>{if(e.code==='F6'&&isH()&&MP.phantomConnected){e.preventDefault();e.stopPropagation();if(phPanel.style.display==='block')phPanel.style.display='none';else{phRender();phPanel.style.display='block'}}},true);
 })();
 </script></body></html>
