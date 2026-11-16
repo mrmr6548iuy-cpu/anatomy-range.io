@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><title>Anatomy Range</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&display=swap">
 <style>
 :root{--bg:#101315;--ink:#ece7de;--mut:#8d9498;--blood:#c2121a;--pan:rgba(16,19,21,.88);--line:#2c3236;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -195,9 +196,9 @@ const PR=[.13,.07,.16,.15,.07,.07,.055,.055,.05,.05,.09,.09,.07,.07,.06,.06],JC=
 const SD=[['Head',1,0,.12,50,0],['Chest',1,2,.17,90,1],['Abdomen',2,3,.15,90,1],['L upper arm',4,6,.06,60,1],['R upper arm',5,7,.06,60,1],['L forearm',6,8,.05,50,0],['R forearm',7,9,.05,50,0],['L thigh',10,12,.085,70,2],['R thigh',11,13,.085,70,2],['L shin',12,14,.06,60,2],['R shin',13,15,.06,60,2]];
 const ORG={0:[['Brain',.95,0,.09,25,0xe3a1a8]],1:[['Heart',.35,-.03,.05,25,0xa3121b],['L lung',.4,-.07,.07,30,0xd98f93],['R lung',.4,.07,.07,30,0xd98f93]],2:[['Stomach',.3,-.03,.07,35,0xc4896a],['Liver',.25,.06,.065,45,0x5c1b1b],['Intestines',.68,0,.09,60,0xd8a49c]]};
 const BRACE=[[2,4],[2,5],[4,5],[10,11],[2,10],[2,11],[0,2],[1,3],[1,10],[1,11],[4,11],[5,10]];
-const sphG=new T.SphereGeometry(1,12,9),cylG=new T.CylinderGeometry(1,1,1,10),fleshM=new T.MeshStandardMaterial({map:fleshT,bumpMap:fleshT,bumpScale:1.5,roughness:.28}),boneM=new T.MeshStandardMaterial({map:boneT,roughness:.6}),woundM=new T.MeshBasicMaterial({color:0x40060a});
+const sphG=new T.SphereGeometry(1,24,16),cylG=new T.CylinderGeometry(1,1,1,18),fleshM=new T.MeshStandardMaterial({map:fleshT,bumpMap:fleshT,bumpScale:1.5,roughness:.28}),boneM=new T.MeshStandardMaterial({map:boneT,roughness:.6}),woundM=new T.MeshBasicMaterial({color:0x40060a});
 const bodyMat=(c,k)=>new T.MeshStandardMaterial({color:c,map:k?clothT:skinT,bumpMap:k?clothT:skinT,bumpScale:k?.6:.25,roughness:k?.92:.55});
-const coneG=new T.CylinderGeometry(.2,1,1,6),tapG=new T.CylinderGeometry(.74,1,1,10),tapR=new T.CylinderGeometry(1,.74,1,10),ribG=new T.TorusGeometry(.14,.006,5,14),Z=V(0,0,1),Zn=V(0,0,-1),eyeM=new T.MeshStandardMaterial({color:0xf4f0e8,roughness:.12}),irisM=new T.MeshStandardMaterial({color:0x2b5a8a,roughness:.2}),nerveM=new T.MeshStandardMaterial({color:0xd9a0a0,roughness:.3}),holeM=new T.MeshStandardMaterial({color:0x2a0306,roughness:.3});let lw='';
+const coneG=new T.CylinderGeometry(.2,1,1,10),tapG=new T.CylinderGeometry(.74,1,1,16),tapR=new T.CylinderGeometry(1,.74,1,16),ribG=new T.TorusGeometry(.14,.006,7,24),Z=V(0,0,1),Zn=V(0,0,-1),eyeM=new T.MeshStandardMaterial({color:0xf4f0e8,roughness:.12}),irisM=new T.MeshStandardMaterial({color:0x2b5a8a,roughness:.2}),nerveM=new T.MeshStandardMaterial({color:0xd9a0a0,roughness:.3}),holeM=new T.MeshStandardMaterial({color:0x2a0306,roughness:.3});let lw='';
 const entryT=ctex(64,64,(x,w,h)=>{let g=x.createRadialGradient(32,32,2,32,32,31);g.addColorStop(0,'rgba(60,20,70,0)');g.addColorStop(.35,'rgba(90,30,90,.35)');g.addColorStop(1,'rgba(90,30,90,0)');x.fillStyle=g;x.fillRect(0,0,w,h);g=x.createRadialGradient(32,32,1,32,32,11);g.addColorStop(0,'#150204');g.addColorStop(.45,'#2a0508');g.addColorStop(.7,'#7a1218');g.addColorStop(1,'rgba(122,18,24,0)');x.fillStyle=g;x.beginPath();x.arc(32,32,11,0,7);x.fill()},0);
 const exitT=ctex(128,128,(x,w,h)=>{x.fillStyle='rgba(110,10,16,.35)';x.beginPath();for(let i=0;i<18;i++){const a=i/18*6.28,r=rr(34,60);x.lineTo(64+Math.cos(a)*r,64+Math.sin(a)*r)}x.fill();x.fillStyle='#6d0a10';x.beginPath();for(let i=0;i<14;i++){const a=i/14*6.28,r=i%2?rr(10,22):rr(24,40);x.lineTo(64+Math.cos(a)*r,64+Math.sin(a)*r)}x.fill();x.fillStyle='#2b0307';x.beginPath();x.arc(64,64,9,0,7);x.fill();for(let i=0;i<14;i++){x.fillStyle=R()<.5?'rgba(235,150,150,.8)':'rgba(150,20,28,.9)';x.beginPath();x.arc(64+rr(-30,30),64+rr(-30,30),rr(1.5,4),0,7);x.fill()}},0);
 const planeG=new T.PlaneGeometry(1,1),wm2=m=>new T.MeshStandardMaterial({map:m,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,roughness:.28}),entryM=wm2(entryT),exitM=wm2(exitT);
@@ -228,7 +229,20 @@ function mk(type,x,z){
  const rag=type==='rag',e={type,pts:[],cons:[],seg:[],wounds:[],blood:100,alive:true,c:rag?0:1,stun:rag?9:0,root:{x,z,h:R()*6.28},ph:R()*6,mv:0,bt:R()*6,pr:1,fear:0,mem:0,last:[x,z],cd:rr(.4,1.2),m:Array(16).fill(1),att:Array(16).fill(true),prone:false,aim:false,panic:false,dying:0,cause:'',legs:true,arms:true,para:false,lungs:2,suff:0,wt:0,wx:x,wz:z,g:new T.Group(),jm:[],xr:null,tg:null,burn:0};
  const sk=[0xe0b08c,0xc68a62,0x8d5a3b,0xf0c8a8][R()*4|0],cl={civilian:[0x3d6b8c,0x4a4a52],gunman:[0x22262b,0x1b1d20],brute:[sk,0x30363a],rag:[0xb0b0b0,0x6a6a72]}[type],cols=[sk,cl[0],cl[1]];
  const y0=rag?1.2:0;
- STAND.forEach((s,i)=>{const p=V(x+s[0],s[1]+y0,z+s[2]);e.pts.push({p,q:p.clone().add(rag?V(rr(-.1,.1),0,rr(-.1,.1)):V()),r:PR[i]});const m=new T.Mesh(sphG,bodyMat(cols[JC[i]],JC[i]));m.scale.setScalar(PR[i]);m.castShadow=true;e.g.add(m);e.jm.push(m)});
+ STAND.forEach((s,i)=>{const p=V(x+s[0],s[1]+y0,z+s[2]);e.pts.push({p,q:p.clone().add(rag?V(rr(-.1,.1),0,rr(-.1,.1)):V()),r:PR[i]});const m=new T.Mesh(sphG,bodyMat(cols[JC[i]],JC[i]));m.scale.setScalar(PR[i]);m.castShadow=true;e.g.add(m);e.jm.push(m);
+  // Character-specific layered details ride on the animated body joints.
+  const detail=(parent,geo,mat,x,y,z,sx,sy,sz)=>{const q=new T.Mesh(geo,mat);q.position.set(x,y,z);q.scale.set(sx,sy,sz);q.castShadow=true;parent.add(q);return q};
+  if(i===0){const hair=new T.MeshStandardMaterial({color:type==='gunman'?0x17191d:type==='brute'?0x34251e:0x49372b,roughness:.9}),faceSkin=new T.MeshStandardMaterial({color:sk,roughness:.65}),white=new T.MeshStandardMaterial({color:0xf2eee5,roughness:.28}),iris=new T.MeshStandardMaterial({color:type==='gunman'?0x8cc8d8:0x4b6b86,roughness:.22}),dark=new T.MeshStandardMaterial({color:0x171719,roughness:.8});
+   detail(m,new T.SphereGeometry(1,18,12),hair,0,.48,-.02,.94,.52,.96);
+   [-1,1].forEach(side=>{detail(m,new T.SphereGeometry(1,12,8),white,side*.34,.06,.83,.14,.12,.09);detail(m,new T.SphereGeometry(1,12,8),iris,side*.34,.06,.91,.065,.075,.04);detail(m,new T.SphereGeometry(1,10,8),dark,side*.34,.06,.94,.027,.04,.02);detail(m,new T.BoxGeometry(1,1,1),hair,side*.33,.25,.82,.29,.065,.07)});
+   detail(m,new T.SphereGeometry(1,12,8),faceSkin,0,-.1,.94,.12,.17,.12);
+  }
+  if(i===2){const trim=new T.MeshStandardMaterial({color:type==='gunman'?0x8a9aa6:type==='brute'?0x9b713b:0xd0d6d8,metalness:.35,roughness:.6}),dark=new T.MeshStandardMaterial({color:0x202832,roughness:.85});
+   detail(m,new T.BoxGeometry(1,1,1),dark,0,.04,.78,.9,.78,.28);
+   detail(m,new T.BoxGeometry(1,1,1),trim,0,.1,.94,.66,.08,.045);
+   [-1,1].forEach(side=>{detail(m,new T.SphereGeometry(1,12,8),trim,side*.78,.55,.05,.28,.22,.3);detail(m,new T.BoxGeometry(1,1,1),dark,side*.32,-.35,.82,.12,.38,.06)});
+  }
+  if((i===4||i===5)&&type!=='rag'){const pad=new T.MeshStandardMaterial({color:type==='gunman'?0x343b43:0x59636b,metalness:.2,roughness:.72});detail(m,new T.SphereGeometry(1,14,10),pad,0,.15,0,1.35,.8,1.25)}});
  const L=(a,b)=>V(...STAND[a]).distanceTo(V(...STAND[b]));
  SD.forEach((d,si)=>{e.cons.push({i:d[1],j:d[2],l:L(d[1],d[2]),k:1,bone:1,seg:si})});
  [[1,4],[1,5],[3,10],[3,11]].forEach(([i,j])=>e.cons.push({i,j,l:L(i,j),k:1,bone:1,seg:-1}));
@@ -242,7 +256,7 @@ function mk(type,x,z){
 const tmp=V(),tmp2=V(),dir=V();
 function sh(h,a,b,r,flesh,stub){const L=a.distanceTo(b)||.001;h.p0.copy(a);h.p1.copy(b);h.g.visible=true;h.g.position.copy(a);dir.subVectors(b,a).divideScalar(L);h.g.quaternion.setFromUnitVectors(Y,dir);h.cyl.scale.set(r,L,r);h.cyl.position.y=L/2;h.lin.scale.set(r*.93,L,r*.93);h.lin.position.y=L/2;h.lin.geometry=h.cyl.geometry;if(h.ov){h.ov.geometry=h.cyl.geometry;h.ov.scale.set(r*1.008,L,r*1.008);h.ov.position.y=L/2}h.cap.position.y=L;{const er=(h.dg?h.tpr:h.cyl.geometry===tapG?.74:1)*r;if(flesh===fleshM)h.cap.scale.set(er*.98,er*.08,er*.98);else h.cap.scale.setScalar(er*.95)}h.cap.visible=flesh!==null;if(flesh!==null)h.cap.material=flesh;h.stub.visible=stub;h.stub.scale.set(r*.38,.035,r*.38);h.stub.position.y=L+.01}
 function rend(e){
- e.pts.forEach((q,i)=>e.jm[i].position.copy(q.p));
+ e.pts.forEach((q,i)=>{e.jm[i].position.copy(q.p);if(i===0)e.jm[i].rotation.y=e.root.h;});
  if(e.xr!==xr){e.xr=xr;[...e.seg.flatMap(s=>s.H.map(h=>h.cyl.material)),...e.jm.map(j=>j.material)].forEach(m=>{m.transparent=xr;m.opacity=xr?.2:1;m.depthWrite=!xr;m.needsUpdate=true})}
  e.seg.forEach((s,si)=>{const[,ia,ib,r]=SD[si],a=e.pts[ia].p,b=e.pts[ib].p,L=a.distanceTo(b)||.001,[h0,h1]=s.H;
   s.G.position.copy(a);dir.subVectors(b,a).divideScalar(L);s.G.quaternion.setFromUnitVectors(Y,dir);
@@ -562,11 +576,18 @@ function mmStatic(){mmS.width=mmS.height=160;const x=mmS.getContext('2d');x.fill
 function drawMM(){if(!mmx)return;if(!mmBuilt)mmStatic();mmx.drawImage(mmS,0,0);ents.forEach(e=>{if(!e.alive)return;const p=e.pts[3].p;mmx.fillStyle=e.type==='civilian'?'#e8e8e8':e.type==='rag'?'#888':'#ff4040';mmx.fillRect(mc(p.x)-1,mc(p.z)-1,2.4,2.4)});mmx.save();mmx.translate(mc(pl.p.x),mc(pl.p.z));mmx.rotate(Math.atan2(-Math.cos(pl.yaw),-Math.sin(pl.yaw)));mmx.fillStyle='#40ff90';mmx.beginPath();mmx.moveTo(5,0);mmx.lineTo(-3,3);mmx.lineTo(-3,-3);mmx.fill();mmx.restore()}
 /* ---------- cinematics ---------- */
 let cin=null,cinOn=true,tsPrev=1;const CINS=new Set(['pu','dom','cle','red']),ease=u=>u<0?0:u>1?1:u*u*(3-2*u),mix=(a,b,u)=>a+(b-a)*u,fxEl=$('#fx');
-function mkAvatar(){const g=new T.Group(),jm=new T.MeshStandardMaterial({color:0x1d2330,roughness:.8,bumpMap:clothT,bumpScale:1}),skm=new T.MeshStandardMaterial({color:0xd9a98a,roughness:.6}),hr=new T.MeshStandardMaterial({color:0xe8e8ee,roughness:.9}),M=(geo,mat,x,y,z)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;g.add(m);return m};
- M(new T.CylinderGeometry(.21,.19,.62,12),jm,0,1.12,0);M(new T.CylinderGeometry(.19,.2,.2,12),jm,0,.78,0);[-.1,.1].forEach(x=>M(new T.CylinderGeometry(.09,.07,.8,10),jm,x,.4,0));
- M(sphG,skm,0,1.55,0).scale.setScalar(.13);M(sphG,hr,0,1.6,-.02).scale.set(.14,.12,.14);[-.045,.045].forEach(x=>{const e2=new T.Mesh(sphG,new T.MeshBasicMaterial({color:0x7fe8ff}));e2.scale.setScalar(.022);e2.position.set(x,1.565,.118);g.add(e2)});
- const arm=sx=>{const q=new T.Group();q.position.set(sx*.27,1.38,0);const a=new T.Mesh(new T.CylinderGeometry(.06,.05,.6,8),jm);a.position.y=-.3;q.add(a);const h=new T.Mesh(sphG,skm);h.scale.setScalar(.06);h.position.y=-.62;q.add(h);g.add(q);return q};
- g.userData.ra=arm(1);g.userData.la=arm(-1);g.visible=false;scene.add(g);return g}
+function mkAvatar(){
+ const g=new T.Group(),suit=new T.MeshStandardMaterial({color:0x202a38,roughness:.72,metalness:.18}),armor=new T.MeshStandardMaterial({color:0x394b60,roughness:.42,metalness:.55}),trim=new T.MeshStandardMaterial({color:0x64d9ef,emissive:0x164b60,emissiveIntensity:.65,metalness:.45,roughness:.25}),skin=new T.MeshStandardMaterial({color:0xc99578,roughness:.68}),visor=new T.MeshStandardMaterial({color:0x0b1b29,metalness:.8,roughness:.12,emissive:0x123c55,emissiveIntensity:.5}),boot=new T.MeshStandardMaterial({color:0x10151d,roughness:.85});
+ const M=(geo,mat,x,y,z,sx,sy,sz,parent=g)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m};
+ M(new T.CylinderGeometry(.19,.19,.62,18),suit,0,1.12,0,.95,1,0.72);M(new T.SphereGeometry(1,20,14),armor,0,1.2,.09,.19,.22,.09);
+ M(new T.BoxGeometry(.31,.35,.07),armor,0,1.2,.13,1,1,1);M(new T.BoxGeometry(.23,.025,.012),trim,0,1.31,.17,1,1,1);M(new T.BoxGeometry(.13,.025,.012),trim,0,1.13,.17,1,1,1);
+ M(new T.CylinderGeometry(.075,.09,.12,12),armor,0,1.43,0,1,1,1);M(new T.SphereGeometry(1,20,14),skin,0,1.62,0,.125,.15,.12);
+ M(new T.SphereGeometry(1,18,12),armor,0,1.66,-.015,.145,.115,.135);M(new T.BoxGeometry(.2,.065,.045),visor,0,1.64,.105,1,1,1);M(new T.BoxGeometry(.13,.009,.008),trim,0,1.65,.131,1,1,1);
+ [-1,1].forEach(side=>{M(new T.SphereGeometry(1,14,10),armor,side*.22,1.38,0,.14,.13,.14);M(new T.CylinderGeometry(.055,.055,.44,14),suit,side*.25,1.1,0,1,1,1);M(new T.CylinderGeometry(.045,.045,.35,14),armor,side*.25,.77,.015,1,1,1);M(new T.SphereGeometry(1,14,10),boot,side*.25,.42,.02,.09,.12,.11);M(new T.SphereGeometry(1,14,10),armor,side*.25,.08,.045,.105,.08,.17)});
+ M(new T.BoxGeometry(.27,.34,.13),suit,0,.57,-.12,1,1,1);M(new T.BoxGeometry(.2,.25,.07),armor,0,.59,-.2,1,1,1);M(new T.BoxGeometry(.24,.035,.16),trim,0,.74,-.12,1,1,1);
+ const arm=sx=>{const q=new T.Group();q.position.set(sx*.27,1.38,0);M(new T.CylinderGeometry(.055,.055,.42,14),suit,0,-.19,0,1,1,1,q);M(new T.SphereGeometry(1,14,10),armor,0,-.43,.015,.075,.075,.075,q);M(new T.CylinderGeometry(.045,.045,.31,14),armor,0,-.59,.015,1,1,1,q);M(new T.SphereGeometry(1,14,10),skin,0,-.77,.02,.055,.06,.055,q);g.add(q);return q};
+ g.userData.ra=arm(1);g.userData.la=arm(-1);g.visible=false;scene.add(g);return g
+}
 const av=mkAvatar(),mkOrb=c=>{const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:c})),sp=new T.Sprite(new T.SpriteMaterial({map:flT,color:c,blending:T.AdditiveBlending,depthWrite:false,transparent:true}));sp.scale.setScalar(5);m.add(sp);m.visible=false;scene.add(m);return m},orbB=mkOrb(0x2a6bff),orbR=mkOrb(0xff2a2a),orbP=mkOrb(0xb36bff);
 function cap(txt,col){const c=$('#cap');c.innerHTML='<div style="color:'+col+'">'+txt+'</div>';c.style.opacity=1}
 function cap2(txt){const c=$('#cap');c.innerHTML+='<small>'+txt+'</small>'}
@@ -1043,22 +1064,51 @@ const acctOfPid=pid=>pid===0?MP.acct:(MP.peers.get(pid)||{}).acct;
 function touchStats(id,name,ev){const S=loadJ('ar_stats_v1'),r=S[id]||(S[id]={name,k:0,d:0,j:0,last:0});r.name=name;r.last=Date.now();if(ev==='join')r.j++;if(ev==='k')r.k++;if(ev==='d')r.d++;saveJ('ar_stats_v1',S)}
 async function sha(str){const h=await crypto.subtle.digest('SHA-256',enc.encode(str));return[...new Uint8Array(h)].slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('')}
 async function pkey(pw,salt){const k=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
-async function createAcct(name,pw){
+async function createLocalAcct(name,pw){
  if(!window.isSecureContext||!window.crypto||!crypto.subtle)throw new Error('Accounts require a secure HTTPS page. Open the GitHub Pages https:// address.');
  if(!/^[A-Za-z0-9_]{3,16}$/.test(name))throw new Error('Username: 3–16 letters, numbers or _');
  if(typeof pw!=='string'||pw.length<6)throw new Error('Password must be at least 6 characters');
  try{localStorage.setItem('__ar_storage_test','1');localStorage.removeItem('__ar_storage_test')}catch(e){throw new Error('Browser storage is blocked. Allow site storage for this page, then try again.')}
  const A=loadJ('ar_accts_v1'),key=name.toLowerCase();if(A[key])throw new Error('That username already exists in this browser');
  let kp,pub,prv,salt,iv,ct;try{kp=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);pub=await crypto.subtle.exportKey('jwk',kp.publicKey);prv=await crypto.subtle.exportKey('jwk',kp.privateKey);salt=crypto.getRandomValues(new Uint8Array(16));iv=crypto.getRandomValues(new Uint8Array(12));ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await pkey(pw,salt),enc.encode(JSON.stringify(prv)))}catch(e){throw new Error('Could not create the account keys: '+(e.message||e))}
- A[key]={name,pub:{kty:pub.kty,crv:pub.crv,x:pub.x,y:pub.y},salt:b64(salt),iv:b64(iv),ct:b64(ct)};if(!saveJ('ar_accts_v1',A)||!loadJ('ar_accts_v1')[key])throw new Error('Account could not be saved in this browser. Check site storage permissions.');return loginAcct(name,pw)}
+ A[key]={name,pub:{kty:pub.kty,crv:pub.crv,x:pub.x,y:pub.y},salt:b64(salt),iv:b64(iv),ct:b64(ct)};if(!saveJ('ar_accts_v1',A)||!loadJ('ar_accts_v1')[key])throw new Error('Account could not be saved in this browser. Check site storage permissions.');return loginLocalAcct(name,pw)}
 const REMEMBER_DB='ar_remember_v1';
 function rememberDB(){return new Promise((resolve,reject)=>{if(!indexedDB)return reject(new Error('Browser storage unavailable'));const q=indexedDB.open(REMEMBER_DB,1);q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains('session'))q.result.createObjectStore('session')};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error||new Error('Could not open browser storage'))})}
 async function saveRemember(acct){const db=await rememberDB();return new Promise((resolve,reject)=>{const tx=db.transaction('session','readwrite');tx.objectStore('session').put({name:acct.name,pub:acct.pub,priv:acct.priv},'active');tx.oncomplete=()=>{db.close();resolve(true)};tx.onerror=()=>{db.close();reject(tx.error||new Error('Could not save sign-in'))}})}
 async function clearRemember(){try{const db=await rememberDB();await new Promise((resolve,reject)=>{const tx=db.transaction('session','readwrite');tx.objectStore('session').delete('active');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}catch(e){}}
 async function restoreRemember(){try{const db=await rememberDB(),saved=await new Promise((resolve,reject)=>{const q=db.transaction('session','readonly').objectStore('session').get('active');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)});db.close();if(saved&&saved.priv&&saved.pub){MP.acct={name:saved.name,pub:saved.pub,priv:saved.priv,id:await sha(saved.pub.x+saved.pub.y)};acctUI();toast('Welcome back, '+saved.name)}}catch(e){}}
-async function loginAcct(name,pw){if(!window.isSecureContext||!window.crypto||!crypto.subtle)throw new Error('Accounts require HTTPS and browser cryptography.');const r=loadJ('ar_accts_v1')[String(name||'').toLowerCase()];if(!r)throw new Error('No account with that username is saved in this browser. Use Import if you have its account file.');
+async function loginLocalAcct(name,pw){if(!window.isSecureContext||!window.crypto||!crypto.subtle)throw new Error('Accounts require HTTPS and browser cryptography.');const r=loadJ('ar_accts_v1')[String(name||'').toLowerCase()];if(!r)throw new Error('No account with that username is saved in this browser. Use Import if you have its account file.');
  let prv;try{prv=JSON.parse(dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(r.iv)},await pkey(pw,ub64(r.salt)),ub64(r.ct))))}catch(e){throw new Error('Wrong password')}
  const priv=await crypto.subtle.importKey('jwk',prv,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);MP.acct={name:r.name,pub:r.pub,priv,id:await sha(r.pub.x+r.pub.y)};if($('#acremember')&&$('#acremember').checked){try{await saveRemember(MP.acct)}catch(e){toast('Signed in, but Remember me could not be saved')}}else await clearRemember();acctUI();return MP.acct}
+/* ---------- Supabase cloud identity layer ----------
+   Configure a Supabase project in the Cloud Account setup panel. The database
+   enforces global username uniqueness; creator role is assigned only by SQL. */
+const CLOUD_CFG_KEY='ar_supabase_cfg_v1';
+let cloudClient=null,cloudProfile=null;
+function cloudCfg(){try{return JSON.parse(localStorage.getItem(CLOUD_CFG_KEY)||'null')}catch(e){return null}}
+function setCloudCfg(url,key){localStorage.setItem(CLOUD_CFG_KEY,JSON.stringify({url,key}));cloudClient=null}
+function getCloud(){const c=cloudCfg();if(!c||!c.url||!c.key)throw new Error('Set your Supabase Project URL and anon/public key in Cloud Account Setup first.');if(!window.supabase?.createClient)throw new Error('Supabase library did not load. Check your internet connection.');if(!cloudClient)cloudClient=window.supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return cloudClient}
+async function cloudProfileFor(user){const sb=getCloud();const {data,error}=await sb.from('profiles').select('id,username,role').eq('id',user.id).single();if(error)throw new Error('Cloud profile unavailable. Run the setup SQL shown in Cloud Account Setup. '+error.message);return data}
+async function createAcct(name,pw){
+ if(!/^[A-Za-z0-9_]{3,16}$/.test(name))throw new Error('Username: 3–16 letters, numbers or _');
+ if(name.toLowerCase()==='mrmr')throw new Error('MRMR is reserved. Create your account with a temporary username, then use the creator-promotion SQL in Cloud Account Setup to reserve MRMR for it.');
+ const sb=getCloud();const {data,error}=await sb.auth.signUp({email:(name.toLowerCase()+'@accounts.anatomyrange.invalid'),password:pw,options:{data:{username:name}}});
+ if(error)throw new Error(error.message);
+ if(!data.user)throw new Error('Cloud signup did not return an account.');
+ // Keep the existing signed game challenge working on this device. Cloud auth is the global identity;
+ // this local keypair remains a device-specific multiplayer proof until a trusted game relay is added.
+ let local=loadJ('ar_accts_v1')[name.toLowerCase()];if(!local)await createLocalAcct(name,pw);else await loginLocalAcct(name,pw);
+ cloudProfile=await cloudProfileFor(data.user).catch(()=>null);
+ MP.acct.cloudUid=data.user.id;MP.acct.role=cloudProfile?.role||'player';MP.acct.global=true;
+ acctUI();return MP.acct;
+}
+async function loginAcct(name,pw){
+ const sb=getCloud();const {data,error}=await sb.auth.signInWithPassword({email:(name.toLowerCase()+'@accounts.anatomyrange.invalid'),password:pw});if(error)throw new Error(error.message);
+ const profile=await cloudProfileFor(data.user);cloudProfile=profile;
+ let local=loadJ('ar_accts_v1')[name.toLowerCase()];if(local)await loginLocalAcct(name,pw);else await createLocalAcct(name,pw);
+ MP.acct.cloudUid=data.user.id;MP.acct.role=profile.role||'player';MP.acct.global=true;acctUI();return MP.acct;
+}
+async function cloudLogout(){try{await getCloud().auth.signOut()}catch(e){}cloudProfile=null}
 async function verifyAcct(pub,nonce,sig){if(!pub||pub.kty!=='EC'||pub.crv!=='P-256'||typeof pub.x!=='string'||typeof pub.y!=='string'||typeof sig!=='string')return false;
  const k=await crypto.subtle.importKey('jwk',{kty:'EC',crv:'P-256',x:pub.x,y:pub.y},{name:'ECDSA',namedCurve:'P-256'},false,['verify']);return crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},k,ub64(sig),enc.encode('anatomyrange|'+MP.code+'|'+nonce))}
 function abortJoin(){status('offline');try{MP.peer.destroy()}catch(x){}MP.peer=null;MP.conn=null}
@@ -1082,16 +1132,22 @@ function feedRaw(t){const r=document.createElement('div');r.style.cssText='backg
 function feedMsg(t){feedRaw(t);if(MP.peers.size)MP.ev.push({t:'m',m:t,o:-1})}
 /* account menu */
 {const ab=document.createElement('div');ab.style.cssText=box.style.cssText;
- ab.innerHTML=`<b>Account</b> <i id="acs" style="color:var(--mut);font-style:normal"></i><div class="g"><input id="acn" maxlength="16" placeholder="username" style="width:120px;${IS}"><input id="acp" type="password" placeholder="password" style="width:120px;${IS}"><button id="acc">Create</button><button id="acl">Log in</button><label style="font-size:13px;display:flex;align-items:center;gap:4px"><input id="acremember" type="checkbox" checked> Remember me</label><button id="aco">Log out</button><button id="ace">Export</button><button id="aci">Import</button></div><input id="acf" type="file" accept=".json" style="display:none"><p style="font-size:13px">Accounts are saved in this browser. Remember me keeps this device signed in; turn it off on shared computers. Use Export / Import to move an account to another device. PeerJS does not store accounts.</p>`;box.after(ab);
+ ab.innerHTML=`<b>Account</b> <i id="acs" style="color:var(--mut);font-style:normal"></i><div class="g"><input id="acn" maxlength="16" placeholder="username" style="width:120px;${IS}"><input id="acp" type="password" placeholder="password" style="width:120px;${IS}"><button id="acc">Create</button><button id="acl">Log in</button><label style="font-size:13px;display:flex;align-items:center;gap:4px"><input id="acremember" type="checkbox" checked> Remember me</label><button id="aco">Log out</button><button id="ace">Export</button><button id="aci">Import</button></div><input id="acf" type="file" accept=".json" style="display:none"><p style="font-size:13px">Cloud accounts use Supabase for global usernames and password sign-in. The game still uses a device-local signed key for its PeerJS challenge; cross-device trusted player identity requires a server-side game relay. Remember me keeps this device signed in.</p>`;box.after(ab);
  const say=e=>toast(e.message||String(e));
- window.acctUI=()=>{$('#acs').textContent=!window.isSecureContext||!window.crypto||!crypto.subtle?'accounts need HTTPS':MP.acct?'signed in as '+MP.acct.name+' #'+MP.acct.id.slice(0,4):'not signed in — you play as a guest';$('#aco').style.display=MP.acct?'':'none'};
+ window.acctUI=()=>{$('#acs').textContent=!window.isSecureContext||!window.crypto||!crypto.subtle?'accounts need HTTPS':MP.acct?'signed in as '+MP.acct.name+' · '+(MP.acct.role==='creator'?'CREATOR':MP.acct.role||'local')+' #'+MP.acct.id.slice(0,4):'not signed in — you play as a guest';$('#aco').style.display=MP.acct?'':'none'};
  $('#acc').onclick=()=>createAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Account created — you are signed in')}).catch(say);
  $('#acl').onclick=()=>loginAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Signed in')}).catch(say);
- $('#aco').onclick=()=>{MP.acct=null;clearRemember();acctUI()};
+ $('#aco').onclick=()=>{cloudLogout();MP.acct=null;clearRemember();acctUI()};
  $('#ace').onclick=()=>{const n=($('#acn').value.trim()||(MP.acct&&MP.acct.name)||'').toLowerCase(),r=loadJ('ar_accts_v1')[n];if(!r){toast('Type the username of the account to export');return}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(r)],{type:'application/json'}));a.download='anatomy-range-account-'+r.name+'.json';a.click()};
  $('#aci').onclick=()=>$('#acf').click();
  $('#acf').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{const r=JSON.parse(t);if(!r.name||!r.pub||!r.salt||!r.iv||!r.ct)throw new Error('Not an account file');const A=loadJ('ar_accts_v1');A[String(r.name).toLowerCase()]=r;saveJ('ar_accts_v1',A);toast('Imported '+r.name+' — now log in')}).catch(say);e.target.value=''};
  acctUI();restoreRemember()}
+/* Cloud setup: credentials are the public anon key only, never a service-role key. */
+{const cbox=document.createElement('div');cbox.style.cssText=box.style.cssText;cbox.innerHTML=`<details><summary style="cursor:pointer;font-weight:700">Cloud Account Setup · Supabase</summary><p>Enter your Supabase Project URL and anon/public key. These are public client settings; NEVER paste a service-role key or password here.</p><div class="g"><input id="ar-sb-url" placeholder="https://your-project.supabase.co" style="min-width:230px;flex:1;${IS}"><input id="ar-sb-key" placeholder="Supabase anon / publishable key" style="min-width:230px;flex:1;${IS}"><button id="ar-sb-save">Save config</button></div><p id="ar-sb-state">Not configured</p><button id="ar-sb-sql-show">Show database setup SQL</button><textarea id="ar-sb-sql" readonly style="display:none;width:100%;height:220px;${IS}"></textarea><p>Run the database SQL first. In Supabase Auth settings, disable email confirmation for this username-only login setup. Create an account with a temporary username, then run the creator-promotion SQL below in the SQL Editor.</p><textarea id="ar-sb-promote" readonly style="width:100%;height:48px;${IS}">-- Replace YOUR_TEMP_USERNAME with the username you registered. Run once in Supabase SQL Editor.
+update public.profiles set username = 'MRMR', role = 'creator' where lower(username) = 'YOUR_TEMP_USERNAME';
+update auth.users set email = 'mrmr@accounts.anatomyrange.invalid', raw_user_meta_data = jsonb_set(coalesce(raw_user_meta_data, '{}'::jsonb), '{username}', '"MRMR"'::jsonb) where id = (select id from public.profiles where lower(username) = 'mrmr');</textarea></details>`;ab.after(cbox);
+ const sql=`create table if not exists public.profiles (id uuid primary key references auth.users(id) on delete cascade, username text not null unique, role text not null default 'player' check (role in ('player','admin','creator')), created_at timestamptz not null default now());\ncreate unique index if not exists profiles_username_lower_unique on public.profiles (lower(username));\nalter table public.profiles enable row level security;\ncreate or replace function public.ar_username_valid() returns trigger language plpgsql security definer set search_path=public as $$ begin if new.raw_user_meta_data->>'username' is null or new.raw_user_meta_data->>'username' !~ '^[A-Za-z0-9_]{3,16}$' or lower(new.raw_user_meta_data->>'username') = 'mrmr' then raise exception 'Invalid or reserved username'; end if; insert into public.profiles(id,username) values(new.id,new.raw_user_meta_data->>'username'); return new; end; $$;\ndrop trigger if exists ar_create_profile on auth.users;\ncreate trigger ar_create_profile after insert on auth.users for each row execute procedure public.ar_username_valid();\ncreate policy "Profiles readable by authenticated users" on public.profiles for select to authenticated using (true);\nrevoke insert, update, delete on public.profiles from anon, authenticated;`;
+ $('#ar-sb-url').value=cloudCfg()?.url||'';$('#ar-sb-key').value=cloudCfg()?.key||'';$('#ar-sb-state').textContent=cloudCfg()?'Cloud settings saved on this browser':'Not configured';$('#ar-sb-save').onclick=()=>{const u=$('#ar-sb-url').value.trim(),k=$('#ar-sb-key').value.trim();if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(u)||!k){toast('Enter a valid Supabase URL and anon/public key');return}setCloudCfg(u,k);$('#ar-sb-state').textContent='Saved. Cloud authentication is ready to test.';toast('Supabase settings saved')};$('#ar-sb-sql-show').onclick=()=>{const t=$('#ar-sb-sql');t.value=sql;t.style.display=t.style.display==='none'?'block':'none';};}
 /* ---------- admin panel (host only: F2 or the menu button) ---------- */
 const kick=(P,why)=>{send(P.conn,{t:'no',why:why||'Kicked by the host'});setTimeout(()=>{try{P.conn.close()}catch(x){}},300)};
 const ban=(P,why)=>{if(!P.acct){toast('Guests cannot be banned — kick them, or switch on "Require account"');return}MP.bans[P.acct.id]={name:P.acct.name,why:why||'',t:Date.now()};saveJ('ar_bans_v1',MP.bans);kick(P,'Banned'+(why?': '+why:''))};
