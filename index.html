@@ -1085,7 +1085,7 @@ async function loginLocalAcct(name,pw){if(!window.isSecureContext||!window.crypt
    enforces global username uniqueness; creator role is assigned only by SQL. */
 const CLOUD_CFG_KEY='ar_supabase_cfg_v1';
 let cloudClient=null,cloudProfile=null;
-function cloudCfg(){try{return JSON.parse(localStorage.getItem(CLOUD_CFG_KEY)||'null')}catch(e){return null}}
+function cloudCfg(){try{return JSON.parse(localStorage.getItem(CLOUD_CFG_KEY)||'null')||{url:'https://gjiseuhdrstlpkugmyfc.supabase.co',key:'sb_publishable_RAJPNGYhuZBA44w81_G9jg_qSkzVQwH'}}catch(e){return{url:'https://gjiseuhdrstlpkugmyfc.supabase.co',key:'sb_publishable_RAJPNGYhuZBA44w81_G9jg_qSkzVQwH'}}}
 function setCloudCfg(url,key){localStorage.setItem(CLOUD_CFG_KEY,JSON.stringify({url,key}));cloudClient=null}
 function getCloud(){const c=cloudCfg();if(!c||!c.url||!c.key)throw new Error('Set your Supabase Project URL and anon/public key in Cloud Account Setup first.');if(!window.supabase?.createClient)throw new Error('Supabase library did not load. Check your internet connection.');if(!cloudClient)cloudClient=window.supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return cloudClient}
 async function cloudProfileFor(user){const sb=getCloud();const {data,error}=await sb.from('profiles').select('id,username,role').eq('id',user.id).single();if(error)throw new Error('Cloud profile unavailable. Run the setup SQL shown in Cloud Account Setup. '+error.message);return data}
@@ -1371,7 +1371,7 @@ function render(){const s=st(),ward=mode==='ward';$l.innerHTML='';tabsEl.innerHT
   if(isCr())VAULT.forEach(([id,n,ty])=>{const has=s.vault.includes(id);rowEl(n,ty,mkBtn(has?'In inventory ✓':'Add to inventory',()=>{s.vault.push(id);save();grant();const wi=W.findIndex(x=>x.id===id);if(wi>=0)sel(wi);toast(n+' added');render()},has))})}}
 const card=document.querySelector('#menu .card'),row=document.createElement('div');row.className='g';
 const bW=mkBtn('Wardrobe',()=>{mode='ward';render();pan.style.display='flex';pvStart()}),bV=mkBtn('Creator Vault',()=>{mode='vault';render();pan.style.display='flex'});bV.style.display='none';
-const ver=document.createElement('small');ver.textContent='add-on build 6';ver.style.cssText='color:var(--mut);align-self:center';row.append(bW,bV,ver);card.insertBefore(row,card.querySelector('.mode'));
+const ver=document.createElement('small');ver.textContent='add-on build 7';ver.style.cssText='color:var(--mut);align-self:center';row.append(bW,bV,ver);card.insertBefore(row,card.querySelector('.mode'));
 setInterval(()=>{bV.style.display=isCr()?'':'none';grant();paintHud()},1000);paintHud();
 })();
 
