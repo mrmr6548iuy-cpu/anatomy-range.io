@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><title>Anatomy Range</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&display=swap">
 <style>
 :root{--bg:#101315;--ink:#ece7de;--mut:#8d9498;--blood:#c2121a;--pan:rgba(16,19,21,.88);--line:#2c3236;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -44,7 +45,6 @@ button:hover,button:focus-visible{background:#283036;outline:none}
 <p>WASD move, Shift run, Space jump, mouse aim, click fire, R reload (drops the mag, loads a new one, racks the slide), Z rack the slide or pump, right click aim down sights (or launch a grabbed body part), K heal, P free camera (fly anywhere while your body stays put and can't be hurt), Tab edit mode (pauses time so you can place props and contraptions and spawn people while you keep moving), U use the nearest contraption, C crouch, N clear all, mouse wheel zooms while aiming (the sniper scope zooms furthest). VR: trigger fires (or curl your index finger with hand tracking), B or A drops the mag, pinch or grip a fresh mag from the pouch at your belt with your other hand and push it into the gun, then pull the slide back to chamber a round. Off-hand stick moves, gun-hand stick snap-turns. 1-9 and 0 pick weapons, Q/E or wheel cycle through all 15. Esc opens this menu. Needs keyboard and mouse.</p>
 <div class="mode"><button id="go">Play on PC<small>keyboard and mouse</small></button><button id="vrb">Play in VR<small>controllers or hand tracking</small></button></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const T=THREE,V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z),R=Math.random,rr=(a,b)=>a+(b-a)*R(),$=s=>document.querySelector(s),Y=V(0,1,0);
 const ad=(a,b)=>{let d=a-b;while(d>Math.PI)d-=6.2832;while(d<-Math.PI)d+=6.2832;return d};
@@ -577,7 +577,7 @@ function drawMM(){if(!mmx)return;if(!mmBuilt)mmStatic();mmx.drawImage(mmS,0,0);e
 /* ---------- cinematics ---------- */
 let cin=null,cinOn=true,tsPrev=1;const CINS=new Set(['pu','dom','cle','red']),ease=u=>u<0?0:u>1?1:u*u*(3-2*u),mix=(a,b,u)=>a+(b-a)*u,fxEl=$('#fx');
 function mkAvatar(){
- const g=new T.Group(),suit=new T.MeshStandardMaterial({color:0x202a38,roughness:.72,metalness:.18}),armor=new T.MeshStandardMaterial({color:0x394b60,roughness:.42,metalness:.55}),trim=new T.MeshStandardMaterial({color:0x64d9ef,emissive:0x164b60,emissiveIntensity:.65,metalness:.45,roughness:.25}),skin=new T.MeshStandardMaterial({color:0xc99578,roughness:.68}),visor=new T.MeshStandardMaterial({color:0x0b1b29,metalness:.8,roughness:.12,emissive:0x123c55,emissiveIntensity:.5}),boot=new T.MeshStandardMaterial({color:0x10151d,roughness:.85});g.userData.customMats={suit,armor,trim,skin,visor,boot};
+ const g=new T.Group(),suit=new T.MeshStandardMaterial({color:0x202a38,roughness:.72,metalness:.18}),armor=new T.MeshStandardMaterial({color:0x394b60,roughness:.42,metalness:.55}),trim=new T.MeshStandardMaterial({color:0x64d9ef,emissive:0x164b60,emissiveIntensity:.65,metalness:.45,roughness:.25}),skin=new T.MeshStandardMaterial({color:0xc99578,roughness:.68}),visor=new T.MeshStandardMaterial({color:0x0b1b29,metalness:.8,roughness:.12,emissive:0x123c55,emissiveIntensity:.5}),boot=new T.MeshStandardMaterial({color:0x10151d,roughness:.85});
  const M=(geo,mat,x,y,z,sx,sy,sz,parent=g)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m};
  M(new T.CylinderGeometry(.19,.19,.62,18),suit,0,1.12,0,.95,1,0.72);M(new T.SphereGeometry(1,20,14),armor,0,1.2,.09,.19,.22,.09);
  M(new T.BoxGeometry(.31,.35,.07),armor,0,1.2,.13,1,1,1);M(new T.BoxGeometry(.23,.025,.012),trim,0,1.31,.17,1,1,1);M(new T.BoxGeometry(.13,.025,.012),trim,0,1.13,.17,1,1,1);
@@ -1053,74 +1053,62 @@ function refreshList(quiet){if(!quiet)$('#publ').textContent='Searching…';let 
 {const pb=document.createElement('div');pb.style.cssText=box.style.cssText;pb.innerHTML='<b>Public servers</b><div class="g"><input id="pubn" maxlength="24" placeholder="Your server name" style="width:170px;font:600 16px \'Barlow Condensed\',sans-serif;color:var(--ink);background:#1d2327;border:1px solid var(--line);padding:6px 8px"><button id="pubh">Host public</button><button id="pubr">Refresh</button></div><div id="publ" style="margin-top:6px;font-size:15px;color:var(--mut)"></div>';box.after(pb);
  $('#pubh').onclick=()=>startHost({pub:true,name:$('#pubn').value.trim()||'Public server',max:8});$('#pubr').onclick=()=>refreshList();
  setTimeout(()=>refreshList(),900);setInterval(()=>{if(MP.mode==='solo'&&$('#menu').style.display!=='none')refreshList(true)},20000)}
-/* ---------- Supabase cloud accounts ---------- */
-const SUPABASE_URL='https://gjiseuhdrstlpkugmyfc.supabase.co';
-const SUPABASE_ANON_KEY='sb_publishable_RAJPNGYhuZBA44w81_G9jg_qSkzVQwH';
-const ARSB=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+/* ---------- accounts: a password-protected keypair kept in this browser; servers recognise you by public key ---------- */
 const loadJ=k=>{try{const v=JSON.parse(localStorage.getItem(k)||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(e){return{}}},saveJ=(k,o)=>{try{localStorage.setItem(k,JSON.stringify(o));return true}catch(e){return false}};
-/* Account data sync: cloud copy follows the signed-in account across devices;
-   localStorage remains a fast offline cache. Passwords/private keys are never saved in plaintext. */
-let arCloudSaveTimer=null,arCloudPending={};
-function queueAccountDataSave(patch){
- if(!MP.acct||!patch||typeof patch!=='object')return;
- arCloudPending=Object.assign({},arCloudPending,patch);
- if(arCloudSaveTimer)clearTimeout(arCloudSaveTimer);
- arCloudSaveTimer=setTimeout(async()=>{
-  const pending=arCloudPending;arCloudPending={};arCloudSaveTimer=null;
-  try{
-   const ss=await ARSB.auth.getSession(),u=ss.data&&ss.data.session&&ss.data.session.user;
-   if(!u)return;
-   const old=await ARSB.from('ar_account_data').select('data').eq('id',u.id).maybeSingle();
-   if(old.error)throw old.error;
-   const merged=Object.assign({},old.data&&old.data.data||{},pending);
-   const up=await ARSB.from('ar_account_data').upsert({id:u.id,data:merged,updated_at:new Date().toISOString()});
-   if(up.error)throw up.error;
-  }catch(e){console.warn('Account cloud save failed:',e);toast('Cloud save failed — local copy kept')}
- },700);
-}
-async function loadAccountData(){
- if(!MP.acct)return;
- try{
-  const ss=await ARSB.auth.getSession(),u=ss.data&&ss.data.session&&ss.data.session.user;if(!u)return;
-  const got=await ARSB.from('ar_account_data').select('data').eq('id',u.id).maybeSingle();
-  if(got.error)throw got.error;
-  const d=got.data&&got.data.data||{};
-  if(d.avatar&&typeof d.avatar==='object')saveJ('ar_ph_avatar_v1',d.avatar);
-  if(d.stats&&typeof d.stats==='object'){const all=loadJ('ar_stats_v1');all[MP.acct.id]=Object.assign({},all[MP.acct.id]||{},d.stats);saveJ('ar_stats_v1',all)}
-  if(d.avatar||d.stats)toast('Account data restored from cloud');
- }catch(e){console.warn('Could not restore cloud account data:',e);toast('Signed in; cloud data could not be loaded')}
-}
 MP.bans=loadJ('ar_bans_v1');
 const enc=new TextEncoder(),dec=new TextDecoder(),b64=u=>btoa(String.fromCharCode(...new Uint8Array(u))),ub64=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
 const rhex=n=>[...crypto.getRandomValues(new Uint8Array(n))].map(b=>b.toString(16).padStart(2,'0')).join('');
 const IS='font:600 16px "Barlow Condensed",sans-serif;color:var(--ink);background:#1d2327;border:1px solid var(--line);padding:5px 8px;';
 const myName=()=>MP.acct?MP.acct.name:(isH()?'Host':'Guest'),myAcctId=()=>MP.acct?MP.acct.id:null;
 const acctOfPid=pid=>pid===0?MP.acct:(MP.peers.get(pid)||{}).acct;
-function touchStats(id,name,ev){const S=loadJ('ar_stats_v1'),r=S[id]||(S[id]={name,k:0,d:0,j:0,last:0});r.name=name;r.last=Date.now();if(ev==='join')r.j++;if(ev==='k')r.k++;if(ev==='d')r.d++;saveJ('ar_stats_v1',S);if(MP.acct&&MP.acct.id===id)queueAccountDataSave({stats:r})}
+function touchStats(id,name,ev){const S=loadJ('ar_stats_v1'),r=S[id]||(S[id]={name,k:0,d:0,j:0,last:0});r.name=name;r.last=Date.now();if(ev==='join')r.j++;if(ev==='k')r.k++;if(ev==='d')r.d++;saveJ('ar_stats_v1',S)}
 async function sha(str){const h=await crypto.subtle.digest('SHA-256',enc.encode(str));return[...new Uint8Array(h)].slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('')}
 async function pkey(pw,salt){const k=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
-const cloudEmail=name=>String(name).toLowerCase()+'@accounts.anatomyrange.invalid';
-function cloudError(e){const m=e&&e.message?e.message:String(e);if(/fetch|network/i.test(m))return 'Could not reach Supabase. Check your connection and project settings.';if(/Invalid login credentials/i.test(m))return 'Wrong username or password.';if(/User already registered/i.test(m))return 'That username is already taken.';if(/relation .* does not exist|schema cache/i.test(m))return 'Cloud database is not set up yet. Run the SQL setup shown in the Cloud Accounts section of the game.';return m}
-async function createAcct(name,pw){
- if(!window.isSecureContext||!crypto.subtle)throw new Error('Accounts require HTTPS.');
+async function createLocalAcct(name,pw){
+ if(!window.isSecureContext||!window.crypto||!crypto.subtle)throw new Error('Accounts require a secure HTTPS page. Open the GitHub Pages https:// address.');
  if(!/^[A-Za-z0-9_]{3,16}$/.test(name))throw new Error('Username: 3–16 letters, numbers or _');
  if(typeof pw!=='string'||pw.length<6)throw new Error('Password must be at least 6 characters');
- const {data,error}=await ARSB.auth.signUp({email:cloudEmail(name),password:pw});if(error)throw new Error(cloudError(error));
- if(!data.session)throw new Error('Supabase email confirmation is enabled. In Supabase, open Authentication → Providers → Email and turn off Confirm email, then create the account again.');
- let kp,pub,prv,salt,iv,ct;try{kp=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);pub=await crypto.subtle.exportKey('jwk',kp.publicKey);prv=await crypto.subtle.exportKey('jwk',kp.privateKey);salt=crypto.getRandomValues(new Uint8Array(16));iv=crypto.getRandomValues(new Uint8Array(12));ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await pkey(pw,salt),enc.encode(JSON.stringify(prv)))}catch(e){throw new Error('Could not create account keys: '+(e.message||e))}
- const row={id:data.user.id,username:name,pub:{kty:pub.kty,crv:pub.crv,x:pub.x,y:pub.y},salt:b64(salt),iv:b64(iv),ct:b64(ct)};
- const ins=await ARSB.from('ar_profiles').insert(row);if(ins.error)throw new Error(cloudError(ins.error));
- return loginAcct(name,pw)
+ try{localStorage.setItem('__ar_storage_test','1');localStorage.removeItem('__ar_storage_test')}catch(e){throw new Error('Browser storage is blocked. Allow site storage for this page, then try again.')}
+ const A=loadJ('ar_accts_v1'),key=name.toLowerCase();if(A[key])throw new Error('That username already exists in this browser');
+ let kp,pub,prv,salt,iv,ct;try{kp=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);pub=await crypto.subtle.exportKey('jwk',kp.publicKey);prv=await crypto.subtle.exportKey('jwk',kp.privateKey);salt=crypto.getRandomValues(new Uint8Array(16));iv=crypto.getRandomValues(new Uint8Array(12));ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await pkey(pw,salt),enc.encode(JSON.stringify(prv)))}catch(e){throw new Error('Could not create the account keys: '+(e.message||e))}
+ A[key]={name,pub:{kty:pub.kty,crv:pub.crv,x:pub.x,y:pub.y},salt:b64(salt),iv:b64(iv),ct:b64(ct)};if(!saveJ('ar_accts_v1',A)||!loadJ('ar_accts_v1')[key])throw new Error('Account could not be saved in this browser. Check site storage permissions.');return loginLocalAcct(name,pw)}
+const REMEMBER_DB='ar_remember_v1';
+function rememberDB(){return new Promise((resolve,reject)=>{if(!indexedDB)return reject(new Error('Browser storage unavailable'));const q=indexedDB.open(REMEMBER_DB,1);q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains('session'))q.result.createObjectStore('session')};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error||new Error('Could not open browser storage'))})}
+async function saveRemember(acct){const db=await rememberDB();return new Promise((resolve,reject)=>{const tx=db.transaction('session','readwrite');tx.objectStore('session').put({name:acct.name,pub:acct.pub,priv:acct.priv},'active');tx.oncomplete=()=>{db.close();resolve(true)};tx.onerror=()=>{db.close();reject(tx.error||new Error('Could not save sign-in'))}})}
+async function clearRemember(){try{const db=await rememberDB();await new Promise((resolve,reject)=>{const tx=db.transaction('session','readwrite');tx.objectStore('session').delete('active');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}catch(e){}}
+async function restoreRemember(){try{const db=await rememberDB(),saved=await new Promise((resolve,reject)=>{const q=db.transaction('session','readonly').objectStore('session').get('active');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)});db.close();if(saved&&saved.priv&&saved.pub){MP.acct={name:saved.name,pub:saved.pub,priv:saved.priv,id:await sha(saved.pub.x+saved.pub.y)};acctUI();toast('Welcome back, '+saved.name)}}catch(e){}}
+async function loginLocalAcct(name,pw){if(!window.isSecureContext||!window.crypto||!crypto.subtle)throw new Error('Accounts require HTTPS and browser cryptography.');const r=loadJ('ar_accts_v1')[String(name||'').toLowerCase()];if(!r)throw new Error('No account with that username is saved in this browser. Use Import if you have its account file.');
+ let prv;try{prv=JSON.parse(dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(r.iv)},await pkey(pw,ub64(r.salt)),ub64(r.ct))))}catch(e){throw new Error('Wrong password')}
+ const priv=await crypto.subtle.importKey('jwk',prv,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);MP.acct={name:r.name,pub:r.pub,priv,id:await sha(r.pub.x+r.pub.y)};if($('#acremember')&&$('#acremember').checked){try{await saveRemember(MP.acct)}catch(e){toast('Signed in, but Remember me could not be saved')}}else await clearRemember();acctUI();return MP.acct}
+/* ---------- Supabase cloud identity layer ----------
+   Configure a Supabase project in the Cloud Account setup panel. The database
+   enforces global username uniqueness; creator role is assigned only by SQL. */
+const CLOUD_CFG_KEY='ar_supabase_cfg_v1';
+let cloudClient=null,cloudProfile=null;
+function cloudCfg(){try{return JSON.parse(localStorage.getItem(CLOUD_CFG_KEY)||'null')}catch(e){return null}}
+function setCloudCfg(url,key){localStorage.setItem(CLOUD_CFG_KEY,JSON.stringify({url,key}));cloudClient=null}
+function getCloud(){const c=cloudCfg();if(!c||!c.url||!c.key)throw new Error('Set your Supabase Project URL and anon/public key in Cloud Account Setup first.');if(!window.supabase?.createClient)throw new Error('Supabase library did not load. Check your internet connection.');if(!cloudClient)cloudClient=window.supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return cloudClient}
+async function cloudProfileFor(user){const sb=getCloud();const {data,error}=await sb.from('profiles').select('id,username,role').eq('id',user.id).single();if(error)throw new Error('Cloud profile unavailable. Run the setup SQL shown in Cloud Account Setup. '+error.message);return data}
+async function createAcct(name,pw){
+ if(!/^[A-Za-z0-9_]{3,16}$/.test(name))throw new Error('Username: 3–16 letters, numbers or _');
+ if(name.toLowerCase()==='mrmr')throw new Error('MRMR is reserved. Create your account with a temporary username, then use the creator-promotion SQL in Cloud Account Setup to reserve MRMR for it.');
+ const sb=getCloud();const {data,error}=await sb.auth.signUp({email:(name.toLowerCase()+'@accounts.anatomyrange.invalid'),password:pw,options:{data:{username:name}}});
+ if(error)throw new Error(error.message);
+ if(!data.user)throw new Error('Cloud signup did not return an account.');
+ // Keep the existing signed game challenge working on this device. Cloud auth is the global identity;
+ // this local keypair remains a device-specific multiplayer proof until a trusted game relay is added.
+ let local=loadJ('ar_accts_v1')[name.toLowerCase()];if(!local)await createLocalAcct(name,pw);else await loginLocalAcct(name,pw);
+ cloudProfile=await cloudProfileFor(data.user).catch(()=>null);
+ MP.acct.cloudUid=data.user.id;MP.acct.role=cloudProfile?.role||'player';MP.acct.global=true;
+ acctUI();return MP.acct;
 }
 async function loginAcct(name,pw){
- if(!window.isSecureContext||!crypto.subtle)throw new Error('Accounts require HTTPS and browser cryptography.');
- if(!/^[A-Za-z0-9_]{3,16}$/.test(name))throw new Error('Enter a valid username.');
- const auth=await ARSB.auth.signInWithPassword({email:cloudEmail(name),password:pw});if(auth.error)throw new Error(cloudError(auth.error));
- const got=await ARSB.from('ar_profiles').select('username,pub,salt,iv,ct').eq('id',auth.data.user.id).single();if(got.error)throw new Error(cloudError(got.error));
- const r=got.data;let prv;try{prv=JSON.parse(dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(r.iv)},await pkey(pw,ub64(r.salt)),ub64(r.ct))))}catch(e){throw new Error('Could not unlock account keys. Check your password.')}
- const priv=await crypto.subtle.importKey('jwk',prv,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);MP.acct={name:r.username,pub:r.pub,priv,id:await sha(r.pub.x+r.pub.y)};acctUI();await loadAccountData();return MP.acct
+ const sb=getCloud();const {data,error}=await sb.auth.signInWithPassword({email:(name.toLowerCase()+'@accounts.anatomyrange.invalid'),password:pw});if(error)throw new Error(error.message);
+ const profile=await cloudProfileFor(data.user);cloudProfile=profile;
+ let local=loadJ('ar_accts_v1')[name.toLowerCase()];if(local)await loginLocalAcct(name,pw);else await createLocalAcct(name,pw);
+ MP.acct.cloudUid=data.user.id;MP.acct.role=profile.role||'player';MP.acct.global=true;acctUI();return MP.acct;
 }
-async function restoreRemember(){try{const {data}=await ARSB.auth.getSession();if(!data.session)return;const u=data.session.user;const got=await ARSB.from('ar_profiles').select('username').eq('id',u.id).maybeSingle();if(got.data)$('#acs').textContent='cloud account '+got.data.username+' · sign in to unlock';}catch(e){}}
+async function cloudLogout(){try{await getCloud().auth.signOut()}catch(e){}cloudProfile=null}
 async function verifyAcct(pub,nonce,sig){if(!pub||pub.kty!=='EC'||pub.crv!=='P-256'||typeof pub.x!=='string'||typeof pub.y!=='string'||typeof sig!=='string')return false;
  const k=await crypto.subtle.importKey('jwk',{kty:'EC',crv:'P-256',x:pub.x,y:pub.y},{name:'ECDSA',namedCurve:'P-256'},false,['verify']);return crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},k,ub64(sig),enc.encode('anatomyrange|'+MP.code+'|'+nonce))}
 function abortJoin(){status('offline');try{MP.peer.destroy()}catch(x){}MP.peer=null;MP.conn=null}
@@ -1143,14 +1131,23 @@ async function hostHello(P,m){if(!m||m.t!=='hi'||P.busy)return;P.busy=true;let r
 function feedRaw(t){const r=document.createElement('div');r.style.cssText='background:rgba(10,12,14,.75);padding:2px 9px;margin:2px 0;border-right:3px solid #3aa0d8';r.textContent=t;fd.appendChild(r);setTimeout(()=>r.remove(),7000);while(fd.children.length>6)fd.firstChild.remove()}
 function feedMsg(t){feedRaw(t);if(MP.peers.size)MP.ev.push({t:'m',m:t,o:-1})}
 /* account menu */
-{const ab=document.createElement('div');ab.style.cssText=box.style.cssText;
- ab.innerHTML=`<b>Cloud Account</b> <i id="acs" style="color:var(--mut);font-style:normal"></i><div class="g"><input id="acn" maxlength="16" placeholder="username" style="width:120px;${IS}"><input id="acp" type="password" placeholder="password" style="width:120px;${IS}"><button id="acc">Create</button><button id="acl">Log in</button><button id="aco">Log out</button></div><p style="font-size:13px">Accounts and saved character looks/account stats are stored in Supabase and follow your login across browsers and computers. Your private game key is encrypted with your password before upload; passwords and private keys are never stored in plaintext. PeerJS only handles live rooms.</p><details style="font-size:13px"><summary>One-time database setup</summary><p>Open Supabase → SQL Editor → New query, then run the setup SQL provided with this game. Also turn off email confirmation under Authentication → Providers → Email.</p></details>`;box.after(ab);
+let ab;{ab=document.createElement('div');ab.style.cssText=box.style.cssText;
+ ab.innerHTML=`<b>Account</b> <i id="acs" style="color:var(--mut);font-style:normal"></i><div class="g"><input id="acn" maxlength="16" placeholder="username" style="width:120px;${IS}"><input id="acp" type="password" placeholder="password" style="width:120px;${IS}"><button id="acc">Create</button><button id="acl">Log in</button><label style="font-size:13px;display:flex;align-items:center;gap:4px"><input id="acremember" type="checkbox" checked> Remember me</label><button id="aco">Log out</button><button id="ace">Export</button><button id="aci">Import</button></div><input id="acf" type="file" accept=".json" style="display:none"><p style="font-size:13px">Cloud accounts use Supabase for global usernames and password sign-in. The game still uses a device-local signed key for its PeerJS challenge; cross-device trusted player identity requires a server-side game relay. Remember me keeps this device signed in.</p>`;box.after(ab);
  const say=e=>toast(e.message||String(e));
- window.acctUI=()=>{$('#acs').textContent=!window.isSecureContext||!window.crypto||!crypto.subtle?'accounts need HTTPS':MP.acct?'signed in as '+MP.acct.name+' #'+MP.acct.id.slice(0,4):'not signed in — you play as a guest';$('#aco').style.display=MP.acct?'':'none'};
- $('#acc').onclick=()=>createAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Cloud account created — signed in')}).catch(say);
- $('#acl').onclick=()=>loginAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Signed in to cloud account')}).catch(say);
- $('#aco').onclick=async()=>{MP.acct=null;await ARSB.auth.signOut();acctUI()};
+ window.acctUI=()=>{$('#acs').textContent=!window.isSecureContext||!window.crypto||!crypto.subtle?'accounts need HTTPS':MP.acct?'signed in as '+MP.acct.name+' · '+(MP.acct.role==='creator'?'CREATOR':MP.acct.role||'local')+' #'+MP.acct.id.slice(0,4):'not signed in — you play as a guest';$('#aco').style.display=MP.acct?'':'none'};
+ $('#acc').onclick=()=>createAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Account created — you are signed in')}).catch(say);
+ $('#acl').onclick=()=>loginAcct($('#acn').value.trim(),$('#acp').value).then(()=>{$('#acp').value='';toast('Signed in')}).catch(say);
+ $('#aco').onclick=()=>{cloudLogout();MP.acct=null;clearRemember();acctUI()};
+ $('#ace').onclick=()=>{const n=($('#acn').value.trim()||(MP.acct&&MP.acct.name)||'').toLowerCase(),r=loadJ('ar_accts_v1')[n];if(!r){toast('Type the username of the account to export');return}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(r)],{type:'application/json'}));a.download='anatomy-range-account-'+r.name+'.json';a.click()};
+ $('#aci').onclick=()=>$('#acf').click();
+ $('#acf').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{const r=JSON.parse(t);if(!r.name||!r.pub||!r.salt||!r.iv||!r.ct)throw new Error('Not an account file');const A=loadJ('ar_accts_v1');A[String(r.name).toLowerCase()]=r;saveJ('ar_accts_v1',A);toast('Imported '+r.name+' — now log in')}).catch(say);e.target.value=''};
  acctUI();restoreRemember()}
+/* Cloud setup: credentials are the public anon key only, never a service-role key. */
+{const cbox=document.createElement('div');cbox.style.cssText=box.style.cssText;cbox.innerHTML=`<details><summary style="cursor:pointer;font-weight:700">Cloud Account Setup · Supabase</summary><p>Enter your Supabase Project URL and anon/public key. These are public client settings; NEVER paste a service-role key or password here.</p><div class="g"><input id="ar-sb-url" placeholder="https://your-project.supabase.co" style="min-width:230px;flex:1;${IS}"><input id="ar-sb-key" placeholder="Supabase anon / publishable key" style="min-width:230px;flex:1;${IS}"><button id="ar-sb-save">Save config</button></div><p id="ar-sb-state">Not configured</p><button id="ar-sb-sql-show">Show database setup SQL</button><textarea id="ar-sb-sql" readonly style="display:none;width:100%;height:220px;${IS}"></textarea><p>Run the database SQL first. In Supabase Auth settings, disable email confirmation for this username-only login setup. Create an account with a temporary username, then run the creator-promotion SQL below in the SQL Editor.</p><textarea id="ar-sb-promote" readonly style="width:100%;height:48px;${IS}">-- Replace YOUR_TEMP_USERNAME with the username you registered. Run once in Supabase SQL Editor.
+update public.profiles set username = 'MRMR', role = 'creator' where lower(username) = 'YOUR_TEMP_USERNAME';
+update auth.users set email = 'mrmr@accounts.anatomyrange.invalid', raw_user_meta_data = jsonb_set(coalesce(raw_user_meta_data, '{}'::jsonb), '{username}', '"MRMR"'::jsonb) where id = (select id from public.profiles where lower(username) = 'mrmr');</textarea></details>`;ab.after(cbox);
+ const sql=`create table if not exists public.profiles (id uuid primary key references auth.users(id) on delete cascade, username text not null unique, role text not null default 'player' check (role in ('player','admin','creator')), created_at timestamptz not null default now());\ncreate unique index if not exists profiles_username_lower_unique on public.profiles (lower(username));\nalter table public.profiles enable row level security;\ncreate or replace function public.ar_username_valid() returns trigger language plpgsql security definer set search_path=public as $$ begin if new.raw_user_meta_data->>'username' is null or new.raw_user_meta_data->>'username' !~ '^[A-Za-z0-9_]{3,16}$' or lower(new.raw_user_meta_data->>'username') = 'mrmr' then raise exception 'Invalid or reserved username'; end if; insert into public.profiles(id,username) values(new.id,new.raw_user_meta_data->>'username'); return new; end; $$;\ndrop trigger if exists ar_create_profile on auth.users;\ncreate trigger ar_create_profile after insert on auth.users for each row execute procedure public.ar_username_valid();\ncreate policy "Profiles readable by authenticated users" on public.profiles for select to authenticated using (true);\nrevoke insert, update, delete on public.profiles from anon, authenticated;`;
+ $('#ar-sb-url').value=cloudCfg()?.url||'';$('#ar-sb-key').value=cloudCfg()?.key||'';$('#ar-sb-state').textContent=cloudCfg()?'Cloud settings saved on this browser':'Not configured';$('#ar-sb-save').onclick=()=>{const u=$('#ar-sb-url').value.trim(),k=$('#ar-sb-key').value.trim();if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(u)||!k){toast('Enter a valid Supabase URL and anon/public key');return}setCloudCfg(u,k);$('#ar-sb-state').textContent='Saved. Cloud authentication is ready to test.';toast('Supabase settings saved')};$('#ar-sb-sql-show').onclick=()=>{const t=$('#ar-sb-sql');t.value=sql;t.style.display=t.style.display==='none'?'block':'none';};}
 /* ---------- admin panel (host only: F2 or the menu button) ---------- */
 const kick=(P,why)=>{send(P.conn,{t:'no',why:why||'Kicked by the host'});setTimeout(()=>{try{P.conn.close()}catch(x){}},300)};
 const ban=(P,why)=>{if(!P.acct){toast('Guests cannot be banned — kick them, or switch on "Require account"');return}MP.bans[P.acct.id]={name:P.acct.name,why:why||'',t:Date.now()};saveJ('ar_bans_v1',MP.bans);kick(P,'Banned'+(why?': '+why:''))};
@@ -1232,31 +1229,12 @@ function phButtonGrid(items){
  items.forEach(([label,fn])=>{const b=btn(label,fn);b.style.cssText='font-size:14px;padding:9px 5px;border-left-color:#b36bff';grid.appendChild(b)});
  phPanel.appendChild(grid);
 }
-function phColorInput(label,key,def){
- const row=document.createElement('label');row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 2px;color:#dce4eb';row.textContent=label;
- const input=document.createElement('input');input.type='color';input.value=def;input.style.cssText='width:52px;height:28px;background:transparent;border:0;cursor:pointer';
- input.addEventListener('input',()=>{const m=av.userData.customMats&&av.userData.customMats[key];if(m)m.color.set(input.value)});row.appendChild(input);phPanel.appendChild(row);return input;
-}
-function phCustomization(){
- phSection('CHARACTER CUSTOMIZATION');
- const mats=av.userData.customMats||{};
- const defaults={suit:'#202a38',armor:'#394b60',trim:'#64d9ef',skin:'#c99578',visor:'#0b1b29',boot:'#10151d'};
- const inputs={};Object.keys(defaults).forEach(k=>{const m=mats[k];inputs[k]=phColorInput(k.toUpperCase(),k,m?'#'+m.color.getHexString():defaults[k])});
- const saved=(()=>{try{return JSON.parse(localStorage.getItem('ar_ph_avatar_v1')||'null')}catch(e){return null}})();
- if(saved)Object.keys(inputs).forEach(k=>{if(saved[k]){inputs[k].value=saved[k];if(mats[k])mats[k].color.set(saved[k])}});
- phButtonGrid([
-  ['SAVE LOOK',async()=>{const data={};Object.keys(inputs).forEach(k=>data[k]=inputs[k].value);saveJ('ar_ph_avatar_v1',data);if(MP.acct){queueAccountDataSave({avatar:data});toast('Look saved to your account and this device')}else toast('Look saved on this device — log in to sync it across devices')}],
-  ['RESET LOOK',()=>{Object.keys(inputs).forEach(k=>{inputs[k].value=defaults[k];if(mats[k])mats[k].color.set(defaults[k])});localStorage.removeItem('ar_ph_avatar_v1');if(MP.acct)queueAccountDataSave({avatar:defaults});toast('Character look reset')}]
- ]);
- const note=document.createElement('small');note.textContent='Customization changes your first-person avatar. Save Look stores it locally and, when signed in, syncs it to your cloud account.';note.style.cssText='display:block;color:#91a2af;margin-top:6px';phPanel.appendChild(note);
-}
 function phRender(){
  phPanel.textContent='';
  const h=document.createElement('div');h.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px';
  const title=document.createElement('b');title.textContent='PHANTOM // CHAOS CONTROL';
  const close=btn('×',()=>{phPanel.style.display='none'});h.append(title,close);phPanel.appendChild(h);
  const st=document.createElement('div');st.textContent='HOST CONNECTED · SYNCED NPC EVENTS · VISUAL GADGETS';st.style.cssText='color:#a9b7c2;margin-bottom:8px';phPanel.appendChild(st);
- phCustomization();
  phSection('HOST MOVEMENT');
  phButtonGrid([[window.__AR_PHANTOM_FLY__?'DISABLE HOST FLIGHT':'ENABLE HOST FLIGHT',()=>{if(!isH())return;window.__AR_PHANTOM_FLY__=!window.__AR_PHANTOM_FLY__;if(!window.__AR_PHANTOM_FLY__)pl.v.y=0;toast(window.__AR_PHANTOM_FLY__?'PHANTOM FLIGHT ENABLED · WASD move · SPACE up · C down':'PHANTOM FLIGHT DISABLED');phRender();phPanel.style.display='block'}]]);
  phSection('WORLD EVENTS & SCREEN PRANKS');
@@ -1287,6 +1265,115 @@ function phRender(){
  const foot=document.createElement('p');foot.textContent='NPC spawns are host-controlled and synchronized. Screen, FOV, fake error, clone-snapshot and sound pranks auto-reset. NPC waves are capped; no real crash, connection flooding, forced chat or player-control hijacking.';foot.style.cssText='color:#91a2af;margin:10px 0 0';phPanel.appendChild(foot);
 }
 window.addEventListener('message',e=>{const d=e.data;if(e.source!==window||e.origin!==location.origin||!d||d.channel!=='ANATOMY_PHANTOM')return;if(!isH())return;if(d.action==='connect'){MP.phantomConnected=true;phRender();phPanel.style.display='block';toast('PHANTOM connected — host controls ready');window.postMessage({channel:'ANATOMY_PHANTOM',action:'connected'},location.origin)}else if(d.action==='disconnect'){MP.phantomConnected=false;phPanel.style.display='none';toast('PHANTOM disconnected')}else if(d.action==='effect'&&MP.phantomConnected)phBroadcast(String(d.effect||''))});
-window.addEventListener('keydown',e=>{if(e.code==='F6'&&isH()&&MP.phantomConnected){e.preventDefault();e.stopPropagation();if(phPanel.style.display==='block')phPanel.style.display='none';else{phRender();phPanel.style.display='block'}}},true);
+/* ===== ANATOMY RANGE ADD-ON: Wardrobe · Credits · Creator Vault · Ban Hammer ===== */
+(()=>{
+const KEY='ar_wardrobe_v1';
+const ITEMS=[['tophat','TOP HAT','head',140],['crown','CROWN','head',200],['halo','IMPERIAL HALO','head',0,1],['visor','NEON VISOR','face',90],['shades','SHADES','face',70],['cape','CRIMSON CAPE','back',60],['gold_wings','IMPERIAL GOLD WINGS','back',0,1]];
+const VAULT=[['gold_wings','IMPERIAL GOLD WINGS','Creator cosmetic'],['halo','IMPERIAL HALO','Creator cosmetic'],['imperialist','THE IMPERIALIST — ANGELIC SPEAR','Creator-only weapon'],['ban_hammer','THE BAN HAMMER','Creator-only moderation weapon']];
+const CR_COS=['gold_wings','halo'];
+const WDEF={ban_hammer:{id:'ban_hammer',k:'bh',n:'Ban Hammer',a:1,r:.1,c:0xc2121a,z:[.1,.1,.9]},imperialist:{id:'imperialist',k:'m',n:'Imperialist',d:140,ty:'x',r:.4,imp:3,c:0xffd24a,z:[.03,.03,1.2]}};
+const isCr=()=>!!(MP.acct&&MP.acct.role==='creator');
+
+/* ---- per-account wardrobe save ---- */
+let S=null,SK='';
+const st=()=>{const k=KEY+':'+(MP.acct?MP.acct.id:'guest');if(S&&SK===k)return S;SK=k;try{S=JSON.parse(localStorage.getItem(k)||'null')}catch(e){S=null}if(!S||typeof S!=='object')S={cr:50,own:[],eq:[],vault:[]};['own','eq','vault'].forEach(x=>{if(!Array.isArray(S[x]))S[x]=[]});if(typeof S.cr!=='number')S.cr=50;return S};
+const save=()=>{try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}};
+
+/* ---- credits HUD ---- */
+const hud=document.createElement('div');hud.style.cssText='position:fixed;right:20px;bottom:110px;background:var(--pan);border-left:3px solid #ffd24a;padding:4px 10px;font-size:16px;font-weight:700;pointer-events:none;z-index:5';document.body.appendChild(hud);
+const paintHud=()=>{hud.textContent='◈ '+Math.floor(st().cr)+' credits'};
+const addCr=n=>{st().cr+=n;save();paintHud()};
+const _die=die;die=function(e,why){const was=e&&e.alive;const r=_die.apply(this,arguments);if(was&&!e.net&&!/Ban Hammer/.test(why||''))addCr(5);return r};
+
+/* ---- cosmetics (shown on your body in free camera, P) ---- */
+const gold=()=>new T.MeshBasicMaterial({color:0xffd24a});
+function cosModel(id){const g=new T.Group(),add=(m,x,y,z)=>{m.position.set(x,y,z);g.add(m);return m};
+ if(id==='halo'){add(new T.Mesh(new T.TorusGeometry(.26,.025,8,32),gold()),0,1.98,0).rotation.x=Math.PI/2}
+ else if(id==='gold_wings'){for(const s of[-1,1])for(let i=0;i<5;i++){const f=new T.Mesh(new T.BoxGeometry(.07,.75-i*.08,.015),gold());f.geometry.translate(0,.3,0);add(f,s*.12,1.3+i*.04,.16);f.rotation.z=-s*(.5+i*.28);f.rotation.x=.25}}
+ else if(id==='cape'){add(new T.Mesh(new T.PlaneGeometry(.6,.95),new T.MeshBasicMaterial({color:0x9a1018,side:T.DoubleSide})),0,1.15,.2).rotation.x=.12}
+ else if(id==='visor'){add(new T.Mesh(new T.BoxGeometry(.34,.07,.05),new T.MeshBasicMaterial({color:0x30e0ff})),0,1.62,-.19)}
+ else if(id==='crown'){add(new T.Mesh(new T.CylinderGeometry(.17,.13,.13,5,1,true),new T.MeshBasicMaterial({color:0xffd24a,side:T.DoubleSide})),0,1.82,0)}
+ else if(id==='shades'){add(new T.Mesh(new T.BoxGeometry(.32,.06,.04),new T.MeshBasicMaterial({color:0x050505})),0,1.64,-.17)}
+ else if(id==='tophat'){const k=new T.MeshStandardMaterial({color:0x111111});add(new T.Mesh(new T.CylinderGeometry(.14,.14,.28,16),k),0,1.9,0);add(new T.Mesh(new T.CylinderGeometry(.26,.26,.025,20),k),0,1.77,0)}
+ return g}
+const cosG=new T.Group();scene.add(cosG);let cosKey='';
+const activeIds=()=>{const s=st(),cr=isCr();return s.eq.filter(id=>CR_COS.includes(id)?(cr&&s.vault.includes(id)):s.own.includes(id))};
+function cosUpdate(){const s=st(),ids=activeIds(),key=ids.join();
+ if(key!==cosKey){cosKey=key;while(cosG.children.length)cosG.remove(cosG.children[0]);ids.forEach(id=>cosG.add(cosModel(id)))}
+ cosG.visible=!!fcam&&ids.length>0;if(cosG.visible){cosG.position.set(pl.p.x,pl.p.y-eyeH,pl.p.z);cosG.rotation.y=pl.yaw}}
+
+/* ---- multiplayer avatars: head and eyes follow where the player looks ---- */
+const _pose=poseAv;poseAv=function(e){_pose.apply(this,arguments);const c=e.cs,m=e.jm&&e.jm[0];if(c&&m&&c.k<.5){e.root.h=c.yaw+Math.PI;m.rotation.order='YXZ';m.rotation.y=c.yaw+Math.PI;m.rotation.x=-Math.max(-1.2,Math.min(1.2,c.pit))}};
+
+/* ---- weapons ---- */
+function addW(w){if(W.some(x=>x.id===w.id))return -1;W.push(w);const i=W.length-1,sp=document.createElement('span');sp.textContent=(i<9?i+1:i==9?0:'·')+' '+w.n;sp.onclick=()=>sel(i);bar.appendChild(sp);return i}
+function grant(){if(!isCr())return;const s=st();['ban_hammer','imperialist'].forEach(id=>{if(s.vault.includes(id))addW(WDEF[id])})}
+const _fire=fire;fire=function(){const w=W[cur];if(w&&w.id){if(!isCr()){toast('Creator-only item');return}if(w.k==='bh')return}return _fire.apply(this,arguments)};
+const _mk=mkGun;mkGun=function(i){const g=_mk(i),w=W[i];if(w&&w.id){g.children.forEach(c=>c.visible=false);const m=new T.MeshStandardMaterial({color:0x2b2f33,metalness:.9,roughness:.35}),r=new T.MeshStandardMaterial({color:0xc2121a,emissive:0x500008}),y=new T.MeshStandardMaterial({color:0xffd24a,emissive:0x806000,metalness:.8,roughness:.3});
+ const add=(geo,mat,x,yy,z,rx)=>{const o=new T.Mesh(geo,mat);o.position.set(x,yy,z);if(rx!==undefined)o.rotation.x=rx;g.add(o);return o};
+ if(w.id==='ban_hammer'){add(new T.CylinderGeometry(.012,.012,.6,8),m,0,0,-.3,Math.PI/2);add(new T.BoxGeometry(.13,.1,.1),m,0,0,-.62);add(new T.BoxGeometry(.135,.104,.025),r,0,0,-.58);add(new T.BoxGeometry(.135,.104,.025),r,0,0,-.66)}
+ else{add(new T.CylinderGeometry(.01,.01,1.4,8),y,0,0,-.5,Math.PI/2);add(new T.ConeGeometry(.03,.18,8),y,0,0,-1.29,-Math.PI/2);add(new T.BoxGeometry(.16,.02,.05),y,0,0,-1.08)}}
+ return g};
+
+/* ---- Ban Hammer: targeting laser, giant hammer, crater, moderation ---- */
+const bh={cd:0,armed:false,pt:null},anims=[],craters=[];
+const lnG=new T.BufferGeometry().setFromPoints([V(),V()]),laser=new T.Line(lnG,new T.LineBasicMaterial({color:0xff2030,transparent:true,opacity:.95}));laser.frustumCulled=false;laser.visible=false;scene.add(laser);
+const ring=new T.Mesh(new T.RingGeometry(.9,1.1,40).rotateX(-Math.PI/2),new T.MeshBasicMaterial({color:0xff2030,transparent:true,opacity:.85,side:T.DoubleSide,depthTest:false}));ring.visible=false;ring.renderOrder=9;scene.add(ring);
+function aimPt(){const o=cam.getWorldPosition(V()),d=cam.getWorldDirection(V());let t=120,e=null;if(d.y<-1e-3)t=Math.min(t,-o.y/d.y);try{trace(o,d,t,null).forEach(h=>{if(h.t<t){t=h.t;e=h.e}})}catch(x){}return{p:o.clone().addScaledVector(d,t),e}}
+const crT=(()=>{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),g=x.createRadialGradient(128,128,4,128,128,126);g.addColorStop(0,'#000');g.addColorStop(.55,'#17110c');g.addColorStop(.85,'rgba(40,30,20,.7)');g.addColorStop(1,'rgba(40,30,20,0)');x.fillStyle=g;x.beginPath();x.arc(128,128,126,0,7);x.fill();x.strokeStyle='#050403';x.lineWidth=3;for(let i=0;i<14;i++){const a=i*.45+Math.random()*.3;x.beginPath();x.moveTo(128,128);let px=128,py=128;for(let k=0;k<5;k++){px+=Math.cos(a+Math.random()*.5-.25)*24;py+=Math.sin(a+Math.random()*.5-.25)*24;x.lineTo(px,py)}x.stroke()}return new T.CanvasTexture(c)})();
+function crater(p){const m=new T.Mesh(new T.CircleGeometry(1,40).rotateX(-Math.PI/2),new T.MeshBasicMaterial({map:crT,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}));m.position.set(p.x,p.y+.03,p.z);m.scale.setScalar(4.2);m.rotation.y=Math.random()*6.28;scene.add(m);craters.push(m);while(craters.length>10)scene.remove(craters.shift())}
+const _clr=clr;clr=function(){craters.splice(0).forEach(c=>scene.remove(c));return _clr.apply(this,arguments)};
+function bigHammer(){const g=new T.Group(),m=new T.MeshStandardMaterial({color:0x2b2f33,metalness:.9,roughness:.35}),r=new T.MeshStandardMaterial({color:0xc2121a,emissive:0x700008,metalness:.5,roughness:.4}),h=new T.Mesh(new T.BoxGeometry(4.4,2.6,2.6),m);h.position.y=1.3;h.castShadow=true;g.add(h);[-1.3,1.3].forEach(x=>{const b=new T.Mesh(new T.BoxGeometry(.35,2.7,2.7),r);b.position.set(x,1.3,0);g.add(b)});const s=new T.Mesh(new T.CylinderGeometry(.22,.22,12,10),m);s.position.y=8.6;g.add(s);return g}
+function banPlayer(P){if(!isH()){toast('Only the room host can enforce bans');return}if(P.acct&&P.acct.role==='creator')return;
+ if(P.acct){MP.bans[P.acct.id]={name:P.acct.name,why:'Ban Hammer',t:Date.now()};try{localStorage.setItem('ar_bans_v1',JSON.stringify(MP.bans))}catch(x){}toast('BANNED: '+P.acct.name)}else toast('Guest kicked (guests can only be kicked, not banned)');
+ send(P.conn,{t:'no',why:'Banned by the Ban Hammer'});setTimeout(()=>{try{P.conn.close()}catch(x){}},300)}
+function impact(a){const p=a.p;crater(p);shake=Math.max(shake,1.3);try{flashFx('#fff',.55);sfx('boom',null,1,3)}catch(x){}
+ for(let i=0;i<70;i++)part(p.x+rr(-1.5,1.5),p.y+.2,p.z+rr(-1.5,1.5),rr(-7,7),rr(4,13),rr(-7,7),rr(.6,1.5),rr(.05,.16),0x4a3b2c,-9.8,0);
+ let hit=0;ents.forEach(e=>{if(!e.root||Math.hypot(e.root.x-p.x,e.root.z-p.z)>3.4)return;hit++;if(e.net!=null){const P=MP.peers.get(e.net);if(P)banPlayer(P)}else if(e.alive)die(e,'crushed by the Ban Hammer')});
+ if(!hit)toast('Ban Hammer: no targets in the crater')}
+function slam(t){if(!isCr()||bh.cd>0)return;bh.cd=4;const g=bigHammer();g.position.set(t.p.x,t.p.y+34,t.p.z);g.rotation.y=pl.yaw;scene.add(g);anims.push({g,p:t.p.clone(),ph:'fall',t:0})}
+document.addEventListener('mouseup',e=>{if(e.button===0&&bh.armed){bh.armed=false;if(bh.pt)slam(bh.pt);bh.pt=null}});
+
+/* ---- per-frame update ---- */
+let last=performance.now(),mz=V();
+(function loop(now){requestAnimationFrame(loop);try{const dt=Math.min(.05,(now-last)/1000);last=now;bh.cd=Math.max(0,bh.cd-dt);
+ const w=W[cur],on=w&&w.k==='bh'&&locked&&md&&bh.cd<=0&&isCr()&&!fcam;
+ if(on){bh.armed=true;bh.pt=aimPt();mz.set(.14,-.14,-.5);cam.localToWorld(mz);lnG.setFromPoints([mz.clone(),bh.pt.p]);laser.visible=true;ring.visible=true;ring.position.set(bh.pt.p.x,bh.pt.p.y+.06,bh.pt.p.z);ring.scale.setScalar(3.4*(1+Math.sin(now/90)*.06))}
+ else{laser.visible=false;ring.visible=false;if(!md||!w||w.k!=='bh'){bh.armed=false}}
+ for(let i=anims.length-1;i>=0;i--){const a=anims[i];a.t+=dt;
+  if(a.ph==='fall'){const k=Math.min(1,a.t/.5);a.g.position.y=a.p.y+34*(1-k*k);a.g.rotation.z=(1-k)*.3;if(k>=1){a.ph='hold';a.t=0;impact(a)}}
+  else if(a.ph==='hold'){if(a.t>1.1){a.ph='rise';a.t=0}}
+  else{a.g.position.y=a.p.y+a.t*a.t*70;if(a.t>.6){scene.remove(a.g);anims.splice(i,1)}}}
+ cosUpdate()}catch(err){if(!loop.e){loop.e=1;console.warn('Add-on loop error (shown once):',err)}}})(last);
+
+/* ---- menu: Wardrobe (3D preview + tabs + item grid) and Creator Vault ---- */
+const pan=document.createElement('div');pan.style.cssText='position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.65)';
+pan.innerHTML='<div class="card" style="width:min(780px,94vw)"><h1 style="font-size:32px" id="arpt"></h1><p id="arpd"></p><div style="display:flex;gap:16px;flex-wrap:wrap"><div id="arpvw" style="flex:0 0 240px"><canvas id="arpv" width="240" height="340" style="width:240px;height:340px;background:#0b0e10;border:1px solid var(--line)"></canvas></div><div style="flex:1;min-width:260px"><div id="arptabs" class="g" style="margin:0 0 8px"></div><div id="arpl" style="display:grid;gap:8px"></div></div></div><div class="g"><button id="arpc">Close</button></div></div>';document.body.appendChild(pan);
+const $l=pan.querySelector('#arpl'),tabsEl=pan.querySelector('#arptabs'),pvw=pan.querySelector('#arpvw');pan.addEventListener('keydown',e=>e.stopPropagation());
+let mode='',tab='head',pv=null;
+pan.querySelector('#arpc').onclick=()=>{pan.style.display='none'};
+function pvInit(){const c=pan.querySelector('#arpv'),r=new T.WebGLRenderer({canvas:c,antialias:true,alpha:true});r.outputEncoding=T.sRGBEncoding;r.toneMapping=T.ACESFilmicToneMapping;r.setSize(240,340,false);const sc=new T.Scene(),cm=new T.PerspectiveCamera(35,240/340,.1,50);cm.position.set(0,1.15,4.6);cm.lookAt(0,.95,0);sc.add(new T.HemisphereLight(0xffffff,0x445055,1.1));const dl=new T.DirectionalLight(0xffffff,1.6);dl.position.set(2,4,3);sc.add(dl);
+ const av=mk('civilian',0,0),k=ents.indexOf(av);if(k>=0)ents.splice(k,1);sc.add(av.g);av.net=-99;av.nm={position:V(),scale:V()};av.gi=-1;av.cs=null;av.st={x:0,y:0,z:0,yaw:Math.PI,pit:0,c:-1,d:0,eh:1.7};
+ const cg=new T.Group();sc.add(cg);pv={r,sc,cm,av,cg,key:'',run:0,t:0}}
+function pvLoop(){if(pan.style.display!=='flex'||mode!=='ward'){pv.run=0;return}requestAnimationFrame(pvLoop);try{const ids=activeIds(),k=ids.join();if(k!==pv.key){pv.key=k;while(pv.cg.children.length)pv.cg.remove(pv.cg.children[0]);ids.forEach(id=>pv.cg.add(cosModel(id)))}
+ pv.t+=.016;const s=pv.av.st;s.yaw=Math.PI+Math.sin(pv.t*.6)*1.1;s.pit=Math.sin(pv.t*1.3)*.3;rend(pv.av);pv.cg.rotation.y=s.yaw;pv.r.render(pv.sc,pv.cm)}catch(e){if(!pv.err){pv.err=1;console.warn('Wardrobe preview error (shown once):',e)}}}
+function pvStart(){try{if(!pv)pvInit();if(!pv.run){pv.run=1;pvLoop()}}catch(e){console.warn('Preview unavailable',e)}}
+function rowEl(name,sub,btn){const r=document.createElement('div');r.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)';const t=document.createElement('div');t.style.flex='1';t.innerHTML='<b></b><br><i style="color:var(--mut);font-style:normal"></i>';t.firstChild.textContent=name;t.lastChild.textContent=sub;r.append(t,btn);$l.appendChild(r)}
+function mkBtn(t,f,dis){const b=document.createElement('button');b.textContent=t;b.disabled=!!dis;b.onclick=f;return b}
+function eqToggle(s,id){const slot=ITEMS.find(x=>x[0]===id)[2];if(s.eq.includes(id))s.eq=s.eq.filter(x=>x!==id);else s.eq=[...s.eq.filter(x=>ITEMS.find(y=>y[0]===x)[2]!==slot),id];save()}
+function render(){const s=st(),ward=mode==='ward';$l.innerHTML='';tabsEl.innerHTML='';paintHud();pvw.style.display=ward?'':'none';tabsEl.style.display=ward?'':'none';$l.style.gridTemplateColumns=ward?'repeat(auto-fill,minmax(130px,1fr))':'1fr';
+ if(ward){pan.querySelector('#arpt').textContent='Wardrobe';pan.querySelector('#arpd').textContent='◈ '+Math.floor(s.cr)+' credits (+5 per NPC kill). One item per slot. Free camera (P) shows them in the game.';
+  [['head','HEAD'],['face','FACE'],['back','BACK']].forEach(([t,n])=>{const b=mkBtn(n,()=>{tab=t;render()});if(t===tab)b.style.borderBottom='2px solid #ffd24a';tabsEl.appendChild(b)});
+  ITEMS.filter(x=>x[2]===tab).forEach(([id,n,sl,c,cr])=>{const own=cr?(isCr()&&s.vault.includes(id)):s.own.includes(id);if(cr&&!own)return;const eq=s.eq.includes(id),d=document.createElement('div');d.style.cssText='border:1px solid '+(eq?'#ffd24a':cr?'#8a6a1a':'var(--line)')+';padding:8px;display:flex;flex-direction:column;gap:6px';d.innerHTML='<b></b><i style="color:var(--mut);font-style:normal"></i>';d.firstChild.textContent=n;d.lastChild.textContent=cr?'Creator item':own?(eq?'Equipped':'Owned'):c+' credits';
+   d.appendChild(own?mkBtn(eq?'Unequip':'Equip',()=>{eqToggle(s,id);render()}):mkBtn('Buy',()=>{if(s.cr<c)return;s.cr-=c;s.own.push(id);eqToggle(s,id);render()},s.cr<c));$l.appendChild(d)});
+  if(!$l.children.length){const p=document.createElement('p');p.textContent='Nothing in this tab yet.';$l.appendChild(p)}pvStart()}
+ else{pan.querySelector('#arpt').textContent='Creator Vault';pan.querySelector('#arpd').textContent=isCr()?'Creator account verified. Items go to your inventory; weapons appear in your weapon bar.':'Creator account required. Sign in with the account whose role is set to creator.';
+  if(isCr())VAULT.forEach(([id,n,ty])=>{const has=s.vault.includes(id);rowEl(n,ty,mkBtn(has?'In inventory ✓':'Add to inventory',()=>{s.vault.push(id);save();grant();const wi=W.findIndex(x=>x.id===id);if(wi>=0)sel(wi);toast(n+' added');render()},has))})}}
+const card=document.querySelector('#menu .card'),row=document.createElement('div');row.className='g';
+const bW=mkBtn('Wardrobe',()=>{mode='ward';render();pan.style.display='flex';pvStart()}),bV=mkBtn('Creator Vault',()=>{mode='vault';render();pan.style.display='flex'});bV.style.display='none';
+const ver=document.createElement('small');ver.textContent='add-on build 6';ver.style.cssText='color:var(--mut);align-self:center';row.append(bW,bV,ver);card.insertBefore(row,card.querySelector('.mode'));
+setInterval(()=>{bV.style.display=isCr()?'':'none';grant();paintHud()},1000);paintHud();
+})();
+
 })();
 </script></body></html>
