@@ -1324,12 +1324,14 @@ const crT=(()=>{const c=document.createElement('canvas');c.width=c.height=256;co
 function crater(p){const m=new T.Mesh(new T.CircleGeometry(1,40).rotateX(-Math.PI/2),new T.MeshBasicMaterial({map:crT,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}));m.position.set(p.x,p.y+.03,p.z);m.scale.setScalar(4.2);m.rotation.y=Math.random()*6.28;scene.add(m);craters.push(m);while(craters.length>10)scene.remove(craters.shift())}
 const _clr=clr;clr=function(){craters.splice(0).forEach(c=>scene.remove(c));return _clr.apply(this,arguments)};
 function bigHammer(){const g=new T.Group(),m=new T.MeshStandardMaterial({color:0x2b2f33,metalness:.9,roughness:.35}),r=new T.MeshStandardMaterial({color:0xc2121a,emissive:0x700008,metalness:.5,roughness:.4}),h=new T.Mesh(new T.BoxGeometry(4.4,2.6,2.6),m);h.position.y=1.3;h.castShadow=true;g.add(h);[-1.3,1.3].forEach(x=>{const b=new T.Mesh(new T.BoxGeometry(.35,2.7,2.7),r);b.position.set(x,1.3,0);g.add(b)});const s=new T.Mesh(new T.CylinderGeometry(.22,.22,12,10),m);s.position.y=8.6;g.add(s);return g}
-function banPlayer(P){if(!isH()){toast('Only the room host can enforce bans');return}if(P.acct&&P.acct.role==='creator')return;
- if(P.acct){MP.bans[P.acct.id]={name:P.acct.name,why:'Ban Hammer',t:Date.now()};try{localStorage.setItem('ar_bans_v1',JSON.stringify(MP.bans))}catch(x){}toast('BANNED: '+P.acct.name)}else toast('Guest kicked (guests can only be kicked, not banned)');
- send(P.conn,{t:'no',why:'Banned by the Ban Hammer'});setTimeout(()=>{try{P.conn.close()}catch(x){}},300)}
+function kickPlayer(P){if(!isH()){toast('Only the room host can kick players');return}if(P.acct&&P.acct.role==='creator')return;
+ send(P.conn,{t:'no',why:'Disintegrated and kicked by the Ban Hammer'});setTimeout(()=>{try{P.conn.close()}catch(x){}},400);toast('KICKED: '+(P.acct?P.acct.name:P.name||'player'))}
+function dust(e){const cols=[0x8a8a8a,0xffd24a,0xdddddd,0x555555];e.pts.forEach(q=>{const p=q.p;for(let n=0;n<14;n++)part(p.x+rr(-.1,.1),p.y+rr(-.1,.1),p.z+rr(-.1,.1),rr(-1.5,1.5),rr(1,4),rr(-1.5,1.5),rr(1.2,2.6),rr(.03,.09),cols[n%4],-.6,0)})}
 function impact(a){const p=a.p;crater(p);shake=Math.max(shake,1.3);try{flashFx('#fff',.55);sfx('boom',null,1,3)}catch(x){}
  for(let i=0;i<70;i++)part(p.x+rr(-1.5,1.5),p.y+.2,p.z+rr(-1.5,1.5),rr(-7,7),rr(4,13),rr(-7,7),rr(.6,1.5),rr(.05,.16),0x4a3b2c,-9.8,0);
- let hit=0;ents.forEach(e=>{if(!e.root||Math.hypot(e.root.x-p.x,e.root.z-p.z)>3.4)return;hit++;if(e.net!=null){const P=MP.peers.get(e.net);if(P)banPlayer(P)}else if(e.alive)die(e,'crushed by the Ban Hammer')});
+ let hit=0;ents.slice().forEach(e=>{if(!e.root||!e.pts||Math.hypot(e.root.x-p.x,e.root.z-p.z)>3.4)return;
+  if(e.net!=null){const P=MP.peers.get(e.net);if(P&&!(P.acct&&P.acct.role==='creator')){hit++;dust(e);e.g.visible=false;kickPlayer(P)}}
+  else{hit++;dust(e);e.alive=false;kill(e);const k=ents.indexOf(e);if(k>=0)ents.splice(k,1);try{count()}catch(x){}}});
  if(!hit)toast('Ban Hammer: no targets in the crater')}
 function slam(t){if(!isCr()||bh.cd>0)return;bh.cd=4;const g=bigHammer();g.position.set(t.p.x,t.p.y+34,t.p.z);g.rotation.y=pl.yaw;scene.add(g);anims.push({g,p:t.p.clone(),ph:'fall',t:0})}
 document.addEventListener('mouseup',e=>{if(e.button===0&&bh.armed){bh.armed=false;if(bh.pt)slam(bh.pt);bh.pt=null}});
@@ -1371,13 +1373,13 @@ function render(){const s=st(),ward=mode==='ward';$l.innerHTML='';tabsEl.innerHT
   if(isCr())VAULT.forEach(([id,n,ty])=>{const has=s.vault.includes(id);rowEl(n,ty,mkBtn(has?'In inventory ✓':'Add to inventory',()=>{s.vault.push(id);save();grant();const wi=W.findIndex(x=>x.id===id);if(wi>=0)sel(wi);toast(n+' added');render()},has))})}}
 const card=document.querySelector('#menu .card'),row=document.createElement('div');row.className='g';
 const bW=mkBtn('Wardrobe',()=>{mode='ward';render();pan.style.display='flex';pvStart()}),bV=mkBtn('Creator Vault',()=>{mode='vault';render();pan.style.display='flex'});bV.style.display='none';
-const ver=document.createElement('small');ver.textContent='add-on build 9';ver.style.cssText='color:var(--mut);align-self:center';row.append(bW,bV,ver);card.insertBefore(row,card.querySelector('.mode'));
+const ver=document.createElement('small');ver.textContent='add-on build 11';ver.style.cssText='color:var(--mut);align-self:center';row.append(bW,bV,ver);card.insertBefore(row,card.querySelector('.mode'));
 const lockSetup=()=>{const u=document.querySelector('#ar-sb-url'),d=u&&u.closest('details'),bx=d&&d.parentElement;if(!bx)return;const ok=isCr()&&MP.acct&&MP.acct.name==='MRMR';bx.style.display=ok?'':'none';if(!ok)d.open=false};
 /* ---- auto login: remember every sign-in on this device and restore the cloud role on load ---- */
-const _la=loginAcct;loginAcct=async function(){const r=await _la.apply(this,arguments);try{await saveRemember(MP.acct)}catch(e){}return r};
+const _la=loginAcct;loginAcct=async function(){const r=await _la.apply(this,arguments);if(cloudProfile&&cloudProfile.username&&MP.acct)MP.acct.name=cloudProfile.username;try{await saveRemember(MP.acct)}catch(e){}return r};
 const _ca=createAcct;createAcct=async function(){const r=await _ca.apply(this,arguments);try{await saveRemember(MP.acct)}catch(e){}return r};
 (async()=>{for(let i=0;i<60;i++){await new Promise(r=>setTimeout(r,500));if(!MP.acct)continue;if(MP.acct.role)return;try{const{data}=await getCloud().auth.getSession();if(data&&data.session){const p=await cloudProfileFor(data.session.user);MP.acct.cloudUid=data.session.user.id;MP.acct.role=p.role||'player';MP.acct.global=true;if(p.username)MP.acct.name=p.username;acctUI()}}catch(e){}return}})();
-const stat=()=>{ver.textContent='add-on build 9 · '+(MP.acct?MP.acct.name+' ('+(MP.acct.role||'no cloud role')+')':'not signed in')};
+const stat=()=>{ver.textContent='add-on build 11 · '+(MP.acct?MP.acct.name+' ('+(MP.acct.role||'no cloud role')+')':'not signed in')};
 lockSetup();stat();setInterval(()=>{lockSetup();stat();bV.style.display=isCr()?'':'none';grant();paintHud()},1000);paintHud();
 })();
 
