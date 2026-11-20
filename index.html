@@ -824,7 +824,7 @@ function poseAv(e){const s=e.st;if(!s)return;let c=e.cs;if(!c)c=e.cs={x:s.x,y:s.
   if(!s.d){const h=e.pts[9],el=e.pts[7];h.p.copy(g.position);el.p.copy(e.pts[5].p).lerp(h.p,.5);el.p.y-=.12;h.q.copy(h.p);el.q.copy(el.p);
    const lh=e.pts[8],le=e.pts[6];lh.p.set(g.position.x-sy*cp*.3,g.position.y+sp2*.3-.03,g.position.z-cy*cp*.3);le.p.copy(e.pts[4].p).lerp(lh.p,.5);le.p.y-=.12;lh.q.copy(lh.p);le.q.copy(le.p)}}
  e.nm.position.set(c.x,c.y+(s.eh||1.7)+.5,c.z);const dd=Math.max(.5,cam.position.distanceTo(e.nm.position));e.nm.scale.set(dd*.17,dd*.0425,1)}
-const mySt=()=>({x:+pl.p.x.toFixed(2),y:+(pl.p.y-eyeH).toFixed(2),z:+pl.p.z.toFixed(2),yaw:+pl.yaw.toFixed(3),pit:+pl.pit.toFixed(3),c:cur,d:pl.dead>0?1:0,eh:+eyeH.toFixed(2)});
+const mySt=()=>({x:+pl.p.x.toFixed(2),y:+(pl.p.y-eyeH).toFixed(2),z:+pl.p.z.toFixed(2),yaw:+pl.yaw.toFixed(3),pit:+pl.pit.toFixed(3),c:cur,d:pl.dead>0?1:0,eh:+eyeH.toFixed(2),cos:window.__arCos||[]});
 const plist=()=>[Object.assign({i:0},mySt()),...[...MP.peers.values()].filter(P=>P.st).map(P=>Object.assign({i:P.pid},P.st))];
 /* ---------- host: snapshot, events, remote input ---------- */
 function snap(){
@@ -1300,12 +1300,16 @@ function cosModel(id){const g=new T.Group(),add=(m,x,y,z)=>{m.position.set(x,y,z
  return g}
 const cosG=new T.Group();scene.add(cosG);let cosKey='';
 const activeIds=()=>{const s=st(),cr=isCr();return s.eq.filter(id=>CR_COS.includes(id)?(cr&&s.vault.includes(id)):s.own.includes(id))};
-function cosUpdate(){const s=st(),ids=activeIds(),key=ids.join();
+function cosUpdate(){const s=st(),ids=activeIds(),key=ids.join();window.__arCos=ids.slice(0,4);
  if(key!==cosKey){cosKey=key;while(cosG.children.length)cosG.remove(cosG.children[0]);ids.forEach(id=>cosG.add(cosModel(id)))}
  cosG.visible=!!fcam&&ids.length>0;if(cosG.visible){cosG.position.set(pl.p.x,pl.p.y-eyeH,pl.p.z);cosG.rotation.y=pl.yaw}}
 
 /* ---- multiplayer avatars: head and eyes follow where the player looks ---- */
-const _pose=poseAv;poseAv=function(e){_pose.apply(this,arguments);const c=e.cs,m=e.jm&&e.jm[0];if(c&&m&&c.k<.5){e.root.h=c.yaw+Math.PI;m.rotation.order='YXZ';m.rotation.y=c.yaw+Math.PI;m.rotation.x=-Math.max(-1.2,Math.min(1.2,c.pit))}};
+const _pose=poseAv;poseAv=function(e){_pose.apply(this,arguments);const c=e.cs,m=e.jm&&e.jm[0];if(c&&m&&c.k<.5){e.root.h=c.yaw+Math.PI;m.rotation.order='YXZ';m.rotation.y=c.yaw+Math.PI;m.rotation.x=-Math.max(-1.2,Math.min(1.2,c.pit))}
+ /* other players' cosmetics: read the list they broadcast, show only known items */
+ if(e.net!=null&&e.net!==-99&&c&&e.st){let who='';try{who=nm(e.net)}catch(x){}const ok=ITEMS.map(x=>x[0]),own=who==='MRMR',ids=(Array.isArray(e.st.cos)?e.st.cos:[]).filter(id=>typeof id==='string'&&ok.includes(id)&&(!CR_COS.includes(id)||own)).slice(0,4),k=ids.join();
+  if(e.cosK!==k){e.cosK=k;if(e.cosG)e.g.remove(e.cosG);e.cosG=new T.Group();ids.forEach(id=>e.cosG.add(cosModel(id)));e.g.add(e.cosG)}
+  if(e.cosG){e.cosG.visible=c.k<.5;e.cosG.position.set(c.x,c.y,c.z);e.cosG.rotation.y=c.yaw;e.cosG.scale.setScalar(Math.max(.6,Math.min(1.2,(e.st.eh||1.7)/1.7)))}}};
 
 /* ---- weapons ---- */
 function addW(w){if(W.some(x=>x.id===w.id))return -1;W.push(w);const i=W.length-1,sp=document.createElement('span');sp.textContent=(i<9?i+1:i==9?0:'·')+' '+w.n;sp.onclick=()=>sel(i);bar.appendChild(sp);return i}
@@ -1410,7 +1414,7 @@ function render(){const s=st(),ward=mode==='ward';$l.innerHTML='';tabsEl.innerHT
   if(isCr())VAULT.forEach(([id,n,ty])=>{const has=s.vault.includes(id);rowEl(n,ty,mkBtn(has?'In inventory ✓':'Add to inventory',()=>{s.vault.push(id);save();grant();const wi=W.findIndex(x=>x.id===id);if(wi>=0)sel(wi);toast(n+' added');render()},has))})}}
 const card=document.querySelector('#menu .card'),row=document.createElement('div');row.className='g';
 const bW=mkBtn('Wardrobe',()=>{mode='ward';render();pan.style.display='flex';pvStart()}),bV=mkBtn('Creator Vault',()=>{mode='vault';render();pan.style.display='flex'});bV.style.display='none';const bC=mkBtn('Creator Menu',()=>{mode='cm';render();pan.style.display='flex'});bC.style.display='none';
-const ver=document.createElement('small');ver.textContent='add-on build 19';ver.style.cssText='color:var(--mut);align-self:center';row.append(bW,bV,bC,ver);card.insertBefore(row,card.querySelector('.mode'));
+const ver=document.createElement('small');ver.textContent='add-on build 20';ver.style.cssText='color:var(--mut);align-self:center';row.append(bW,bV,bC,ver);card.insertBefore(row,card.querySelector('.mode'));
 const lockSetup=()=>{const u=document.querySelector('#ar-sb-url'),d=u&&u.closest('details'),bx=d&&d.parentElement;if(!bx)return;const ok=isCr()&&MP.acct&&MP.acct.name==='MRMR';bx.style.display=ok?'':'none';if(!ok)d.open=false};
 /* ---- auto login: remember every sign-in on this device and restore the cloud role on load ---- */
 const AUTO='ar_auto_v1',keep=(n,p)=>{try{if(MP.acct&&n&&p)localStorage.setItem(AUTO,JSON.stringify({n,p}))}catch(e){}};
@@ -1419,7 +1423,7 @@ const _ca=createAcct;createAcct=async function(){const n=arguments[0],p=argument
 const _lo=cloudLogout;cloudLogout=async function(){try{localStorage.removeItem(AUTO)}catch(e){}return _lo.apply(this,arguments)};
 setTimeout(async()=>{if(MP.acct)return;let c=null;try{c=JSON.parse(localStorage.getItem(AUTO)||'null')}catch(e){}if(c&&c.n&&c.p){try{await loginAcct(c.n,c.p);toast('Welcome back, '+MP.acct.name)}catch(e){console.warn('Auto login failed:',e&&e.message)}}},2500);
 (async()=>{for(let i=0;i<60;i++){await new Promise(r=>setTimeout(r,500));if(!MP.acct)continue;if(MP.acct.role)return;try{const{data}=await getCloud().auth.getSession();if(data&&data.session){const p=await cloudProfileFor(data.session.user);MP.acct.cloudUid=data.session.user.id;MP.acct.role=p.role||'player';MP.acct.global=true;if(p.username)MP.acct.name=p.username;acctUI()}}catch(e){}return}})();
-const stat=()=>{ver.textContent='add-on build 19 · '+(MP.acct?MP.acct.name+' ('+(MP.acct.role||'no cloud role')+')':'not signed in')};
+const stat=()=>{ver.textContent='add-on build 20 · '+(MP.acct?MP.acct.name+' ('+(MP.acct.role||'no cloud role')+')':'not signed in')};
 lockSetup();stat();setInterval(()=>{lockSetup();stat();bV.style.display=bC.style.display=isCr()?'':'none';grant();paintHud()},1000);paintHud();
 })();
 
