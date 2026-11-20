@@ -741,7 +741,7 @@ let spawn=t=>{const[x,z]=place();if(t==='barrel')barrel(x,z);else{if(ents.length
 function kill(e){scene.remove(e.g);if(grab&&grab.e===e)grab=null}
 let clr=()=>{ents.splice(0).forEach(kill);const rm2=a=>a.forEach(b=>{const i=PL.indexOf(b);if(i>=0)PL.splice(i,1)});DEV.splice(0).forEach(o=>{scene.remove(o.g);rm2(o.bs)});PROPS.splice(0).forEach(o=>{scene.remove(o.g);rm2(o.bs)});barrels.splice(0).forEach(b=>scene.remove(b.m));for(let i=0;i<ND;i++){D2.scale.setScalar(0);D2.updateMatrix();dc.setMatrixAt(i,D2.matrix)}dc.instanceMatrix.needsUpdate=true;pd.forEach(p=>p.a=0)};
 const sp=$('#sp');Object.entries(SPW).forEach(([k,v])=>{const b=document.createElement('button');b.textContent='Spawn '+v.toLowerCase();b.onclick=()=>spawn(k);sp.appendChild(b)});
-[['X-ray (X)',()=>xr=!xr],['Slow motion (T)',()=>ts=ts===1?.25:1],['Clear all (N)',()=>clr()]].forEach(([l,f])=>{const b=document.createElement('button');b.textContent=l;b.onclick=f;sp.appendChild(b)});
+[['X-ray (X)',()=>xr=!xr],['Slow motion (T)',()=>{if(window.__isClient&&window.__isClient()){toast('Only the host can slow time');return}ts=ts===1?.25:1}],['Clear all (N)',()=>clr()]].forEach(([l,f])=>{const b=document.createElement('button');b.textContent=l;b.onclick=f;sp.appendChild(b)});
 const cv=ren.domElement;let fb=false;const start=()=>{try{cv.requestPointerLock()}catch(e){}setTimeout(()=>{if(!document.pointerLockElement&&!locked){fb=true;locked=true;$('#menu').style.display='none';cv.style.cursor='none'}},300)};$('#go').onclick=start;cv.onclick=()=>{if(!locked)start()};
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===cv;$('#menu').style.display=locked?'none':'flex';if(!locked){md=false;grab=null}});
 document.addEventListener('mousemove',e=>{if(!locked||cin)return;const sn=cam.fov/75;pl.yaw-=e.movementX*.0022*sn;pl.pit=Math.max(-1.5,Math.min(1.5,pl.pit-e.movementY*.0022*sn))});
@@ -749,7 +749,7 @@ document.addEventListener('mousedown',e=>{if(!locked)return;if(edit){if(e.button
 document.addEventListener('mouseup',e=>{if(e.button===2)adsOn=false;else{md=false;grab=null}});document.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('wheel',e=>{if(!locked)return;if(edit){eIdx=(eIdx+(e.deltaY>0?1:-1)+ITEMS.length)%ITEMS.length;edUI();return}if(fcam){fsp=Math.max(1,Math.min(40,fsp*(e.deltaY>0?.85:1.18)));return}if(adsOn&&!W[cur].k){zf=Math.max(8,Math.min(60,zf+(e.deltaY>0?4:-4)));return}if(grab&&W[cur].k==='g')grab.dist=Math.max(1.2,Math.min(10,grab.dist+(e.deltaY>0?-.4:.4)));else sel(cur+(e.deltaY>0?1:-1))});
 document.addEventListener('keydown',e=>{keys[e.code]=1;seqK=(seqK+(e.key||'')).toLowerCase().slice(-8);if(!jjk&&seqK.endsWith('cursed'))unlockJJK();if(e.code==='Escape'&&fb){locked=!locked;$('#menu').style.display=locked?'none':'flex';md=false;return}if(!locked)return;if(cin&&e.code==='Space'){cinSkip();return}if(e.code==='Tab'){e.preventDefault();toggleEdit();return}if(edit&&editKey(e))return;const d=e.code.match(/^Digit(\d)$/);if(d)sel(d[1]==='0'?9:+d[1]-1);
- ({KeyQ:()=>sel(cur-1),KeyE:()=>sel(cur+1),KeyF:()=>spawn('civilian'),KeyG:()=>spawn('gunman'),KeyH:()=>spawn('brute'),KeyV:()=>spawn('rag'),KeyB:()=>spawn('barrel'),KeyX:()=>xr=!xr,KeyT:()=>ts=ts===1?.25:1,KeyN:clr,KeyU:useDev,KeyO:()=>{cinOn=!cinOn;toast(cinOn?'Cinematics on':'Cinematics off')},KeyP:toggleFree,Backquote:()=>{if(cur>=15)sel(lastW);else if(jjk)sel(lastP)},KeyR:reload,KeyZ:rack,KeyK:()=>{pl.hp=100;pl.dead=0}})[e.code]?.()});
+ ({KeyQ:()=>sel(cur-1),KeyE:()=>sel(cur+1),KeyF:()=>spawn('civilian'),KeyG:()=>spawn('gunman'),KeyH:()=>spawn('brute'),KeyV:()=>spawn('rag'),KeyB:()=>spawn('barrel'),KeyX:()=>xr=!xr,KeyT:()=>{if(window.__isClient&&window.__isClient()){toast('Only the host can slow time');return}ts=ts===1?.25:1},KeyN:clr,KeyU:useDev,KeyO:()=>{cinOn=!cinOn;toast(cinOn?'Cinematics on':'Cinematics off')},KeyP:toggleFree,Backquote:()=>{if(cur>=15)sel(lastW);else if(jjk)sel(lastP)},KeyR:reload,KeyZ:rack,KeyK:()=>{pl.hp=100;pl.dead=0}})[e.code]?.()});
 document.addEventListener('keyup',e=>keys[e.code]=0);
 for(let i=0;i<3;i++)mk('civilian',rr(-8,8),rr(-4,-12));mk('gunman',6,-10);mk('brute',-6,-12);barrel(-3,-6);barrel(4,-4);[[22,18],[-24,28],[36,-6],[-30,4],[8,-44],[52,10],[-8,40],[18,-52],[-70,20],[-60,70],[30,70],[85,-60],[75,-40],[-70,-30],[20,-70],[-10,60],[62,-60],[-40,-20],[60,0],[-80,-10]].forEach(([x,z])=>mk('civilian',x,z));mk('gunman',-34,-34);mk('gunman',-38,-36);mk('gunman',30,-26);mk('gunman',66,-78);mk('gunman',80,-58);mk('gunman',60,70);mk('gunman',75,85);mk('gunman',-45,-10);mk('brute',43,30);mk('brute',-20,-50);mk('brute',-70,40);mk('brute',0,70);barrel(-30,-36);barrel(-37,-31);vrInit();ren.setAnimationLoop(frame);
 </script>
@@ -848,13 +848,13 @@ function hostShot(P,s){const av=MP.av.get(P.pid);if(!av||!ents.includes(av))retu
 function hostMsg(P,m){if(!m)return;if(m.t==='chat'){hostChat(P,m.m);return}if(m.t!=='i')return;P.st=m.st;
  (m.s||[]).forEach(s=>hostShot(P,s));
  (m.g||[]).forEach(g=>{gfx(g[0],g[1],g[2]);MP.ev.push({t:'g',i:g[0],a:g[1],b:g[2],o:P.pid})});
- (m.pj||[]).forEach(addProj);(m.sp||[]).forEach(s=>spawnAt(s[0],s[1],s[2]));
+ (m.pj||[]).forEach(addProj);
  (m.ht||[]).forEach(h=>{const[k,v0,pt,d,D,wi,fl,zn0]=h,v=Math.min(100,+v0||0),zn=['el','er','al','ar'].includes(zn0)?zn0:0;
   if(k===0){MP.last={s:P.pid,w:wi,t:performance.now()};_hitP(v);if(zn&&window.__arSense)window.__arSense(zn)}else{const Q=MP.peers.get(k);if(Q)send(Q.conn,{t:'d',v,s:P.pid,w:wi,z:zn})}if(zn){const av=MP.av.get(k);if(av&&zn[0]==='e'&&av.eyes)popEyes(av,1);MP.ev.push({t:'z',i:k,z:zn,o:P.pid})}
   if(!fl){bleed(V3(pt),V3(d),Math.min(10,2+D*.1|0),Math.min(4,1.5+D*.03));MP.ev.push({t:'a',pt,d,D,o:P.pid})}});
  (m.fl||[]).forEach(f=>{const o=V3(f[0]),d=V3(f[1]);flameFx(o,d);hostFlame(o,d);MP.ev.push({t:'f',p:f[0],d:f[1],o:P.pid})});
  if(m.ud)toggleDev(m.ud[0],m.ud[1]);if(m.dt)recordKill(P.pid,m.dt[0],m.dt[1]);
- if(m.cl)_clr()}
+ }
 /* ---------- client: apply snapshots and events ---------- */
 function applySnap(m){
  MP.nmz=m.nm||MP.nmz;syncAv(m.pl.filter(s=>s.i!==MP.id));MP.scc=m.sc||{};if(m.L)applyL(m.L);
@@ -983,8 +983,8 @@ boom=function(b){if(isC())return;_boom(b)};
 expl=function(x,y,z,Rd,dm){if(isC()&&!MP.ax)return;
  if(isH()&&MP.peers.size){MP.inExpl=true;try{_expl(x,y,z,Rd,dm)}finally{MP.inExpl=false}MP.ev.push({t:'x',x:+x.toFixed(2),y:+y.toFixed(2),z:+z.toFixed(2),R:Rd,dm,o:-1})}else _expl(x,y,z,Rd,dm)};
 rend=function(e){if(e.net!=null)poseAv(e);else if(e.tg&&isC())smooth(e);_rend(e)};
-spawn=function(t){if(isC()){const[x,z]=place();MP.sp.push([t,x,z]);return}_spawn(t)};
-clr=function(){if(isC()){MP.cl=1;return}_clr()};
+spawn=function(t){if(isC()){toast('Only the host can spawn people');return}_spawn(t)};
+clr=function(){if(isC()){toast('Only the host can clear');return}_clr()};
 toggleEdit=function(){if(isC()){toast('Edit mode is host-only in multiplayer');return}_te()};
 /* ---------- props & contraptions sync ---------- */
 const _prop=prop,_dev=dev,_devTick=devTick,_useDev=useDev;
@@ -1275,6 +1275,7 @@ const VAULT=[['gold_wings','IMPERIAL GOLD WINGS','Creator cosmetic'],['halo','IM
 const CR_COS=['gold_wings','halo'];
 const WDEF={ban_hammer:{id:'ban_hammer',k:'bh',n:'Ban Hammer',a:1,r:.1,c:0xc2121a,z:[.1,.1,.9]},imperialist:{id:'imperialist',k:'m',n:'Imperialist',d:140,ty:'x',r:.4,imp:3,c:0xffd24a,z:[.03,.03,1.2]}};
 let boss=null;const orbs=[];
+window.__isClient=()=>MP.mode==='client';
 const isCr=()=>!!(MP.acct&&MP.acct.role==='creator');
 
 /* ---- per-account wardrobe save ---- */
@@ -1430,7 +1431,7 @@ function render(){const s=st(),ward=mode==='ward';$l.innerHTML='';tabsEl.innerHT
   if(isCr())VAULT.forEach(([id,n,ty])=>{const has=s.vault.includes(id);rowEl(n,ty,mkBtn(has?'In inventory ✓':'Add to inventory',()=>{s.vault.push(id);save();grant();const wi=W.findIndex(x=>x.id===id);if(wi>=0)sel(wi);toast(n+' added');render()},has))})}}
 const card=document.querySelector('#menu .card'),row=document.createElement('div');row.className='g';
 const bW=mkBtn('Wardrobe',()=>{mode='ward';render();pan.style.display='flex';pvStart()}),bV=mkBtn('Creator Vault',()=>{mode='vault';render();pan.style.display='flex'});bV.style.display='none';const bC=mkBtn('Creator Menu',()=>{mode='cm';render();pan.style.display='flex'});bC.style.display='none';
-const ver=document.createElement('small');ver.textContent='add-on build 21';ver.style.cssText='color:var(--mut);align-self:center';row.append(bW,bV,bC,ver);card.insertBefore(row,card.querySelector('.mode'));
+const ver=document.createElement('small');ver.textContent='add-on build 22';ver.style.cssText='color:var(--mut);align-self:center';row.append(bW,bV,bC,ver);card.insertBefore(row,card.querySelector('.mode'));
 const lockSetup=()=>{const u=document.querySelector('#ar-sb-url'),d=u&&u.closest('details'),bx=d&&d.parentElement;if(!bx)return;const ok=isCr()&&MP.acct&&MP.acct.name==='MRMR';bx.style.display=ok?'':'none';if(!ok)d.open=false};
 /* ---- auto login: remember every sign-in on this device and restore the cloud role on load ---- */
 const AUTO='ar_auto_v1',keep=(n,p)=>{try{if(MP.acct&&n&&p)localStorage.setItem(AUTO,JSON.stringify({n,p}))}catch(e){}};
@@ -1439,7 +1440,7 @@ const _ca=createAcct;createAcct=async function(){const n=arguments[0],p=argument
 const _lo=cloudLogout;cloudLogout=async function(){try{localStorage.removeItem(AUTO)}catch(e){}return _lo.apply(this,arguments)};
 setTimeout(async()=>{if(MP.acct)return;let c=null;try{c=JSON.parse(localStorage.getItem(AUTO)||'null')}catch(e){}if(c&&c.n&&c.p){try{await loginAcct(c.n,c.p);toast('Welcome back, '+MP.acct.name)}catch(e){console.warn('Auto login failed:',e&&e.message)}}},2500);
 (async()=>{for(let i=0;i<60;i++){await new Promise(r=>setTimeout(r,500));if(!MP.acct)continue;if(MP.acct.role)return;try{const{data}=await getCloud().auth.getSession();if(data&&data.session){const p=await cloudProfileFor(data.session.user);MP.acct.cloudUid=data.session.user.id;MP.acct.role=p.role||'player';MP.acct.global=true;if(p.username)MP.acct.name=p.username;acctUI()}}catch(e){}return}})();
-const stat=()=>{ver.textContent='add-on build 21 · '+(MP.acct?MP.acct.name+' ('+(MP.acct.role||'no cloud role')+')':'not signed in')};
+const stat=()=>{ver.textContent='add-on build 22 · '+(MP.acct?MP.acct.name+' ('+(MP.acct.role||'no cloud role')+')':'not signed in')};
 lockSetup();stat();setInterval(()=>{lockSetup();stat();bV.style.display=bC.style.display=isCr()?'':'none';grant();paintHud()},1000);paintHud();
 })();
 
