@@ -983,8 +983,8 @@ function cap2(txt){const c=$('#cap');c.innerHTML+='<small>'+txt+'</small>'}
 function capOff(){$('#cap').style.opacity=0}
 function flashFx(col,op){fxEl.style.transition='none';fxEl.style.background=col;fxEl.style.opacity=op;requestAnimationFrame(()=>{fxEl.style.transition='opacity .7s';fxEl.style.opacity=0})}
 function slashFx(){const q=$('#sl');q.style.transition='none';q.style.opacity=1;q.style.transform='rotate(-22deg) scaleX(0)';requestAnimationFrame(()=>requestAnimationFrame(()=>{q.style.transition='transform .12s ease-out,opacity .5s .2s';q.style.transform='rotate(-22deg) scaleX(1)';q.style.opacity=0}))}
-function cinStart(k,o,fw){if(cin)return;tsPrev=ts;cin={k,o,fw,t0:performance.now(),len:{pu:9,dom:5.1,cle:2,red:2.6}[k],cap:0};if(k==='pu'){let best=45;const Ff=V(-Math.sin(pl.yaw),0,-Math.cos(pl.yaw));ents.forEach(e=>{if(!e.alive)return;const v=e.pts[3].p.clone().sub(pl.p),d=v.length();if(d>4&&d<best&&v.normalize().dot(Ff)>.6){best=d;cin.tg=e}});if(cin.tg)cin.tg.frz=1}av.visible=true;$('#lb1').style.height=$('#lb2').style.height='11vh';toast('Space or click to skip. O toggles cinematics.')}
-function cinEnd(){if(cin&&cin.tg)cin.tg.frz=0;cin=null;ts=tsPrev||1;av.visible=false;av.userData.ra.rotation.set(0,0,0);av.userData.la.rotation.set(0,0,0);orbB.visible=orbR.visible=orbP.visible=false;$('#lb1').style.height=$('#lb2').style.height='0';capOff();if(dom){dom.hold=false;dom.t=7;if(dom.m)dom.m.scale.setScalar(20)}}
+function cinStart(k,o,fw){if(cin)return;tsPrev=ts;cin={k,o,fw,t0:performance.now(),len:{pu:9,dom:5.1,cle:2,red:2.6}[k],cap:0};if(k==='pu'){let best=45;const Ff=V(-Math.sin(pl.yaw),0,-Math.cos(pl.yaw));ents.forEach(e=>{if(!e.alive)return;const v=e.pts[3].p.clone().sub(pl.p),d=v.length();if(d>4&&d<best&&v.normalize().dot(Ff)>.6){best=d;cin.tg=e}});if(cin.tg)cin.tg.frz=1}av.visible=true;if(window.__arSetCinematicCosmetics)window.__arSetCinematicCosmetics(window.__arCos||[]);$('#lb1').style.height=$('#lb2').style.height='11vh';toast('Space or click to skip. O toggles cinematics.')}
+function cinEnd(){if(cin&&cin.tg)cin.tg.frz=0;cin=null;ts=tsPrev||1;av.visible=false;if(window.__arSetCinematicCosmetics)window.__arSetCinematicCosmetics([]);av.userData.ra.rotation.set(0,0,0);av.userData.la.rotation.set(0,0,0);orbB.visible=orbR.visible=orbP.visible=false;$('#lb1').style.height=$('#lb2').style.height='0';capOff();if(dom){dom.hold=false;dom.t=7;if(dom.m)dom.m.scale.setScalar(20)}}
 function cinSkip(){const c=cin;if(!c)return;if(!c.fired&&c.k!=='dom'){c.fired=true;techFire(c.k,c.o,c.fw)}if(c.k==='dom'&&!dom)dom={t:7,p:pl.p.clone(),tt:0};cinEnd()}
 function cinUpdate(){if(!cin)return;const c=cin,now=performance.now(),t=(now-c.t0)/1000,k=c.k,P=pl.p,F=V(-Math.sin(pl.yaw),0,-Math.cos(pl.yaw)),Rt=V(Math.cos(pl.yaw),0,-Math.sin(pl.yaw)),fy=P.y-eyeH,hand=P.clone().addScaledVector(F,.75).addScaledVector(Rt,.05);hand.y=P.y-.3;
  av.position.set(P.x,fy,P.z);av.rotation.y=pl.yaw+Math.PI;const ra=av.userData.ra,la=av.userData.la;ra.rotation.x=la.rotation.x=0;ra.rotation.z=-.1;la.rotation.z=.1;
@@ -1019,7 +1019,7 @@ function cinUpdate(){if(!cin)return;const c=cin,now=performance.now(),t=(now-c.t
    const pp=c.lp||c.o.clone().addScaledVector(c.fw,20);if(alive){pos=pp.clone().addScaledVector(c.fw,-5).addScaledVector(Y,1.6).addScaledVector(Rt,1.2);look=pp.clone().addScaledVector(c.fw,8);fov=58}else{ts=.25;pos=pp.clone().addScaledVector(c.fw,-7).addScaledVector(Y,2.5).addScaledVector(Rt,3);look=pp.clone();fov=52}}
   bt=c.len-.45}
  if(t>=bt){const eyeL=P.clone().add(V(-Math.sin(pl.yaw)*Math.cos(pl.pit),Math.sin(pl.pit),-Math.cos(pl.yaw)*Math.cos(pl.pit)).multiplyScalar(10));if(!c.bp){c.bp=pos.clone();c.bl=look.clone();c.bf=fov}const u=ease((t-bt)/Math.max(.05,c.len-bt));pos=c.bp.clone().lerp(P,u);look=c.bl.clone().lerp(eyeL,u);fov=mix(c.bf,75,u)}
- cam.position.copy(pos);if(shake>.01)cam.position.add(V(rr(-1,1),rr(-1,1),rr(-1,1)).multiplyScalar(shake*.12));cam.lookAt(look);if(roll)cam.rotateZ(roll);cam.fov=fov;
+ cam.position.copy(pos);if(shake>.01)cam.position.add(V(rr(-1,1),rr(-1,1),rr(-1,1)).multiplyScalar(shake*.12));cam.lookAt(look);const face=look.clone().sub(P),faceH=Math.max(.001,Math.hypot(face.x,face.z));av.root.h=Math.atan2(face.x,face.z);av.jm[0].rotation.order='YXZ';av.jm[0].rotation.y=av.root.h;av.jm[0].rotation.x=-Math.atan2(face.y,faceH);if(roll)cam.rotateZ(roll);cam.fov=fov;if(cinCosG){cinCosG.position.set(P.x,P.y-eyeH,P.z);cinCosG.rotation.y=pl.yaw;cinCosG.visible=cinCosG.children.length>0}
  if(t>=c.len)cinEnd()}
 /* ---------- AI ---------- */
 function eshoot(e){const p=e.pts[9].p,d=V(pl.p.x-p.x,pl.p.y-.4-p.y,pl.p.z-p.z),dist=d.length();d.normalize();
@@ -1772,7 +1772,7 @@ function cosModel(id){const g=new T.Group(),add=(m,x,y,z)=>{m.position.set(x,y,z
  return g}
 const cosG=new T.Group();scene.add(cosG);let cosKey='';
 const activeIds=()=>{const s=st(),cr=isCr();return s.eq.filter(id=>CR_COS.includes(id)?(cr&&s.vault.includes(id)):s.own.includes(id))};
-function cosUpdate(){const s=st(),ids=activeIds(),key=ids.join();window.__arCos=ids.slice(0,4);
+let cinCosG=null;window.__arSetCinematicCosmetics=ids=>{if(!cinCosG){cinCosG=new T.Group();scene.add(cinCosG)}while(cinCosG.children.length)cinCosG.remove(cinCosG.children[0]);(Array.isArray(ids)?ids:[]).filter(id=>ITEMS.some(x=>x[0]===id)&&(!CR_COS.includes(id)||isCr())).slice(0,4).forEach(id=>cinCosG.add(cosModel(id)));cinCosG.visible=!!cin&&cinCosG.children.length>0};function cosUpdate(){const s=st(),ids=activeIds(),key=ids.join();window.__arCos=ids.slice(0,4);
  if(key!==cosKey){cosKey=key;while(cosG.children.length)cosG.remove(cosG.children[0]);ids.forEach(id=>cosG.add(cosModel(id)))}
  cosG.visible=!!fcam&&ids.length>0;if(cosG.visible){cosG.position.set(pl.p.x,pl.p.y-eyeH,pl.p.z);cosG.rotation.y=pl.yaw}}
 
