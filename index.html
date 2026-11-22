@@ -2118,7 +2118,7 @@ function arNukeTick(dt){
    toast('ONE TO THREE FOUR — I DECLARE A NUKE WAR. You got nuked.');setTimeout(()=>{arEggTriggered=false},2500);
   }
  }else arEggStay=0;
- if(window.__arEggBeacon){const t=performance.now()*.001;window.__arEggBeacon.label.position.y=2.45+Math.sin(t*2)*.12;window.__arEggBeacon.label.material.opacity=.78+.22*Math.sin(t*3)}
+ /* Hidden beacon has no visible label, so no label animation is needed. */
 }
 window.arNukeTick=arNukeTick;
 
