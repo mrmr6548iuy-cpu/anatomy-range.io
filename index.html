@@ -784,7 +784,110 @@ const ishell=new T.Mesh(sphG,new T.MeshBasicMaterial({color:0x8fe0ff,transparent
 function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(toast.h);toast.h=setTimeout(()=>{t.style.opacity=0},4200)}
 function unlockJJK(){if(jjk)return;if(window.__arJJKRequest&&!window.__arJJKGranting&&window.__arJJKRequest())return;jjk=true;ce=100;flash.l=2;shake=.5;sfx('boom',null,1,3);relic.visible=false;$('#ce').style.display='block';setJJKKit(jjkKit);toast('CURSED ENERGY AWAKENED · '+JJK_KITS[jjkKit].name);sel(15)}
 function ctProj(o,fw,col,sc,sp,k){const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:col}));m.scale.setScalar(sc);m.position.copy(o).addScaledVector(fw,1.2);scene.add(m);proj.push({m,v:fw.clone().multiplyScalar(sp),k,t:0})}
-function techFire(pw,o,fw){const rt=V().crossVectors(fw,Y).normalize(),fx=JKFX[pw];if(fx){const[k,col,power]=fx;if(k==='projectile'){ctProj(o,fw,col,.42,power/1.5,'jk');sfx('launch',o)}else if(k==='beam'){shoot(o,fw,power,'x',1,4,38);tracer(o.clone().addScaledVector(fw,.7),o.clone().addScaledVector(fw,12));sfx('swingh',o)}else if(k==='burst'){for(let i=-2;i<=2;i++){const d=fw.clone().addScaledVector(rt,i*.16).normalize();shoot(o,d,power,'x',.8,2,24);tracer(o.clone(),o.clone().addScaledVector(d,7))}shake=Math.max(shake,.22);sfx('boom',o,.7,2)}else if(k==='field'){const p=pl.p.clone().addScaledVector(fw,4);p.y=1.2;const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:col,transparent:true,opacity:.28,wireframe:true}));m.position.copy(p);scene.add(m);FLD.push({p,t:3.2,r:power,m});sfx('grab',p)}else if(k==='dash'){pl.p.addScaledVector(fw,7);pl.p.y=Math.max(0,pl.p.y);noise(pl.p.x,pl.p.z,22);for(let i=0;i<12;i++)part(pl.p.x,pl.p.y+.4,pl.p.z,rr(-2,2),rr(0,2),rr(-2,2),.35,.07,col,0,1);sfx('launch',pl.p)}else if(k==='guard'){inf=!inf;toast(inf?'Cursed guard active':'Cursed guard released');sfx('grab',o)}else if(k==='domain'){dom={t:6.5,p:pl.p.clone(),tt:0};sfx('boom',null,.8,5);toast('DOMAIN EXPANSION')}else if(k==='orbit'){for(let i=0;i<5;i++){const a=i/5*Math.PI*2,d=fw.clone().addScaledVector(rt,Math.cos(a)*.42).addScaledVector(Y,Math.sin(a)*.25).normalize();ctProj(o,d,col,.28,power/1.5,'jk')}sfx('launch',o)}return}
+function jjkUniqueFire(pw,o,fw,rt){
+ const ray=(dmg=32,range=18,dir=fw)=>shoot(o,dir,dmg,'x',.7,1,range);
+ const fan=(n,spread,dmg=28,range=20)=>{for(let i=0;i<n;i++){const u=n===1?0:i/(n-1)-.5,d=fw.clone().addScaledVector(rt,u*spread).normalize();ray(dmg,range,d)}};
+ const pulse=(radius=7,power=2,stun=1.2,mode='push')=>{const c=pl.p.clone().addScaledVector(fw,Math.min(4,radius*.35));ents.forEach(e=>{const p=e.pts[3].p,dv=p.clone().sub(c),d=dv.length();if(d>radius||d<.01)return;dv.normalize();const k=(1-d/radius)*power;for(const q of e.pts){if(mode==='pull')q.q.addScaledVector(dv,k);else q.q.addScaledVector(dv,-k);if(mode==='lift')q.q.y-=k*1.8}e.stun=Math.max(e.stun,stun)});const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:0x9bc8ff,transparent:true,opacity:.32,wireframe:true}));m.position.copy(c);scene.add(m);fxs.push({m,t:0,R:radius});shake=Math.max(shake,.16)};
+ const dash=(distance=5,side=0)=>{pl.p.addScaledVector(fw,distance);pl.p.addScaledVector(rt,side);pl.p.y=Math.max(0,pl.p.y);pl.v.set(0,0,0);noise(pl.p.x,pl.p.z,24);sfx('launch',pl.p)};
+ const guard=(label)=>{inf=!inf;toast(label+(inf?' active':' released'));sfx('grab',o)};
+ const nearest=(range=18)=>{let best=null,bd=range;for(const e of ents){if(!e.alive)continue;const v=e.pts[3].p.clone().sub(o),d=v.length();if(d<bd&&d>.1&&v.normalize().dot(fw)>.45){best=e;bd=d}}return best};
+ const target=(range=18,stun=1.4)=>{const e=nearest(range);if(!e){toast('No target in range');return null}e.stun=Math.max(e.stun,stun);e.fear=Math.max(e.fear,1);return e};
+ switch(pw){
+ // Yuji: close-range martial arts, combo impacts and movement.
+ case 'yuji_impact':ray(48,4);shake=Math.max(shake,.2);sfx('punt',o);return true;
+ case 'yuji_blackflash':ray(72,13);pulse(5,3,1.5);sfx('boom',o,.8,3);return true;
+ case 'yuji_rush':dash(9);ray(38,5);return true;
+ case 'yuji_burst':pulse(8,4,1.7);return true;
+ case 'yuji_feint':dash(4,3);return true;
+ case 'yuji_chain':fan(3,.18,34,12);return true;
+ case 'yuji_pummel':ray(30,4);ray(30,4,fw.clone().addScaledVector(rt,.12).normalize());ray(30,4,fw.clone().addScaledVector(rt,-.12).normalize());return true;
+ case 'yuji_wave':pulse(11,2.5,1.2);return true;
+ // Megumi: shikigami-style tracking pressure, binding and shadow movement.
+ case 'megumi_dogs':{const e=target(22,2);if(e){const p=e.pts[3].p;ray(44,Math.min(25,p.distanceTo(o)),fw);ray(44,Math.min(25,p.distanceTo(o)),fw.clone().addScaledVector(rt,.045).normalize())}sfx('chum',o);return true}
+ case 'megumi_nue':fan(5,.32,27,24);shake=Math.max(shake,.12);return true;
+ case 'megumi_toad':{const e=target(15,3);if(e){for(const q of e.pts)q.q.addScaledVector(fw,-2.5);toast('TOAD BIND')}return true}
+ case 'megumi_garden':pulse(13,3,2,'pull');dom={t:5,p:pl.p.clone(),tt:0};toast('CHIMERA SHADOW GARDEN');return true;
+ case 'megumi_rabbits':{for(let i=0;i<12;i++){const a=i/12*Math.PI*2,m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:0xd8e1ef,transparent:true,opacity:.7}));m.scale.set(.16,.22,.16);m.position.copy(pl.p).add(V(Math.cos(a)*2,.3,Math.sin(a)*2));scene.add(m);fxs.push({m,t:0,R:2})}pulse(5,1.5,.5);return true}
+ case 'megumi_elephant':pulse(12,5,2,'lift');shake=Math.max(shake,.35);sfx('boom',o,1,4);return true;
+ case 'megumi_step':dash(7,3);return true;
+ case 'megumi_totality':dash(3);ray(64,9);pulse(5,2,1.4);return true;
+ // Nobara: precision resonance and nail volleys.
+ case 'nobara_resonance':{const e=target(28,2.4);if(e){const p=e.pts[3].p;const d=p.clone().sub(o).normalize();shoot(o,d,68,'x',.8,2,Math.min(30,p.distanceTo(o)));toast('RESONANCE HIT')}sfx('swingh',o);return true}
+ case 'nobara_hairpin':fan(7,.48,24,22);return true;
+ case 'nobara_burst':{const e=target(24,1.8);if(e)ray(58,Math.min(28,e.pts[3].p.distanceTo(o)));pulse(4,2,1);return true}
+ case 'nobara_field':pulse(10,2.2,2);return true;
+ case 'nobara_nails':fan(9,.62,19,26);return true;
+ case 'nobara_wave':fan(5,.22,42,24);return true;
+ case 'nobara_guard':guard('Straw Doll Counter');return true;
+ case 'nobara_storm':fan(13,.8,20,23);return true;
+ // Sukuna: rapid cutting lanes, fire and shrine pressure.
+ case 'dis':fan(5,.22,45,30);return true;
+ case 'cle':ray(120,8);pulse(4,2,1);return true;
+ case 'sukuna_flame':ctProj(o,fw,0xff6a22,.55,34,'e');sfx('launch',o);return true;
+ case 'sukuna_shrine':dom={t:8,p:pl.p.clone(),tt:0};pulse(14,2.5,2);toast('MALEVOLENT SHRINE');return true;
+ case 'sukuna_storm':fan(11,.72,34,25);return true;
+ case 'sukuna_furnace':{const d=fw.clone();ray(92,28,d);for(let i=0;i<18;i++)part(o.x+fw.x*3,o.y+fw.y*3,o.z+fw.z*3,rr(-2,2),rr(-1,3),rr(-2,2),.45,.1,[0xff6a22,0xffb02e,0xffe080][i%3],0,1);shake=Math.max(shake,.28);return true}
+ case 'sukuna_rain':fan(15,1.1,22,28);return true;
+ case 'sukuna_pulse':pulse(13,4,1.6);return true;
+ // Kenjaku: gravity manipulation and curse projectiles.
+ case 'kenjaku_gravity':pulse(12,3,2,'pull');return true;
+ case 'kenjaku_swarm':fan(9,.7,22,24);return true;
+ case 'kenjaku_lift':pulse(10,4,2,'lift');return true;
+ case 'kenjaku_uzumaki':ctProj(o,fw,0x382c58,.9,28,'pu');return true;
+ case 'kenjaku_volley':fan(12,.9,21,25);return true;
+ case 'kenjaku_crush':pulse(8,5,2,'pull');return true;
+ case 'kenjaku_guard':guard('Antigravity Barrier');return true;
+ case 'kenjaku_beam':ray(86,32);return true;
+ // Mahito: close-range control, evasive movement and soul-wave pressure.
+ case 'mahito_touch':{const e=target(4,3.5);if(e){e.fear=3;for(const q of e.pts)q.q.addScaledVector(fw,-1.5);toast('SOUL TOUCH')}return true}
+ case 'mahito_guard':guard('Transfigured Guard');return true;
+ case 'mahito_wave':pulse(9,3,1.6);return true;
+ case 'mahito_domain':dom={t:7,p:pl.p.clone(),tt:0};pulse(12,2,2);toast('SELF-EMBODIMENT OF PERFECTION');return true;
+ case 'mahito_shield':guard('Soul Shield');return true;
+ case 'mahito_dash':dash(8,2);return true;
+ case 'mahito_swarm':fan(10,.8,20,22);return true;
+ case 'mahito_field':pulse(11,2.5,2,'pull');return true;
+ // Yuta: Rika support, speech stun and recovery.
+ case 'yuta_rika':pulse(6,6,2);ray(58,7);sfx('boom',o,.7,3);return true;
+ case 'yuta_copy':guard('Copied Technique Guard');return true;
+ case 'yuta_beam':ray(76,30);return true;
+ case 'rct':pl.hp=Math.min(100,pl.hp+55);flash.l=.8;sfx('grab');toast('REVERSE CURSED TECHNIQUE');return true;
+ case 'yuta_speech':{const e=target(22,3);if(e){for(const q of e.pts)q.q.addScaledVector(fw,-2);toast('CURSED SPEECH: STOP')}return true}
+ case 'yuta_dash':dash(7);ray(46,8);return true;
+ case 'yuta_guard':guard('Rika Guard');return true;
+ case 'yuta_copybeam':fan(3,.1,58,28);return true;
+ // Geto: curse-spirit volleys, barriers and focused Uzumaki.
+ case 'geto_swarm':fan(8,.65,24,23);return true;
+ case 'geto_guard':guard('Cursed Spirit Guard');return true;
+ case 'geto_barrage':fan(11,.8,25,25);return true;
+ case 'geto_uzumaki':ctProj(o,fw,0x382c58,1.05,32,'pu');return true;
+ case 'geto_volley':fan(14,1,20,26);return true;
+ case 'geto_beam':ray(82,30);return true;
+ case 'geto_wall':guard('Cursed Spirit Wall');return true;
+ case 'geto_burst':pulse(10,4,1.8);return true;
+ // Toji: weapon specialist mobility and decisive close-range strikes.
+ case 'toji_dash':dash(9,2);return true;
+ case 'toji_chain':fan(5,.36,35,12);pulse(4,1.5,1);return true;
+ case 'toji_throw':ctProj(o,fw,0xc1b18f,.32,42,'e');return true;
+ case 'toji_heaven':guard('Heavenly Restriction');return true;
+ case 'toji_rush':dash(11);ray(52,7);return true;
+ case 'toji_orbit':fan(7,.52,29,20);return true;
+ case 'toji_strike':ray(76,10);return true;
+ case 'toji_guard':guard('Weapon Parry');return true;
+ // Maki: weapon sweeps, lunges and wide-area control.
+ case 'maki_sweep':fan(7,.5,29,9);return true;
+ case 'maki_dash':dash(8,2);return true;
+ case 'maki_impact':ray(72,9);pulse(4,2,1);return true;
+ case 'maki_mastery':fan(5,.28,38,18);return true;
+ case 'maki_throw':ctProj(o,fw,0x6fbd8d,.3,44,'e');return true;
+ case 'maki_wide':fan(11,.95,23,14);return true;
+ case 'maki_rush':dash(10);ray(42,8);return true;
+ case 'maki_guard':guard('Weapon Guard');return true;
+ default:return false;
+ }
+}
+
+function techFire(pw,o,fw){const rt=V().crossVectors(fw,Y).normalize();if(jjkUniqueFire(pw,o,fw,rt))return;const fx=JKFX[pw];if(fx){const[k,col,power]=fx;if(k==='projectile'){ctProj(o,fw,col,.42,power/1.5,'jk');sfx('launch',o)}else if(k==='beam'){shoot(o,fw,power,'x',1,4,38);tracer(o.clone().addScaledVector(fw,.7),o.clone().addScaledVector(fw,12));sfx('swingh',o)}else if(k==='burst'){for(let i=-2;i<=2;i++){const d=fw.clone().addScaledVector(rt,i*.16).normalize();shoot(o,d,power,'x',.8,2,24);tracer(o.clone(),o.clone().addScaledVector(d,7))}shake=Math.max(shake,.22);sfx('boom',o,.7,2)}else if(k==='field'){const p=pl.p.clone().addScaledVector(fw,4);p.y=1.2;const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:col,transparent:true,opacity:.28,wireframe:true}));m.position.copy(p);scene.add(m);FLD.push({p,t:3.2,r:power,m});sfx('grab',p)}else if(k==='dash'){pl.p.addScaledVector(fw,7);pl.p.y=Math.max(0,pl.p.y);noise(pl.p.x,pl.p.z,22);for(let i=0;i<12;i++)part(pl.p.x,pl.p.y+.4,pl.p.z,rr(-2,2),rr(0,2),rr(-2,2),.35,.07,col,0,1);sfx('launch',pl.p)}else if(k==='guard'){inf=!inf;toast(inf?'Cursed guard active':'Cursed guard released');sfx('grab',o)}else if(k==='domain'){dom={t:6.5,p:pl.p.clone(),tt:0};sfx('boom',null,.8,5);toast('DOMAIN EXPANSION')}else if(k==='orbit'){for(let i=0;i<5;i++){const a=i/5*Math.PI*2,d=fw.clone().addScaledVector(rt,Math.cos(a)*.42).addScaledVector(Y,Math.sin(a)*.25).normalize();ctProj(o,d,col,.28,power/1.5,'jk')}sfx('launch',o)}return}
  if(pw==='blue'){const t=o.clone().addScaledVector(fw,9);t.y=Math.max(.8,t.y);const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:0x2a6bff}));m.scale.setScalar(.4);m.position.copy(t);scene.add(m);FLD.push({p:t,t:4.2,r:11,m});sfx('grab',t)}
  else if(pw==='red'){ctProj(o,fw,0xff2a2a,.28,52,'rd');sfx('launch',o)}
  else if(pw==='pu'){ctProj(o,fw,0xb36bff,.9,36,'pu');sfx('boom',o,1,6);shake=.4}
