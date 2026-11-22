@@ -1100,7 +1100,7 @@ if(!xrOn){if(fcam)cam.position.copy(fpos);else if(window.__arEntityMode&&window.
  for(const p of pd){if(!p.a)continue;p.l-=dt;p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;
   if(p.k===0){if(p.y<.02||p.l<=0){if(p.y<.3)dec(p.x,p.z,p.s*rr(4,9),p.c);p.a=0}}
   else if(p.k===1||p.k===3){if(p.y<p.s){p.y=p.s;if(p.k===3&&p.vy<-.8)sfx('brass',V(p.x,p.y,p.z));p.vy*=-.35;p.vx*=.5;p.vz*=.5;if(p.k===1&&R()<.25)dec(p.x,p.z,p.s*1.4,p.c)}if(p.k===3&&p.l<=0)p.a=0}
-  else{if(p.y<.02){p.y=.02;p.vy=0}if(p.l<=0)p.a=0}}jjkVfxTick(dt)}
+  else{if(p.y<.02){p.y=.02;p.vy=0}if(p.l<=0)p.a=0}}jjkVfxTick(dt)}}
 $('#vig').style.opacity=0;
 function frame(t){const rd=Math.min((t-lt0)/1000,.05);lt0=t;
  if(!xrOn){if(lw!==innerWidth+'x'+innerHeight){lw=innerWidth+'x'+innerHeight;ren.setSize(innerWidth,innerHeight,false);if(arComposer)arComposer.setSize(innerWidth,innerHeight)}cam.aspect=innerWidth/innerHeight}cam.updateProjectionMatrix();
