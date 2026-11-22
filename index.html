@@ -354,7 +354,7 @@ function eyeStep(e,dt){e.eyes.forEach(y=>{if(!y.out)return;const g=9.8*dt*dt,vx=
 function npcGun(){const g=new T.Group(),mt=new T.MeshStandardMaterial({color:0x25282c,metalness:.85,roughness:.4,map:metalT}),b=(x,y,z,a,c,d)=>{const o=new T.Mesh(new T.BoxGeometry(a,c,d),mt);o.position.set(x,y,z);g.add(o)};b(0,0,-.15,.04,.06,.3);b(0,-.06,-.02,.03,.09,.04);b(0,.02,-.38,.015,.015,.2);const fs=new T.Sprite(new T.SpriteMaterial({map:flT,blending:T.AdditiveBlending,depthWrite:false,transparent:true}));fs.position.z=-.52;fs.scale.setScalar(.5);fs.visible=false;g.add(fs);g.userData={fs};return g}
 const PS=[0,1,2,2,3,4,3,4,5,6,7,8,7,8,9,10],ents=[],barrels=[],proj=[],fxs=[];let xr=false,lastEnd=0;
 function mk(type,x,z){
- const rag=type==='rag',e={type,pts:[],cons:[],seg:[],wounds:[],blood:100,alive:true,c:rag?0:1,stun:rag?9:0,root:{x,z,h:R()*6.28},ph:R()*6,mv:0,bt:R()*6,pr:1,fear:0,mem:0,last:[x,z],cd:rr(.4,1.2),m:Array(16).fill(1),att:Array(16).fill(true),prone:false,aim:false,panic:false,dying:0,cause:'',legs:true,arms:true,para:false,lungs:2,suff:0,wt:0,wx:x,wz:z,g:new T.Group(),jm:[],xr:null,tg:null,burn:0};
+ const rag=type==='rag',e={type,pts:[],cons:[],seg:[],wounds:[],blood:100,alive:true,c:rag?0:1,stun:rag?9:0,root:{x,z,h:R()*6.28},ph:R()*6,mv:0,bt:R()*6,pr:1,fear:0,mem:0,last:[x,z],cd:rr(.4,1.2),m:Array(16).fill(1),att:Array(16).fill(true),prone:false,aim:false,panic:false,dying:0,cause:'',legs:true,arms:true,para:false,legFactor:1,armL:true,armR:true,ragdoll:false,lungs:2,suff:0,wt:0,wx:x,wz:z,g:new T.Group(),jm:[],xr:null,tg:null,burn:0};
  const sk=[0xe0b08c,0xc68a62,0x8d5a3b,0xf0c8a8][R()*4|0],cl={civilian:[0x3d6b8c,0x4a4a52],gunman:[0x22262b,0x1b1d20],brute:[sk,0x30363a],rag:[0xb0b0b0,0x6a6a72]}[type],cols=[sk,cl[0],cl[1]];
  const y0=rag?1.2:0;
  STAND.forEach((s,i)=>{const p=V(x+s[0],s[1]+y0,z+s[2]);e.pts.push({p,q:p.clone().add(rag?V(rr(-.1,.1),0,rr(-.1,.1)):V()),r:PR[i]});const m=new T.Mesh(sphG,bodyMat(cols[JC[i]],JC[i]));m.scale.setScalar(PR[i]);m.castShadow=true;e.g.add(m);e.jm.push(m);
@@ -448,15 +448,20 @@ function afterInj(e){
  const lim=i=>e.seg[i].brk||e.seg[i].cut,m=e.m;m.fill(1);
  if(lim(3)){m[6]=m[8]=0}if(lim(5))m[8]=0;if(lim(4)){m[7]=m[9]=0}if(lim(6))m[9]=0;
  if(lim(7)){m[12]=m[14]=0}if(lim(9))m[14]=0;if(lim(8)){m[13]=m[15]=0}if(lim(10))m[15]=0;
- e.legs=!(lim(7)||lim(8)||lim(9)||lim(10));e.arms=!((lim(3)||lim(5))&&(lim(4)||lim(6)));
- e.para=e.seg[1].brk||e.seg[2].brk;e.prone=!e.legs&&!e.para}
+ const leftLeg=lim(7)||lim(9),rightLeg=lim(8)||lim(10);
+ e.legs=!(leftLeg||rightLeg);e.legFactor=leftLeg&&rightLeg?.08:leftLeg||rightLeg?.42:1;
+ e.armL=!(lim(3)||lim(5));e.armR=!(lim(4)||lim(6));e.arms=e.armL||e.armR;
+ e.para=e.seg[1].brk||e.seg[2].brk;e.prone=(leftLeg&&rightLeg)||e.para;
+ // A damaged segment loses support instead of behaving like a rigid animated hinge.
+ e.cons.forEach(c=>{if(c.seg>=0&&lim(c.seg))c.k=.12;else if(e.para&&c.seg<0)c.k=.2});
+}
 function split(e,ia,ib){const bfs=s=>{const S=new Set([s]);let ch=1;while(ch){ch=0;e.cons.forEach(c=>{if(c.bone){if(S.has(c.i)&&!S.has(c.j)){S.add(c.j);ch=1}if(S.has(c.j)&&!S.has(c.i)){S.add(c.i);ch=1}}})}return S},A=bfs(ia),B=bfs(ib);
  e.cons=e.cons.filter(c=>!((A.has(c.i)&&B.has(c.j))||(B.has(c.i)&&A.has(c.j))));const P=bfs(3);e.att=e.pts.map((_,i)=>P.has(i))}
 function addW(e,pt,tw,f,rate,vol,art){e.wounds.push({pt,tw,f,rate,vol,art})}
 function wpos(e,w,o){o.copy(e.pts[w.pt].p);if(w.tw!==null)o.lerp(e.pts[w.tw].p,w.f);return o}
 function noise(x,z,r,fear){ents.forEach(e=>{if(!e.alive||e.type==='rag')return;const d=Math.hypot(e.root.x-x,e.root.z-z);if(d<r){e.mem=Math.max(e.mem,7);e.last=[x,z];if(e.type==='civilian'||fear)e.fear+=fear||.5}})}
 function witness(e){const p=e.pts[3].p;ents.forEach(o=>{if(o===e||!o.alive||o.type==='rag')return;if(Math.hypot(o.root.x-p.x,o.root.z-p.z)<14){o.fear+=o.type==='civilian'?.9:.3;o.mem=Math.max(o.mem,6);o.last=[p.x,p.z]}})}
-function die(e,why){if(!e.alive)return;e.alive=false;e.cause=why;e.dying=1.2;combatBurst(e.pts[3].p,e.ld||Y,2.5);witness(e);const k=/cardiac|thoracic|rupture/.test(why)?'clutch':/blood|asphyx/.test(why)?'sink':/burn/.test(why)?'run':/brain|cranial/.test(why)?'stiff':/decap|guillotin/.test(why)?'stand':/electro/.test(why)?'shake':'knock';if(!e.pins&&e.type!=='rag'){e.dd={k,t:0,len:{clutch:1.3,sink:1.8,run:2,stiff:.9,stand:1.1,shake:1.6,knock:.6}[k],c:.55};if(k==='knock'||k==='stiff'){const d=e.ld||V(0,0,0);e.pts.forEach(p=>p.p.addScaledVector(d,.035))}}}
+function die(e,why){if(!e.alive)return;e.alive=false;e.cause=why;e.dying=1.2;e.ragdoll=true;e.c=0;e.stun=9;e.cons.forEach(c=>c.k*=.72);const fallDir=e.ld||V(0,0,0);e.pts.forEach((p,i)=>{const f=i<4?.055:.025;p.p.addScaledVector(fallDir,f)});combatBurst(e.pts[3].p,e.ld||Y,2.5);witness(e);const k=/cardiac|thoracic|rupture/.test(why)?'clutch':/blood|asphyx/.test(why)?'sink':/burn/.test(why)?'run':/brain|cranial/.test(why)?'stiff':/decap|guillotin/.test(why)?'stand':/electro/.test(why)?'shake':'knock';if(!e.pins&&e.type!=='rag'){e.dd={k,t:0,len:{clutch:1.3,sink:1.8,run:2,stiff:.9,stand:1.1,shake:1.6,knock:.6}[k],c:.55};if(k==='knock'||k==='stiff'){const d=e.ld||V(0,0,0);e.pts.forEach(p=>p.p.addScaledVector(d,.035))}}}
 function cut(e,si,why,tt){const s=e.seg[si];if(s.cut||s.gone)return;s.cut=true;s.ct=Math.max(.2,Math.min(.8,tt===undefined?.5:tt));s.open=true;opn(e,si);e.cons=e.cons.filter(c=>c.seg!==si);const[,ia,ib]=SD[si];split(e,ia,ib);if(e.pins)e.pins=e.pins.filter(k=>e.att[k.i]);
  addW(e,ia,ib,.45,si===0?7:5,40,true);addW(e,ib,ia,.45,5,25,true);
  const p=e.pts[ia].p.clone().lerp(e.pts[ib].p,.5);gore(p,14,FLESH,4);gore(p,3,BONE,3,.04);sfx('chop',p);
@@ -819,7 +824,7 @@ function aiTick(e,dt){if(e.frz){e.mv=0;e.aim=false;return}
  e.aim=false;e.panic=false;
  const burning=e.seg.some(s=>s.burn>0);
  if(!ok&&!e.prone)return;
- const hurtBad=e.blood<65||burning;
+ const hurtBad=e.blood<65||burning||e.legFactor<.8||e.para;
  if(e.type==='civilian'||e.fear>1.2||hurtBad&&e.type!=='brute'){
   if(e.fear>.5||e.mem>0||burning){th=Math.atan2(r.x-e.last[0],r.z-e.last[1])+(burning?Math.sin(e.bt*3)*1.5:0);sp=5.2;e.panic=true}
   else{if(e.wt<=0){e.wt=rr(2,6);e.wx=r.x+rr(-10,10);e.wz=r.z+rr(-10,10)}e.wt-=dt;const d=Math.hypot(e.wx-r.x,e.wz-r.z);th=Math.atan2(e.wx-r.x,e.wz-r.z);sp=d>1?1.3:0}}
@@ -830,7 +835,7 @@ function aiTick(e,dt){if(e.frz){e.mv=0;e.aim=false;return}
   if(e.mem>0){th=see?to:lt;sp=(see?dist>1.5:lastD>1.5)?3.8:0;e.aim=sp===0;e.cd-=dt;if(see&&dist<1.8&&e.cd<=0){hitP(14);shake=.3;sfx('hit');e.cd=1}}
   else{if(e.wt<=0){e.wt=rr(3,7);e.wx=r.x+rr(-8,8);e.wz=r.z+rr(-8,8)}e.wt-=dt;th=Math.atan2(e.wx-r.x,e.wz-r.z);sp=Math.hypot(e.wx-r.x,e.wz-r.z)>1?1:0}}
  if(e.prone){sp=Math.min(Math.abs(sp),.8)*(sp<0?-1:1);if(e.type==='gunman'&&see&&e.arms){e.cd-=dt;if(e.cd<=0){eshoot(e);e.cd=rr(.8,1.5)}}}
- if(e.stun>0)sp=0;
+ if(e.legFactor<1)sp*=e.legFactor;if(e.para)sp=Math.min(Math.abs(sp),.22)*(sp<0?-1:1);if(e.stun>0)sp=0;
  r.h+=Math.max(-5*dt,Math.min(5*dt,ad(th,r.h)))*-1*-1;r.h=r.h;
  const turn=ad(th,r.h);
  r.x=Math.max(-AR+1,Math.min(AR-1,r.x+Math.sin(r.h)*sp*dt));r.z=Math.max(-AR+1,Math.min(AR-1,r.z+Math.cos(r.h)*sp*dt));
