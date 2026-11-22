@@ -289,7 +289,7 @@ function mk(type,x,z){
   }else{
    // Paired muscle compartments and tendon insertions around each long bone.
    const upper=si===3||si===4||si===7||si===8,arm=si>=3&&si<=6;
-   const w=arm?.027:upper?.043:.031, len=Lb*(upper?.32:.36), cy=Lb*.52;
+   const w=arm ? .027 : upper ? .043 : .031, len=Lb*(upper ? .32 : .36), cy=Lb*.52;
    [-1,1].forEach(side=>{
     an(new T.SphereGeometry(1,16,12),muscleM,side*w,cy,.012,w*1.15,len,w*.9);
     an(new T.SphereGeometry(1,14,10),muscleM,side*w*.72,cy,-.018,w*.9,len*.82,w*.8);
@@ -298,7 +298,7 @@ function mk(type,x,z){
    an(new T.SphereGeometry(1,12,10),tendonM,0,Lb*.92,0,.018,.035,.018);
   }
   const sp=new T.Mesh(coneG,boneM);sp.visible=false;e.g.add(sp);s.sp=sp;
-  (ORG[si]||[]).forEach(o=>{const m=new T.Mesh(sphG,new T.MeshStandardMaterial({color:o[5],roughness:.42,bumpMap:fleshT,bumpScale:.35}));m.scale.set(o[6]||o[3],o[7]||o[3],o[8]||o[3]);m.visible=false;G.add(m);s.org.push({n:o[0],t:o[1],x:o[2],z:o[3]===undefined?0:o[3]*.0,hp:o[4],max:o[4],m,dead:false})});
+  (ORG[si]||[]).forEach(o=>{const m=new T.Mesh(sphG,new T.MeshStandardMaterial({color:o[5],roughness:.42,bumpMap:fleshT,bumpScale:.35}));m.scale.set(o[6]||o[3],o[7]||o[3],o[8]||o[3]);m.visible=false;G.add(m);s.org.push({n:o[0],t:o[1],x:o[2],z:0,hp:o[4],max:o[4],m,dead:false})});
   e.g.add(G);e.seg.push(s)});
  e.gf=0;if(type==='gunman'){e.gun=npcGun();e.g.add(e.gun)}e.eyes=[-1,1].map(side=>{const m=new T.Mesh(sphG,eyeM),ir=new T.Mesh(sphG,irisM),ne=new T.Mesh(cylG,nerveM),ho=new T.Mesh(sphG,holeM);m.scale.setScalar(.03);ir.scale.set(.55,.55,.3);ir.position.z=.85;m.add(ir);ne.visible=ho.visible=false;e.g.add(m,ne,ho);return{m,ne,ho,side,out:0,free:0,so:V(),p:V(),q:V()}});scene.add(e.g);ents.push(e);rend(e);return e}
 const tmp=V(),tmp2=V(),dir=V();
