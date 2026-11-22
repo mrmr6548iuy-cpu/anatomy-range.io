@@ -2069,9 +2069,11 @@ const _lo=cloudLogout;cloudLogout=async function(){try{localStorage.removeItem(A
 {const mb=document.querySelector('#mph'),g=mb&&mb.closest('div.g');if(g){const r=document.createElement('div');r.style.cssText='margin:6px 0';r.innerHTML='<span style="color:var(--mut)">Game mode (pick before hosting): </span><select id="argm" style="font:600 15px \'Barlow Condensed\',sans-serif;color:var(--ink);background:#1d2327;border:1px solid var(--line);padding:4px 6px"><option value="0">Sandbox</option><option value="1">Civilian Hunt (60 civilians per wave)</option></select>';g.parentNode.insertBefore(r,g);r.querySelector('select').onchange=e=>{MP.gm=e.target.value==='1'?1:0;if(!MP.gm&&hunt.on)huntStop()}}}
 setTimeout(async()=>{if(MP.acct)return;let c=null;try{c=JSON.parse(localStorage.getItem(AUTO)||'null')}catch(e){}if(c&&c.n&&c.p){try{await loginAcct(c.n,c.p);toast('Welcome back, '+MP.acct.name)}catch(e){console.warn('Auto login failed:',e&&e.message)}}},2500);
 (async()=>{for(let i=0;i<60;i++){await new Promise(r=>setTimeout(r,500));if(!MP.acct)continue;if(MP.acct.role)return;try{const{data}=await getCloud().auth.getSession();if(data&&data.session){const p=await cloudProfileFor(data.session.user);MP.acct.cloudUid=data.session.user.id;MP.acct.role=p.role||'player';MP.acct.global=true;if(p.username)MP.acct.name=p.username;acctUI()}}catch(e){}return}})();
-const stat=()=>{ver.textContent='add-on build 27 · '+(MP.acct?MP.acct.name+' ('+(MP.acct.role||'no cloud role')+')':'not signed in')};
+const stat=()=>{ver.textContent='add-on build 28 · '+(MP.acct?MP.acct.name+' ('+(MP.acct.role||'no cloud role')+')':'not signed in')};
 setTimeout(()=>{try{sel(cur)}catch(e){}},800);lockSetup();stat();setInterval(()=>{lockSetup();stat();bV.style.display=bC.style.display=isCr()?'':'none';grant();paintHud()},1000);paintHud();
 })();
+
+
 
 
 /* ---- secret proximity Easter egg ---- */
@@ -2106,5 +2108,6 @@ function arNukeTick(dt){
  }else arEggStay=0;
  if(window.__arEggBeacon){const t=performance.now()*.001;window.__arEggBeacon.label.position.y=2.45+Math.sin(t*2)*.12;window.__arEggBeacon.label.material.opacity=.78+.22*Math.sin(t*3)}
 }
+
 })();
 </script></body></html>
