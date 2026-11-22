@@ -104,34 +104,38 @@ const wm=new T.MeshStandardMaterial({map:wallT,roughness:.9});[[0,-100,201,1],[0
 let AC;const snd=(f,d,v=.2)=>{try{AC=AC||new AudioContext();const n=AC.sampleRate*d|0,b=AC.createBuffer(1,n,AC.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=(R()*2-1)*(1-i/n)**2;const s=AC.createBufferSource(),g=AC.createGain(),q=AC.createBiquadFilter();q.frequency.value=Math.min(16000,f*5);s.buffer=b;g.gain.value=v;s.connect(q);q.connect(g);g.connect(AC.destination);s.start()}catch(e){}};
 /* ---------- audio engine ---------- */
 let MB,RV,SAWn=null,HUMn=null,stp2=0,spin=0,ggCool=0,eyeH=1.7,zf=52;const ZF={5:14,3:38};const lastT={},_lp=V(),_ld=V();
-function aud(){if(AC)return;AC=new(window.AudioContext||window.webkitAudioContext)();const cp=AC.createDynamicsCompressor();cp.threshold.value=-16;cp.ratio.value=5;cp.attack.value=.002;cp.release.value=.2;MB=AC.createGain();MB.gain.value=.9;MB.connect(cp);cp.connect(AC.destination);RV=AC.createConvolver();const sr=AC.sampleRate,L=sr*2.4|0,b=AC.createBuffer(2,L,sr);for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<L;i++){const t=i/L;d[i]=(R()*2-1)*Math.pow(1-t,2.8)*Math.min(1,i/(sr*.03))}}RV.buffer=b;const g=AC.createGain();g.gain.value=.5;RV.connect(g);g.connect(cp)}
+function aud(){if(AC)return;AC=new(window.AudioContext||window.webkitAudioContext)();const cp=AC.createDynamicsCompressor();cp.threshold.value=-16;cp.ratio.value=5;cp.attack.value=.002;cp.release.value=.2;MB=AC.createGain();MB.gain.value=.9;MB.connect(cp);cp.connect(AC.destination);RV=AC.createConvolver();const sr=AC.sampleRate,L=sr*2.4|0,b=AC.createBuffer(2,L,sr);for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<L;i++){const t=i/L;d[i]=(R()*2-1)*Math.pow(1-t,2.8)*Math.min(1,i/(sr*.03))}}RV.buffer=b;const g=AC.createGain();g.gain.value=.34;RV.connect(g);g.connect(cp);const amb=AC.createBufferSource(),af=AC.createBiquadFilter(),ag=AC.createGain(),lfo=AC.createOscillator(),lg=AC.createGain();amb.buffer=nb(5,0);amb.loop=true;af.type='lowpass';af.frequency.value=520;af.Q.value=.35;ag.gain.value=.012;amb.connect(af);af.connect(ag);ag.connect(MB);lfo.frequency.value=.09;lg.gain.value=.004;lfo.connect(lg);lg.connect(ag.gain);amb.start();lfo.start();window.__arAmbient={source:amb,filter:af,gain:ag,lfo};}
 function nb(len,pw){const n=AC.sampleRate*len|0,b=AC.createBuffer(1,n,AC.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=(R()*2-1)*Math.pow(1-i/n,pw);return b}
 function nz(o,type,f,q,gn,len,pw,t){const s=AC.createBufferSource(),fi=AC.createBiquadFilter(),g=AC.createGain();s.buffer=nb(len,pw);fi.type=type;fi.frequency.value=f;fi.Q.value=q;g.gain.value=gn;s.connect(fi);fi.connect(g);g.connect(o);s.start(t)}
-function tn(o,f0,f1,gn,len,t,ty){const os=AC.createOscillator(),g=AC.createGain();os.type=ty||'sine';os.frequency.setValueAtTime(f0,t);os.frequency.exponentialRampToValueAtTime(Math.max(1,f1),t+len);g.gain.setValueAtTime(gn,t);g.gain.exponentialRampToValueAtTime(.001,t+len);os.connect(g);g.connect(o);os.start(t);os.stop(t+len+.02)}
+function tn(o,f0,f1,gn,len,t,ty){const os=AC.createOscillator(),g=AC.createGain(),sh=AC.createWaveShaper();os.type=ty||'triangle';os.detune.setValueAtTime(rr(-7,7),t);os.frequency.setValueAtTime(Math.max(1,f0),t);os.frequency.exponentialRampToValueAtTime(Math.max(1,f1),t+len);sh.curve=new Float32Array([-1,-.82,-.56,-.3,0,.3,.56,.82,1]);sh.oversample='2x';g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(gn,t+.006);g.gain.exponentialRampToValueAtTime(.001,t+len);os.connect(sh);sh.connect(g);g.connect(o);os.start(t);os.stop(t+len+.025)}
 function sweep(o,f0,f1,len,gn,t){const s=AC.createBufferSource(),fi=AC.createBiquadFilter(),g=AC.createGain();s.buffer=nb(len,1);fi.type='bandpass';fi.Q.value=1.1;fi.frequency.setValueAtTime(f0,t);fi.frequency.exponentialRampToValueAtTime(f1,t+len*.8);g.gain.setValueAtTime(.001,t);g.gain.exponentialRampToValueAtTime(gn,t+len*.4);g.gain.exponentialRampToValueAtTime(.001,t+len);s.connect(fi);fi.connect(g);g.connect(o);s.start(t)}
 const GS=[[2800,.025,1900,.09,650,.13,95,.1,1],[2200,.03,900,.2,420,.32,70,.22,1.3],[3000,.02,2000,.07,700,.1,100,.08,.9],[3200,.03,1500,.16,520,.34,62,.24,1.5],[1800,.04,800,.26,260,.5,48,.4,1.6],[3600,.04,1200,.3,210,.9,36,.75,2],[2600,.015,1700,.05,600,.06,85,.05,.7],[2800,.02,2000,.08,700,.1,95,.09,.8]];
-const SF={magout:(g,t)=>{nz(g,'bandpass',3200,3,.5,.02,2,t);tn(g,170,90,.5,.07,t);nz(g,'highpass',2500,.7,.25,.05,2,t+.03)},
-magin:(g,t)=>{tn(g,140,70,.7,.08,t);nz(g,'bandpass',2400,2.5,.9,.03,2,t+.02);tn(g,2600,2400,.18,.05,t+.04,'square')},
-rackb:(g,t)=>{for(let i=0;i<5;i++)nz(g,'bandpass',2200+i*100,4,.35,.012,2,t+i*.014);nz(g,'highpass',3000,.7,.18,.1,1.5,t)},
-rackf:(g,t)=>{nz(g,'bandpass',1800,2,1.1,.04,3,t);tn(g,3300,3100,.22,.12,t);tn(g,200,100,.4,.06,t)},
-empty:(g,t)=>{nz(g,'bandpass',3500,5,.8,.012,2,t);tn(g,4200,3800,.15,.05,t)},
-brass:(g,t)=>{const f=rr(4200,6200);tn(g,f,f*.98,.25,.09,t);tn(g,f*1.5,f*1.5,.12,.05,t)},
-magdrop:(g,t)=>{tn(g,160,90,.6,.08,t);nz(g,'bandpass',1500,1.2,.5,.06,2,t)},
-step:(g,t)=>{nz(g,'lowpass',500,.7,.8,.07,2.5,t);tn(g,95,60,.3,.08,t)},
-flesh:(g,t)=>{nz(g,'lowpass',450,.7,1.2,.09,2,t);tn(g,130,65,.8,.12,t);nz(g,'bandpass',950,2,.35,.07,2,t+.01)},
-slash:(g,t)=>{nz(g,'bandpass',1800,.8,.7,.08,2,t);nz(g,'lowpass',500,.7,.9,.1,2,t+.02)},
-thud:(g,t)=>{tn(g,110,45,1.1,.2,t);nz(g,'lowpass',350,.7,.8,.14,2.5,t)},
-bone:(g,t)=>{nz(g,'bandpass',1400,3,1.2,.04,3,t);nz(g,'highpass',2500,.7,.6,.02,2,t);tn(g,260,160,.4,.06,t)},
-chop:(g,t)=>{nz(g,'lowpass',700,.8,1.2,.12,2,t);tn(g,150,60,.9,.15,t);nz(g,'bandpass',1200,1.5,.6,.1,2,t+.01)},
-squelch:(g,t)=>{nz(g,'bandpass',700,6,.9,.1,1.5,t);tn(g,260,90,.4,.1,t)},
-swing:(g,t)=>sweep(g,500,2200,.28,.8,t),swingh:(g,t)=>sweep(g,250,900,.4,1,t),
-launch:(g,t)=>{nz(g,'lowpass',800,.7,1,.25,2,t);tn(g,120,40,.9,.25,t);nz(g,'bandpass',2000,.8,.5,.15,2,t)},
-hit:(g,t)=>{tn(g,100,50,1,.2,t);nz(g,'lowpass',500,.7,.8,.15,2,t)},
-whiz:(g,t)=>sweep(g,5200,1800,.14,.6,t),
-grab:(g,t)=>{tn(g,80,220,.8,.25,t);sweep(g,400,2500,.3,.5,t)},release:(g,t)=>{tn(g,200,60,.6,.2,t)},
-punt:(g,t)=>{nz(g,'lowpass',900,.7,1.5,.3,2,t);tn(g,260,35,1.3,.5,t);sweep(g,3000,300,.35,.8,t)},
-boom:(g,t,v)=>{const k=Math.min(1.6,.6+v*.1);tn(g,70,22,1.8*k,1.6,t);nz(g,'lowpass',260,.7,2*k,1.6,2,t);nz(g,'bandpass',900,.7,1.2*k,.35,2.5,t);for(let i=0;i<14;i++)nz(g,'bandpass',rr(600,3000),2,rr(.15,.5),rr(.02,.06),2,t+rr(.1,1.4));nz(g,'highpass',3000,.7,.6*k,.12,3,t)}};
-GS.forEach((q,i)=>{SF['g'+i]=(g,t)=>{nz(g,'highpass',q[0],.7,1.5,q[1],2,t);nz(g,'bandpass',q[2],.6,1.2,q[3],3,t);nz(g,'lowpass',q[4],.7,1.3,q[5],2,t);tn(g,q[6]*1.6,q[6]*.45,1.5,q[7],t);if(i===3||i===4||i===5)nz(g,'bandpass',900,.7,.5,.4,2,t+.12)}});
+const SF={
+magout:(g,t)=>{nz(g,'lowpass',520,.8,.75,.16,2.4,t);nz(g,'bandpass',1450,1.4,.32,.12,2,t+.015);tn(g,105,48,.55,.18,t)},
+magin:(g,t)=>{nz(g,'lowpass',760,.9,.9,.13,2.2,t);nz(g,'bandpass',1850,2,.25,.09,2,t+.025);tn(g,145,78,.5,.13,t)},
+rackb:(g,t)=>{nz(g,'bandpass',980,2.2,.55,.07,2.5,t);nz(g,'highpass',2400,.8,.22,.035,2,t+.012);tn(g,180,92,.4,.11,t)},
+rackf:(g,t)=>{nz(g,'lowpass',620,.8,.9,.15,2.5,t);nz(g,'bandpass',1250,1.5,.3,.09,2,t+.02);tn(g,155,65,.65,.16,t)},
+empty:(g,t)=>{nz(g,'bandpass',1150,1.5,.35,.055,2,t);nz(g,'lowpass',360,.7,.25,.08,2,t)},
+brass:(g,t)=>{nz(g,'bandpass',2900,1.3,.42,.045,2,t);nz(g,'highpass',4800,.7,.14,.025,2,t+.008);tn(g,780,390,.12,.055,t,'triangle')},
+magdrop:(g,t)=>{nz(g,'lowpass',420,.7,.75,.18,2.5,t);nz(g,'bandpass',1650,2,.28,.07,2,t+.025);tn(g,125,48,.55,.17,t)},
+step:(g,t)=>{nz(g,'lowpass',260,.7,.8,.12,2.7,t);nz(g,'bandpass',720,1.2,.2,.055,2,t+.012);tn(g,78,38,.22,.1,t)},
+flesh:(g,t)=>{nz(g,'lowpass',320,.65,.8,.14,2.5,t);nz(g,'bandpass',680,1.1,.22,.08,2,t+.012);tn(g,92,42,.38,.13,t)},
+slash:(g,t)=>{sweep(g,2600,420,.22,.65,t);nz(g,'lowpass',390,.7,.45,.12,2.4,t+.018)},
+thud:(g,t)=>{tn(g,88,32,.95,.26,t);nz(g,'lowpass',210,.7,1.05,.23,2.8,t);nz(g,'bandpass',520,1,.22,.11,2,t+.012)},
+bone:(g,t)=>{nz(g,'bandpass',1050,2,.6,.055,2.5,t);nz(g,'highpass',3100,.8,.22,.025,2,t+.012);tn(g,185,92,.28,.085,t)},
+chop:(g,t)=>{sweep(g,1700,260,.18,.42,t);nz(g,'lowpass',310,.7,.95,.2,2.5,t);tn(g,115,42,.48,.16,t)},
+squelch:(g,t)=>{nz(g,'lowpass',240,.65,.7,.18,2.2,t);nz(g,'bandpass',520,1,.3,.12,2,t+.02)},
+swing:(g,t)=>{sweep(g,3800,620,.32,.55,t);nz(g,'lowpass',500,.7,.18,.18,2,t)},
+swingh:(g,t)=>{sweep(g,2100,330,.42,.62,t);nz(g,'bandpass',750,.8,.2,.22,2,t+.02)},
+launch:(g,t)=>{nz(g,'lowpass',330,.7,.9,.32,2.5,t);sweep(g,1800,180,.28,.35,t);tn(g,92,28,.65,.32,t)},
+hit:(g,t)=>{nz(g,'lowpass',240,.7,.9,.2,2.5,t);nz(g,'bandpass',850,1,.2,.08,2,t+.008);tn(g,82,34,.62,.2,t)},
+whiz:(g,t)=>{sweep(g,4200,900,.19,.4,t);nz(g,'highpass',2600,.7,.12,.11,2,t)},
+grab:(g,t)=>{nz(g,'lowpass',180,.7,.7,.28,2.5,t);sweep(g,520,1500,.25,.3,t);tn(g,65,115,.32,.2,t)},
+release:(g,t)=>{nz(g,'lowpass',260,.7,.55,.2,2.5,t);sweep(g,1200,260,.18,.28,t)},
+punt:(g,t)=>{nz(g,'lowpass',190,.7,1.1,.42,2.7,t);sweep(g,1600,180,.3,.35,t);tn(g,105,25,.72,.4,t)},
+boom:(g,t,v)=>{const k=Math.min(1.6,.6+v*.1);tn(g,58,18,1.2*k,1.45,t);nz(g,'lowpass',145,.65,1.6*k,1.35,2.8,t);nz(g,'bandpass',430,.8,.7*k,.55,2.2,t);nz(g,'highpass',2100,.7,.18*k,.16,2.5,t+.015);for(let i=0;i<9;i++)nz(g,'bandpass',rr(300,1800),1.2,rr(.08,.22),rr(.035,.1),2.3,t+rr(.08,.75))}
+};
+GS.forEach((q,i)=>{SF['g'+i]=(g,t)=>{nz(g,'lowpass',Math.max(130,q[4]*.72),.7,1.05,.22+q[5]*.22,2.6,t);nz(g,'bandpass',Math.min(3600,q[2]*.72),.9,.48,.075+q[3]*.2,2.5,t+.004);nz(g,'highpass',Math.min(5200,q[0]*.82),.7,.24,.045,2,t+.006);tn(g,q[6]*1.35,q[6]*.38,.65,q[7]*.72,t);if(i===3||i===4||i===5)sweep(g,1800,260,.16,.18,t+.035)}});
 const SFXG={flesh:.03,step:.2,brass:.05,bone:.05,slash:.04,whiz:.05,thud:.06,squelch:.05};
 function sfx(n,pos,gn,arg){try{aud();if(AC.state==='suspended')AC.resume();const now=AC.currentTime;if(lastT[n]&&now-lastT[n]<(SFXG[n]||.02))return;lastT[n]=now;let t=now,o=MB;
  if(pos){cam.getWorldPosition(_lp);const d=_lp.distanceTo(pos);t=now+Math.min(.5,d/343);const p=AC.createPanner();p.panningModel='HRTF';p.distanceModel='inverse';p.refDistance=2.5;p.rolloffFactor=1.1;if(p.positionX){p.positionX.value=pos.x;p.positionY.value=pos.y;p.positionZ.value=pos.z}else p.setPosition(pos.x,pos.y,pos.z);p.connect(MB);const w=AC.createGain();w.gain.value=Math.min(1,.12+d/40);p.connect(w);w.connect(RV);o=p}
