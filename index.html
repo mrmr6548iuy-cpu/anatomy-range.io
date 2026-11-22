@@ -720,11 +720,39 @@ Object.assign(SFXG,{zap:.08,sawhum:.15,crackle:.12,creak:.4,hyd:.3,crunch:.3});
 /* ---------- cursed energy ---------- */
 let jjk=false,ce=100,inf=false,dom=null,rh=0,rh2=0,seqK='';const FLD=[];
 const PW=[['Infinity','inf',.4,0,0x7fd0ff],['Blue','blue',.8,20,0x2a6bff],['Red','red',.7,22,0xff2a2a],['Hollow Purple','pu',2.2,60,0xb36bff],['Dismantle','dis',.12,3,0xe8e8f0],['Cleave','cle',1,25,0xff5a5a],['Domain Expansion','dom',3,100,0x3a1060],['Reverse Technique','rct',1,30,0x40ff90]];
+const JJK_KITS=[
+{name:'Yuji Itadori',moves:[['Divergent Impact','yuji_impact',.45,10,0xff8b48],['Black Flash','yuji_blackflash',.8,22,0xffd05a],['Crushing Rush','yuji_rush',.7,18,0xff8b48],['Focused Burst','yuji_burst',1.1,32,0xffc078]]},
+{name:'Satoru Gojo',moves:[['Infinity','inf',.4,0,0x7fd0ff],['Blue','blue',.8,20,0x2a6bff],['Red','red',.7,22,0xff2a2a],['Hollow Purple','pu',2.2,60,0xb36bff]]},
+{name:'Megumi Fushiguro',moves:[['Divine Dogs','megumi_dogs',.6,14,0x667b9c],['Nue','megumi_nue',.8,20,0x8a9cff],['Toad Bind','megumi_toad',1,24,0x4c9b76],['Chimera Garden','megumi_garden',2,58,0x333b58]]},
+{name:'Nobara Kugisaki',moves:[['Resonance','nobara_resonance',.7,16,0xd9a0b0],['Hairpin','nobara_hairpin',.8,20,0xd36b85],['Straw Doll Burst','nobara_burst',1,28,0xe5a0b0],['Resonant Field','nobara_field',1.5,42,0x9b5879]]},
+{name:'Ryomen Sukuna',moves:[['Dismantle','dis',.12,3,0xe8e8f0],['Cleave','cle',1,25,0xff5a5a],['Flame Arrow','sukuna_flame',1.2,34,0xff6a22],['Malevolent Shrine','sukuna_shrine',2.5,72,0x8f1d36]]},
+{name:'Kenjaku',moves:[['Gravity Well','kenjaku_gravity',.8,20,0x9a83c9],['Cursed Swarm','kenjaku_swarm',.9,24,0x7965aa],['Antigravity','kenjaku_lift',1,28,0xc4a5ee],['Maximum Uzumaki','kenjaku_uzumaki',2,58,0x382c58]]},
+{name:'Mahito',moves:[['Soul Touch','mahito_touch',.6,14,0x75c6c1],['Transfigured Guard','mahito_guard',.8,20,0x6bb5ad],['Soul Wave','mahito_wave',1,28,0x80e0d0],['Idle Transfiguration','mahito_domain',2,60,0x478f8b]]},
+{name:'Yuta Okkotsu',moves:[['Rika Strike','yuta_rika',.8,20,0xe6e6e6],['Copy Technique','yuta_copy',.7,18,0xb9c9e8],['Cursed Beam','yuta_beam',1,28,0x9ed7ff],['Reverse Technique','rct',1,30,0x40ff90]]},
+{name:'Suguru Geto',moves:[['Curse Swarm','geto_swarm',.8,20,0x8a75b8],['Spirit Guard','geto_guard',.8,18,0x9a8ac8],['Curse Barrage','geto_barrage',1.1,30,0x7255a0],['Maximum Uzumaki','geto_uzumaki',2,58,0x382c58]]},
+{name:'Toji Fushiguro',moves:[['Split Soul Dash','toji_dash',.6,14,0xb5a58e],['Chain Sweep','toji_chain',.8,20,0x9b8a72],['Arsenal Throw','toji_throw',.9,24,0xc1b18f],['Heavenly Restriction','toji_heaven',1.3,36,0xd6c7a8]]},
+{name:'Maki Zenin',moves:[['Polearm Sweep','maki_sweep',.6,14,0x6fbd8d],['Cursed Tool Dash','maki_dash',.7,18,0x8bc9a0],['Heavy Impact','maki_impact',.9,24,0x53a879],['Weapon Mastery','maki_mastery',1.3,36,0x9cddb0]]}
+];
+let jjkKit=1,jjkOwner=null;
+const JKFX={
+yuji_impact:['beam',0xff8b48,34],yuji_blackflash:['burst',0xffd05a,48],yuji_rush:['dash',0xff8b48,0],yuji_burst:['field',0xffc078,9],
+megumi_dogs:['orbit',0x667b9c,30],megumi_nue:['projectile',0x8a9cff,46],megumi_toad:['field',0x4c9b76,8],megumi_garden:['domain',0x333b58,0],
+nobara_resonance:['beam',0xd9a0b0,30],nobara_hairpin:['burst',0xd36b85,40],nobara_burst:['projectile',0xe5a0b0,42],nobara_field:['field',0x9b5879,9],
+sukuna_flame:['projectile',0xff6a22,54],sukuna_shrine:['domain',0x8f1d36,0],
+kenjaku_gravity:['field',0x9a83c9,10],kenjaku_swarm:['orbit',0x7965aa,34],kenjaku_lift:['dash',0xc4a5ee,0],kenjaku_uzumaki:['projectile',0x382c58,60],
+mahito_touch:['beam',0x75c6c1,28],mahito_guard:['guard',0x6bb5ad,0],mahito_wave:['burst',0x80e0d0,42],mahito_domain:['domain',0x478f8b,0],
+yuta_rika:['orbit',0xe6e6e6,42],yuta_copy:['guard',0xb9c9e8,0],yuta_beam:['beam',0x9ed7ff,44],
+geto_swarm:['orbit',0x8a75b8,36],geto_guard:['guard',0x9a8ac8,0],geto_barrage:['burst',0x7255a0,44],geto_uzumaki:['projectile',0x382c58,60],
+toji_dash:['dash',0xb5a58e,0],toji_chain:['burst',0x9b8a72,38],toji_throw:['projectile',0xc1b18f,48],toji_heaven:['guard',0xd6c7a8,0],
+maki_sweep:['burst',0x6fbd8d,36],maki_dash:['dash',0x8bc9a0,0],maki_impact:['beam',0x53a879,38],maki_mastery:['orbit',0x9cddb0,40]
+};
+function setJJKKit(i){if(window.__arJJKCanSwitch&&!window.__arJJKCanSwitch()){toast('Only the JJK owner can switch kits');return JJK_KITS[jjkKit].name}jjkKit=(i+JJK_KITS.length)%JJK_KITS.length;const kit=JJK_KITS[jjkKit];PW.splice(0,PW.length,...kit.moves);if(jjk){kit.moves.forEach((q,j)=>{const w=W[15+j];if(w){w.n=q[0];w.pw=q[1];w.r=q[2];w.cost=q[3];w.c=q[4];w.a=0}});[...bar.children].forEach((el,j)=>{if(j>=15&&j<23)el.textContent=(j-14)+' '+W[j].n});sel(15);toast('JJK KIT: '+kit.name)}const ceBox=$('#ce');if(ceBox){let tag=ceBox.querySelector('.jjk-kit-name');if(!tag){tag=document.createElement('b');tag.className='jjk-kit-name';tag.style.cssText='display:block;color:#b9dfff;margin-top:4px';ceBox.appendChild(tag)}tag.textContent=kit.name+' · [ / ] to switch'}return kit.name}
+
 const ishell=new T.Mesh(sphG,new T.MeshBasicMaterial({color:0x8fe0ff,transparent:true,opacity:.1,depthWrite:false,side:T.DoubleSide}));ishell.scale.setScalar(1.5);ishell.visible=false;scene.add(ishell);
 function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(toast.h);toast.h=setTimeout(()=>{t.style.opacity=0},4200)}
-function unlockJJK(){if(jjk)return;jjk=true;ce=100;PW.forEach(q=>{const w={k:'c',n:q[0],pw:q[1],r:q[2],cost:q[3],c:q[4],a:q[1]==='dis'?1:0,z:[.1,.1,.3]};W.push(w);const i=W.length-1,sp=document.createElement('span');sp.textContent=(i<9?i+1:i==9?0:'·')+' '+w.n;sp.onclick=()=>sel(i);bar.appendChild(sp)});flash.l=2;shake=.5;sfx('boom',null,1,3);relic.visible=false;$('#ce').style.display='block';toast('CURSED ENERGY AWAKENED. Powers added to your weapon wheel: ` toggles powers, Q/E or wheel to choose.');sel(15)}
+function unlockJJK(){if(jjk)return;if(window.__arJJKRequest&&!window.__arJJKGranting){window.__arJJKRequest();return}jjk=true;ce=100;PW.forEach(q=>{const w={k:'c',n:q[0],pw:q[1],r:q[2],cost:q[3],c:q[4],a:0,z:[.1,.1,.3]};W.push(w);const i=W.length-1,sp=document.createElement('span');sp.textContent=(i<9?i+1:i==9?0:'·')+' '+w.n;sp.onclick=()=>sel(i);bar.appendChild(sp)});flash.l=2;shake=.5;sfx('boom',null,1,3);relic.visible=false;$('#ce').style.display='block';setJJKKit(jjkKit);toast('CURSED ENERGY AWAKENED · '+JJK_KITS[jjkKit].name);sel(15)}
 function ctProj(o,fw,col,sc,sp,k){const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:col}));m.scale.setScalar(sc);m.position.copy(o).addScaledVector(fw,1.2);scene.add(m);proj.push({m,v:fw.clone().multiplyScalar(sp),k,t:0})}
-function techFire(pw,o,fw){const rt=V().crossVectors(fw,Y).normalize();
+function techFire(pw,o,fw){const rt=V().crossVectors(fw,Y).normalize(),fx=JKFX[pw];if(fx){const[k,col,power]=fx;if(k==='projectile'){ctProj(o,fw,col,.42,power/1.5,'jk');sfx('launch',o)}else if(k==='beam'){shoot(o,fw,power,'x',1,4,38);tracer(o.clone().addScaledVector(fw,.7),o.clone().addScaledVector(fw,12));sfx('swingh',o)}else if(k==='burst'){for(let i=-2;i<=2;i++){const d=fw.clone().addScaledVector(rt,i*.16).normalize();shoot(o,d,power,'x',.8,2,24);tracer(o.clone(),o.clone().addScaledVector(d,7))}shake=Math.max(shake,.22);sfx('boom',o,.7,2)}else if(k==='field'){const p=pl.p.clone().addScaledVector(fw,4);p.y=1.2;const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:col,transparent:true,opacity:.28,wireframe:true}));m.position.copy(p);scene.add(m);FLD.push({p,t:3.2,r:power,m});sfx('grab',p)}else if(k==='dash'){pl.p.addScaledVector(fw,7);pl.p.y=Math.max(0,pl.p.y);noise(pl.p.x,pl.p.z,22);for(let i=0;i<12;i++)part(pl.p.x,pl.p.y+.4,pl.p.z,rr(-2,2),rr(0,2),rr(-2,2),.35,.07,col,0,1);sfx('launch',pl.p)}else if(k==='guard'){inf=!inf;toast(inf?'Cursed guard active':'Cursed guard released');sfx('grab',o)}else if(k==='domain'){dom={t:6.5,p:pl.p.clone(),tt:0};sfx('boom',null,.8,5);toast('DOMAIN EXPANSION')}else if(k==='orbit'){for(let i=0;i<5;i++){const a=i/5*Math.PI*2,d=fw.clone().addScaledVector(rt,Math.cos(a)*.42).addScaledVector(Y,Math.sin(a)*.25).normalize();ctProj(o,d,col,.28,power/1.5,'jk')}sfx('launch',o)}return}
  if(pw==='blue'){const t=o.clone().addScaledVector(fw,9);t.y=Math.max(.8,t.y);const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:0x2a6bff}));m.scale.setScalar(.4);m.position.copy(t);scene.add(m);FLD.push({p:t,t:4.2,r:11,m});sfx('grab',t)}
  else if(pw==='red'){ctProj(o,fw,0xff2a2a,.28,52,'rd');sfx('launch',o)}
  else if(pw==='pu'){ctProj(o,fw,0xb36bff,.9,36,'pu');sfx('boom',o,1,6);shake=.4}
@@ -931,7 +959,7 @@ document.addEventListener('mousedown',e=>{if(!locked)return;if(edit){if(e.button
 document.addEventListener('mouseup',e=>{if(e.button===2)adsOn=false;else{md=false;grab=null}});document.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('wheel',e=>{if(!locked)return;if(edit){eIdx=(eIdx+(e.deltaY>0?1:-1)+ITEMS.length)%ITEMS.length;edUI();return}if(fcam){fsp=Math.max(1,Math.min(40,fsp*(e.deltaY>0?.85:1.18)));return}if(adsOn&&!W[cur].k){zf=Math.max(8,Math.min(60,zf+(e.deltaY>0?4:-4)));return}if(grab&&W[cur].k==='g')grab.dist=Math.max(1.2,Math.min(10,grab.dist+(e.deltaY>0?-.4:.4)));else sel(cur+(e.deltaY>0?1:-1))});
 document.addEventListener('keydown',e=>{keys[e.code]=1;seqK=(seqK+(e.key||'')).toLowerCase().slice(-8);if(!jjk&&seqK.endsWith('cursed'))unlockJJK();if(e.code==='F3'&&window.__arEntityMode){window.__arToggleEntityView?.();return}if(e.code==='Escape'&&fb){$('#menu').style.display=locked?'none':'flex';if(gameStarted){gamePaused=!locked&&pauseAllowed();pauseNote.style.display=locked?'none':'block';pauseNote.textContent=gamePaused?'PAUSED · Press Play to resume':'MENU OPEN · The public/shared game keeps running'}md=false;return}if(!locked)return;if(cin&&e.code==='Space'){cinSkip();return}if(e.code==='Tab'){e.preventDefault();toggleEdit();return}if(edit&&editKey(e))return;const d=e.code.match(/^Digit(\d)$/);if(d)sel(d[1]==='0'?9:+d[1]-1);
- ({KeyQ:()=>sel(cur-1),KeyE:()=>sel(cur+1),KeyF:()=>spawn('civilian'),KeyG:()=>spawn('gunman'),KeyH:()=>spawn('brute'),KeyV:()=>spawn('rag'),KeyB:()=>spawn('barrel'),KeyX:()=>xr=!xr,KeyT:()=>{if(window.__isClient&&window.__isClient()){toast('Only the host can slow time');return}ts=ts===1?.25:1},KeyN:clr,KeyU:useDev,KeyO:()=>{cinOn=!cinOn;toast(cinOn?'Cinematics on':'Cinematics off')},KeyP:toggleFree,Backquote:()=>{if(cur>=15)sel(lastW);else if(jjk)sel(lastP)},KeyR:reload,KeyZ:rack,KeyK:()=>{pl.hp=100;pl.dead=0}})[e.code]?.()});
+ ({BracketLeft:()=>setJJKKit(jjkKit-1),BracketRight:()=>setJJKKit(jjkKit+1),KeyQ:()=>sel(cur-1),KeyE:()=>sel(cur+1),KeyF:()=>spawn('civilian'),KeyG:()=>spawn('gunman'),KeyH:()=>spawn('brute'),KeyV:()=>spawn('rag'),KeyB:()=>spawn('barrel'),KeyX:()=>xr=!xr,KeyT:()=>{if(window.__isClient&&window.__isClient()){toast('Only the host can slow time');return}ts=ts===1?.25:1},KeyN:clr,KeyU:useDev,KeyO:()=>{cinOn=!cinOn;toast(cinOn?'Cinematics on':'Cinematics off')},KeyP:toggleFree,Backquote:()=>{if(cur>=15)sel(lastW);else if(jjk)sel(lastP)},KeyR:reload,KeyZ:rack,KeyK:()=>{pl.hp=100;pl.dead=0}})[e.code]?.()});
 document.addEventListener('keyup',e=>keys[e.code]=0);
 for(let i=0;i<3;i++)mk('civilian',rr(-8,8),rr(-4,-12));mk('gunman',6,-10);mk('brute',-6,-12);barrel(-3,-6);barrel(4,-4);[[22,18],[-24,28],[36,-6],[-30,4],[8,-44],[52,10],[-8,40],[18,-52],[-70,20],[-60,70],[30,70],[85,-60],[75,-40],[-70,-30],[20,-70],[-10,60],[62,-60],[-40,-20],[60,0],[-80,-10]].forEach(([x,z])=>mk('civilian',x,z));mk('gunman',-34,-34);mk('gunman',-38,-36);mk('gunman',30,-26);mk('gunman',66,-78);mk('gunman',80,-58);mk('gunman',60,70);mk('gunman',75,85);mk('gunman',-45,-10);mk('brute',43,30);mk('brute',-20,-50);mk('brute',-70,40);mk('brute',0,70);barrel(-30,-36);barrel(-37,-31);vrInit();ren.setAnimationLoop(frame);
 </script>
@@ -941,6 +969,15 @@ for(let i=0;i<3;i++)mk('civilian',rr(-8,8),rr(-4,-12));mk('gunman',6,-10);mk('br
 /* ===== Anatomy Range multiplayer: host-authoritative, PeerJS room codes ===== */
 const MP={mode:'solo',id:0,pid:0,peers:new Map(),peer:null,conn:null,code:'',av:new Map(),nid:0,bid:0,full:true,ev:[],origin:0,route:null,inExpl:false,ax:false,shots:[],g:[],pj:[],sp:[],hits:[],cl:0,it:0,st:0,win:{},sc:{},scc:{},pub:false,name:'',max:8,pw:'',reqAcct:false,locked:false,acct:null,nmz:{},muted:new Set(),freeze:false,bans:{},jt:0,lb:{on:false,peer:null,rp:null,reg:null,isDir:false,dir:new Map(),timer:null,retry:null},cp:new Map(),vc:new Map(),calls:new Map(),vm:{},mic:null,ac:null,fl:[],last:null,wd:false,dth:null,ud:null,devAct:false,inNpc:false,ls:''};
 const isH=()=>MP.mode==='host',isC=()=>MP.mode==='client';
+const JK={owner:null,name:''};
+function jkBroadcast(){window.__arJJKApply(JK.owner,JK.name);MP.ev.push({t:'jk',owner:JK.owner,name:JK.name,o:-1})}
+function jkClaim(pid,name){if(JK.owner!==null)return false;JK.owner=pid;JK.name=String(name||'Player').slice(0,24);jkBroadcast();feedMsg(JK.name+' claimed the JJK secret powers');return true}
+window.__arJJKRequest=()=>{if(isC()){send(MP.conn,{t:'jkclaim'});return true}if(isH()){if(jkClaim(0,myName()))return true;toast('JJK powers already claimed by '+JK.name);return false}return false};
+window.__arJJKCanSwitch=()=>JK.owner===null||JK.owner===MP.id;
+window.__arJJKGranting=false;
+window.__arJJKGrantLocal=()=>{window.__arJJKGranting=true;try{unlockJJK()}finally{window.__arJJKGranting=false}};
+window.__arJJKApply=(owner,name)=>{JK.owner=owner==null?null:owner;JK.name=name||'';jjkOwner=JK.owner;relic.visible=JK.owner===null;if(JK.owner===MP.id){window.__arJJKGrantLocal()}else if(JK.owner!==null){jjk=false;$('#ce').style.display='none';toast(JK.name+' claimed the JJK powers')}};
+
 const v3=v=>[+v.x.toFixed(3),+v.y.toFixed(3),+v.z.toFixed(3)],V3=a=>V(a[0],a[1],a[2]);
 const qz=n=>Math.max(-32000,Math.min(32000,Math.round(n*100)));
 const eul=new T.Euler(),tv=V(),tv2=V();
@@ -981,7 +1018,7 @@ function startHost(opt){opt=opt||{};
   const P={pid:++MP.pid,conn:c,st:null,peerId:c.peer,ok:false};
   c.on('open',()=>{P.nonce=rhex(16);send(c,{t:'ch',n:P.nonce,pw:!!MP.pw,req:MP.reqAcct,name:MP.name});P.to=setTimeout(()=>{if(!P.ok){try{c.close()}catch(x){}}},30000)});
   c.on('data',m=>P.ok?hostMsg(P,m):hostHello(P,m));c.on('close',()=>drop(P));c.on('error',()=>drop(P))})}
-function drop(P){if(!MP.peers.delete(P.pid))return;feedMsg((P.name||'Player')+' left');delete MP.nmz[P.pid];rmAv(P.pid);rmVoice(P.peerId);const cl=MP.calls.get(P.peerId);if(cl){try{cl.close()}catch(x){}MP.calls.delete(P.peerId)}broadcastVm();count()}
+function drop(P){if(!MP.peers.delete(P.pid))return;if(JK.owner===P.pid){JK.owner=null;JK.name='';jkBroadcast();feedMsg('JJK powers are available again')}feedMsg((P.name||'Player')+' left');delete MP.nmz[P.pid];rmAv(P.pid);rmVoice(P.peerId);const cl=MP.calls.get(P.peerId);if(cl){try{cl.close()}catch(x){}MP.calls.delete(P.peerId)}broadcastVm();count()}
 function join(code){
  if(MP.mode!=='solo'||MP.peer||noPeer())return;status('connecting…');const p=new Peer();MP.peer=p;hookVoice(p);
  p.on('error',e=>{status('could not join ('+e.type+')');MP.peer=null;try{p.destroy()}catch(x){}});
@@ -1018,7 +1055,7 @@ function snap(){
   const m={n,ty:e.type,a:e.alive?1:0,b:Math.round(e.blood),u:e.aim?1:0,c:e.cause||'',f,p,pm:e.phm||''},sg=JSON.stringify(m);
   if(!full&&e.sig===sg)continue;e.sig=sg;E.push(m)}
  const dvl=DEV.filter(o=>o.mpk),L={p:PROPS.filter(o=>o.mpk).map(o=>[o.mpk,+o.x.toFixed(2),+o.z.toFixed(2),+o.mpr.toFixed(3)]),d:dvl.map(o=>[o.k,+o.x.toFixed(2),+o.z.toFixed(2),+o.ry.toFixed(3)])},ls=JSON.stringify(L);for(const i of [0,...MP.peers.keys()])MP.sc[i]||(MP.sc[i]=[0,0]);
- const msg={t:'s',pl:plist(),ids,e:E,dv:dvl.map(o=>o.on?1:0),sc:MP.sc,nm:MP.nmz,b:barrels.map(b=>[b.id||(b.id=++MP.bid),+b.x.toFixed(2),+b.y.toFixed(2),+b.z.toFixed(2)]),j:proj.map(q=>[q.id||(q.id=++MP.bid),q.k,...v3(q.m.position)])};
+ const msg={t:'s',jk:JK.owner===null?null:{owner:JK.owner,name:JK.name},pl:plist(),ids,e:E,dv:dvl.map(o=>o.on?1:0),sc:MP.sc,nm:MP.nmz,b:barrels.map(b=>[b.id||(b.id=++MP.bid),+b.x.toFixed(2),+b.y.toFixed(2),+b.z.toFixed(2)]),j:proj.map(q=>[q.id||(q.id=++MP.bid),q.k,...v3(q.m.position)])};
  if(full||ls!==MP.ls){MP.ls=ls;msg.L=L}
  for(const P of MP.peers.values()){const dc=P.conn.dataChannel;if(dc&&dc.bufferedAmount>3e5){skipped=true;continue}send(P.conn,msg)}
  if(skipped)MP.full=true}
@@ -1027,7 +1064,7 @@ const spawnAt=(k,x,z)=>{if(k==='barrel')barrel(x,z);else{const i=ents.findIndex(
 const gfx=(i,a,b)=>{gunSfx(i,V3(a));_tracer(V3(a),V3(b))};
 function hostShot(P,s){const av=MP.av.get(P.pid);if(!av||!ents.includes(av))return;const[o,d,dmg,ty,imp,pierce,rng,wi]=s,sc=cur,b=BAL[wi]||[.009,2];cur=wi;CAL=b[0];EXF=b[1];MP.origin=P.pid;
  try{_shoot(V3(o),V3(d).normalize(),dmg,ty,imp,pierce,rng,av)}finally{cur=sc;MP.origin=0}noise(o[0],o[2],ty==='b'?45:8)}
-function hostMsg(P,m){if(!m)return;if(m.t==='chat'){hostChat(P,m.m);return}if(m.t!=='i')return;P.st=m.st;
+function hostMsg(P,m){if(!m)return;if(m.t==='chat'){hostChat(P,m.m);return}if(m.t==='jkclaim'){if(!jkClaim(P.pid,P.name))send(P.conn,{t:'say',m:'JJK powers already claimed by '+JK.name});return}if(m.t!=='i')return;P.st=m.st;
  (m.s||[]).forEach(s=>hostShot(P,s));
  (m.g||[]).forEach(g=>{gfx(g[0],g[1],g[2]);MP.ev.push({t:'g',i:g[0],a:g[1],b:g[2],o:P.pid})});
  (m.pj||[]).forEach(addProj);(m.tc||[]).forEach(t=>{if(window.__arHostTech)window.__arHostTech(P,t)});
@@ -1039,6 +1076,7 @@ function hostMsg(P,m){if(!m)return;if(m.t==='chat'){hostChat(P,m.m);return}if(m.
  }
 /* ---------- client: apply snapshots and events ---------- */
 function applySnap(m){
+ if(Object.prototype.hasOwnProperty.call(m,'jk')){const j=m.jk;window.__arJJKApply(j?j.owner:null,j?j.name:'')}
  MP.nmz=m.nm||MP.nmz;syncAv(m.pl.filter(s=>s.i!==MP.id));MP.scc=m.sc||{};if(m.L)applyL(m.L);
  if(m.dv){const dl=DEV.filter(o=>o.mpk);m.dv.forEach((on,i)=>{const d=dl[i];if(d&&(d.on?1:0)!==on){d.on=on;d.t=0}})}
  const have=new Map(),keep=new Set(m.ids);
@@ -1058,6 +1096,7 @@ function applyL(L){const rm=a=>a.forEach(b=>{const i=PL.indexOf(b);if(i>=0)PL.sp
  L.p.forEach(a=>prop(a[0],a[1],a[2],a[3]));L.d.forEach(a=>dev(a[0],a[1],a[2],a[3]))}
 function smooth(e){const t=e.tg;for(let i=0;i<16;i++){const q=e.pts[i],p=q.p,x=t[i*3]/100,y=t[i*3+1]/100,z=t[i*3+2]/100;if(Math.abs(x-p.x)+Math.abs(z-p.z)>4)p.set(x,y,z);else{p.x+=(x-p.x)*.35;p.y+=(y-p.y)*.35;p.z+=(z-p.z)*.35}q.q.copy(p)}}
 function onEv(e){
+ if(e.t==='jk'){window.__arJJKApply(e.owner,e.name);return}
  if(e.t==='h'){const t=ents.find(x=>x.nid===e.n&&x.net==null);if(t)_hurt(t,e.si,V3(e.pt),V3(e.d),e.D,e.ty,e.imp,e.tt)}
  else if(e.t==='x'){MP.ax=true;try{_expl(e.x,e.y,e.z,e.R,e.dm)}finally{MP.ax=false}}
  else if(e.t==='g')gfx(e.i,e.a,e.b);else if(e.t==='k')feed(e.v,e.s,e.w);else if(e.t==='m')feedRaw(e.m);else if(e.t==='f')flameFx(V3(e.p),V3(e.d));
