@@ -2161,5 +2161,49 @@ window.arNukeTick=arNukeTick;
   resize();setMode(0);
 })();
 </script>
+
+<script>
+(function(){
+ if(window.__arEmotesInstalled)return;
+ window.__arEmotesInstalled=true;
+ const css=document.createElement('style');
+ css.textContent=`
+ #ar-emote-panel{position:fixed;right:16px;bottom:18px;z-index:99991;width:214px;padding:10px;border:1px solid #6b8296;border-radius:13px;background:rgba(8,14,23,.88);color:#edf5ff;font:12px Arial,sans-serif;box-shadow:0 10px 30px #0009;backdrop-filter:blur(12px)}
+ #ar-emote-panel .ar-emote-title{font-size:10px;letter-spacing:2px;color:#9dbbd4;margin:0 0 8px}
+ #ar-emote-buttons{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+ #ar-emote-buttons button{border:1px solid #536d85;border-radius:8px;padding:8px 5px;background:#17283a;color:#eaf4ff;font-weight:700;cursor:pointer}
+ #ar-emote-buttons button.active{background:#315778;border-color:#9ac9ed}
+ #ar-emote-stage{height:118px;margin-top:8px;border-radius:9px;background:radial-gradient(ellipse at 50% 85%,#28415a88,transparent 65%),#0b1420;overflow:hidden;position:relative}
+ #ar-emote-stage canvas{width:100%;height:100%;display:block}
+ #ar-emote-caption{position:absolute;left:0;right:0;bottom:5px;text-align:center;color:#b8d2e8;font-size:10px;letter-spacing:1px;pointer-events:none}
+ @media(max-width:600px){#ar-emote-panel{right:8px;bottom:8px;width:190px}}
+ `;
+ document.head.appendChild(css);
+ const panel=document.createElement('section');panel.id='ar-emote-panel';
+ panel.innerHTML='<div class="ar-emote-title">EMOTE STUDIO</div><div id="ar-emote-buttons"><button data-emote="griddy" class="active">🕺 Griddy</button><button data-emote="robot">🤖 Robot</button><button data-emote="hype">🔥 Hype</button><button data-emote="stop">Stop</button></div><div id="ar-emote-stage"><canvas></canvas><div id="ar-emote-caption">THE GRIDDY</div></div>';
+ document.body.appendChild(panel);
+ const canvas=panel.querySelector('canvas'),ctx=canvas.getContext('2d'),caption=panel.querySelector('#ar-emote-caption');
+ let mode='griddy',start=performance.now(),raf=0;
+ function size(){const d=Math.min(devicePixelRatio||1,2),w=canvas.clientWidth||194,h=canvas.clientHeight||118;canvas.width=w*d;canvas.height=h*d;ctx.setTransform(d,0,0,d,0,0);}
+ function line(x1,y1,x2,y2,width=5){ctx.lineWidth=width;ctx.lineCap='round';ctx.strokeStyle='#d9edff';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+ function draw(t){raf=0;const w=canvas.clientWidth||194,h=canvas.clientHeight||118,phase=(t-start)/1000;ctx.clearRect(0,0,w,h);ctx.fillStyle='#8eb7d5';ctx.globalAlpha=.35;ctx.beginPath();ctx.ellipse(w/2,h-12,36,5,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+ const bob=mode==='stop'?0:Math.sin(phase*(mode==='robot'?5:8))*4;
+ const x=w/2,y=42+bob,step=mode==='griddy'?Math.sin(phase*8):mode==='hype'?Math.sin(phase*10):Math.sin(phase*5)*.45;
+ const arm=mode==='griddy'?Math.sin(phase*8):mode==='hype'?Math.sin(phase*10):Math.sin(phase*4)*.3;
+ ctx.fillStyle='#8fc8f0';ctx.beginPath();ctx.arc(x,y-17,9,0,Math.PI*2);ctx.fill();
+ line(x,y-7,x,y+22,6);
+ if(mode==='robot'){line(x,y,x-18,y+3+arm*5,5);line(x,y,x+18,y+3-arm*5,5);}
+ else{line(x,y,x-17,y-9+arm*10,5);line(x,y,x+17,y-9-arm*10,5);}
+ line(x,y+22,x-12-step*9,y+48,6);line(x,y+22,x+12+step*9,y+48,6);
+ ctx.fillStyle='#9ed6ff';ctx.font='bold 10px Arial';ctx.textAlign='center';ctx.fillText(mode==='griddy'?'STEP · STEP':mode==='robot'?'MECHANICAL GROOVE':mode==='hype'?'HYPE MODE':'',x,h-2);
+ if(mode!=='stop')raf=requestAnimationFrame(draw);
+ }
+ function setMode(next){mode=next;start=performance.now();caption.textContent=next==='griddy'?'THE GRIDDY':next==='robot'?'ROBOT GROOVE':next==='hype'?'HYPE DANCE':'EMOTES PAUSED';panel.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.emote===next));if(raf)cancelAnimationFrame(raf);raf=0;if(next!=='stop')raf=requestAnimationFrame(draw);else{size();drawStopped();}}
+ function drawStopped(){const w=canvas.clientWidth||194,h=canvas.clientHeight||118;ctx.clearRect(0,0,w,h);ctx.fillStyle='#8fc8f0';ctx.beginPath();ctx.arc(w/2,27,9,0,Math.PI*2);ctx.fill();line(w/2,36,w/2,66,6);line(w/2,44,w/2-17,49,5);line(w/2,44,w/2+17,49,5);line(w/2,66,w/2-12,92,6);line(w/2,66,w/2+12,92,6);}
+ panel.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.emote)));
+ addEventListener('resize',()=>{size();if(mode!=='stop'&&!raf)raf=requestAnimationFrame(draw);else if(mode==='stop')drawStopped();});
+ size();setMode('griddy');
+})();
+</script>
 </body>
 </html>
