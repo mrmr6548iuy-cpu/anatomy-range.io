@@ -47,7 +47,8 @@ button:hover,button:focus-visible{background:#283036;outline:none}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const T=THREE,V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z),R=Math.random,rr=(a,b)=>a+(b-a)*R(),$=s=>document.querySelector(s),Y=V(0,1,0);
-let damageFxOn=false;try{damageFxOn=localStorage.getItem('ar_damage_fx_v1')==='1'}catch(e){}\nconst damageFxToggle=$('#damage-fx-toggle');if(damageFxToggle){damageFxToggle.checked=damageFxOn;damageFxToggle.addEventListener('change',()=>{damageFxOn=damageFxToggle.checked;try{localStorage.setItem('ar_damage_fx_v1',damageFxOn?'1':'0')}catch(e){};toast(damageFxOn?'Enhanced damage effects enabled':'Enhanced damage effects disabled')})}
+let damageFxOn=false;try{damageFxOn=localStorage.getItem('ar_damage_fx_v1')==='1'}catch(e){}
+const damageFxToggle=$('#damage-fx-toggle');if(damageFxToggle){damageFxToggle.checked=damageFxOn;damageFxToggle.addEventListener('change',()=>{damageFxOn=damageFxToggle.checked;try{localStorage.setItem('ar_damage_fx_v1',damageFxOn?'1':'0')}catch(e){};toast(damageFxOn?'Enhanced damage effects enabled':'Enhanced damage effects disabled')})}
 const ad=(a,b)=>{let d=a-b;while(d>Math.PI)d-=6.2832;while(d<-Math.PI)d+=6.2832;return d};
 const AR=99;
 const ren=new T.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.shadowMap.enabled=true;ren.xr.enabled=true;ren.outputEncoding=T.sRGBEncoding;ren.toneMapping=T.ACESFilmicToneMapping;document.body.prepend(ren.domElement);
