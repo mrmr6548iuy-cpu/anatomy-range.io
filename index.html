@@ -78,6 +78,32 @@ const postFxToggle=document.querySelector('#postfx-toggle');if(postFxToggle){pos
 scene.add(new T.HemisphereLight(0xdce9f2,0x25201e,.72));const fillLight=new T.DirectionalLight(0x8eb8d2,.42);fillLight.position.set(-12,9,-8);scene.add(fillLight);const rimLight=new T.PointLight(0x4b91b5,1.1,75);rimLight.position.set(-18,8,18);scene.add(rimLight);
 {const pm=new T.PMREMGenerator(ren),c=document.createElement('canvas');c.width=256;c.height=128;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,0,128);g.addColorStop(0,'#7f93a8');g.addColorStop(.5,'#c9d3dc');g.addColorStop(.55,'#444a4f');g.addColorStop(1,'#1c1f22');x.fillStyle=g;x.fillRect(0,0,256,128);x.fillStyle='#fff';x.fillRect(40,20,50,22);x.fillRect(170,14,36,16);const tx=new T.CanvasTexture(c);tx.mapping=T.EquirectangularReflectionMapping;tx.encoding=T.sRGBEncoding;scene.environment=pm.fromEquirectangular(tx).texture}
 const sun=new T.DirectionalLight(0xfff1e0,1.3);sun.position.set(8,18,6);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-24,right:24,top:24,bottom:-24,far:60});scene.add(sun);scene.add(sun.target);
+/* ---------- automatic day/night cycle ---------- */
+const dayNight={time:.25,duration:300,elapsed:0};
+const daySky=new T.Color(0x111a20),nightSky=new T.Color(0x080e19),dawnSky=new T.Color(0xc17b61),dayHemi=new T.Color(0xdce9f2),nightHemi=new T.Color(0x26364e),dayGround=new T.Color(0x25201e),nightGround=new T.Color(0x101725);
+let daySunY=18;
+function updateDayNight(dt){
+ dayNight.elapsed+=dt;
+ dayNight.time=(dayNight.time+dt/dayNight.duration)%1;
+ const angle=dayNight.time*Math.PI*2;
+ const elevation=Math.sin(angle);
+ const daylight=Math.max(0,Math.min(1,(elevation+.12)/.48));
+ const twilight=Math.max(0,1-Math.abs(elevation)/.34)*(1-daylight*.65);
+ const night=1-daylight;
+ daySunY=3+Math.max(.08,elevation)*25;
+ sun.intensity=.08+daylight*1.35+twilight*.22;
+ sun.color.setHex(0xfff1e0).lerp(new T.Color(0xff9565),twilight*.72);
+ fillLight.intensity=.04+daylight*.42;
+ fillLight.color.copy(new T.Color(0x8eb8d2)).lerp(new T.Color(0x536b9a),night*.7);
+ rimLight.intensity=.12+night*.72;
+ scene.background.copy(nightSky).lerp(daySky,daylight).lerp(dawnSky,twilight*.62);
+ scene.fog.color.copy(scene.background);
+ scene.fog.density=.0085+night*.002;
+ const sky=scene.children.find(o=>o.isHemisphereLight);
+ if(sky){sky.intensity=.12+daylight*.66;sky.color.copy(nightHemi).lerp(dayHemi,daylight);sky.groundColor.copy(nightGround).lerp(dayGround,daylight)}
+}
+window.ARDayNight={get time(){return dayNight.time},get duration(){return dayNight.duration},setDuration(seconds){dayNight.duration=Math.max(60,Math.min(1800,Number(seconds)||300))}};
+
 const fl=new T.PointLight(0xffa040,0,18);cam.add(fl);
 function ctex(w,h,f,rep){const c=document.createElement('canvas');c.width=w;c.height=h;f(c.getContext('2d'),w,h);const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.encoding=T.sRGBEncoding;t.anisotropy=8;if(rep)t.repeat.set(rep,rep);return t}
 const spk=(x,w,h,n,a,s)=>{for(let i=0;i<n;i++){const v=R()*255|0;x.fillStyle='rgba('+v+','+v+','+v+','+a+')';x.fillRect(R()*w,R()*h,rr(1,s),rr(1,s))}};
@@ -884,7 +910,7 @@ function frame(t){const rd=Math.min((t-lt0)/1000,.05);lt0=t;
  let i=0;for(const p of pd){if(p.a){D1.position.set(p.x,p.y,p.z);D1.scale.setScalar(p.k===2?p.s*Math.max(0,p.l/p.l0):p.s)}else D1.scale.setScalar(0);D1.updateMatrix();pm.setMatrixAt(i++,D1.matrix)}pm.instanceMatrix.needsUpdate=true;
  if(++fr%5==0){look();$('#ch').classList.remove('h')}
  $('#vig').style.opacity=Math.min(1,pl.flash*.8+(pl.dead>0?.8:(100-pl.hp)/160));
- {const A=ammo[cur];$('#am').innerHTML=window.__arEntityMode?'<i>'+window.__arEntityAbilityName+' · '+Math.max(0,(window.__arEntityCooldown-performance.now())/1000).toFixed(1)+'s cooldown</i>':(A?A.m+(ST[cur]&&ST[cur].ch?'+1':'')+' <small>/ '+A.mx+'</small>':'∞')+'<i>'+W[cur].n+(ST[cur]&&!ST[cur].ch&&rel<=0?' (Z: rack)':'')+(rel>0?' — reloading':'')+'</i>'}{const sc=!xrOn&&adsOn&&cur===5&&cam.fov<30;$('#scope').style.display=sc?'block':'none';gun.visible=!sc&&!fcam&&!cin&&!window.__arEntityMode}sun.position.set(pl.p.x+8,18,pl.p.z+6);sun.target.position.set(pl.p.x,0,pl.p.z);sun.target.updateMatrixWorld();if(jjk)$('#ce i').style.width=ce+'%';if(++mmF%6==0)drawMM();listen();if(!xrOn&&window.__arPostFXOn&&arComposer)arComposer.render();else ren.render(scene,cam)}
+ {const A=ammo[cur];$('#am').innerHTML=window.__arEntityMode?'<i>'+window.__arEntityAbilityName+' · '+Math.max(0,(window.__arEntityCooldown-performance.now())/1000).toFixed(1)+'s cooldown</i>':(A?A.m+(ST[cur]&&ST[cur].ch?'+1':'')+' <small>/ '+A.mx+'</small>':'∞')+'<i>'+W[cur].n+(ST[cur]&&!ST[cur].ch&&rel<=0?' (Z: rack)':'')+(rel>0?' — reloading':'')+'</i>'}{const sc=!xrOn&&adsOn&&cur===5&&cam.fov<30;$('#scope').style.display=sc?'block':'none';gun.visible=!sc&&!fcam&&!cin&&!window.__arEntityMode}updateDayNight(dt);sun.position.set(pl.p.x+8,daySunY,pl.p.z+6);sun.target.position.set(pl.p.x,0,pl.p.z);sun.target.updateMatrixWorld();if(jjk)$('#ce i').style.width=ce+'%';if(++mmF%6==0)drawMM();listen();if(!xrOn&&window.__arPostFXOn&&arComposer)arComposer.render();else ren.render(scene,cam)}
 /* ---------- input & menu ---------- */
 const place=()=>{const fw2=V();cam.getWorldDirection(fw2);return[Math.max(-AR+3,Math.min(AR-3,pl.p.x+fw2.x*7+rr(-1,1))),Math.max(-AR+3,Math.min(AR-3,pl.p.z+fw2.z*7+rr(-1,1)))]};
 const SPW={civilian:'Civilian',gunman:'Gunman',brute:'Brute',rag:'Ragdoll',barrel:'Explosive barrel'};
