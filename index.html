@@ -784,7 +784,38 @@ const ishell=new T.Mesh(sphG,new T.MeshBasicMaterial({color:0x8fe0ff,transparent
 function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(toast.h);toast.h=setTimeout(()=>{t.style.opacity=0},4200)}
 function unlockJJK(){if(jjk)return;if(window.__arJJKRequest&&!window.__arJJKGranting&&window.__arJJKRequest())return;jjk=true;ce=100;flash.l=2;shake=.5;sfx('boom',null,1,3);relic.visible=false;$('#ce').style.display='block';setJJKKit(jjkKit);toast('CURSED ENERGY AWAKENED · '+JJK_KITS[jjkKit].name);sel(15)}
 function ctProj(o,fw,col,sc,sp,k){const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:col}));m.scale.setScalar(sc);m.position.copy(o).addScaledVector(fw,1.2);scene.add(m);proj.push({m,v:fw.clone().multiplyScalar(sp),k,t:0})}
+const jjkVfx=[];
+function jjkAnimateCast(pw,o,fw,rt){
+ const kitMove=JJK_KITS.flatMap(k=>k.moves).find(m=>m[1]===pw),col=(JKFX[pw]&&JKFX[pw][1])||(kitMove&&kitMove[4])||0x9c7bff;
+ const group=new T.Group(),origin=o.clone().addScaledVector(fw,pw.includes('dash')||pw.includes('rush')?1.4:3.2);origin.y=Math.max(.45,origin.y);group.position.copy(origin);
+ const mat=(color,opacity=1)=>new T.MeshBasicMaterial({color,transparent:opacity<1,opacity,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide});
+ const ringMat=mat(col,.72),coreMat=mat(0xffffff,.92),shardMat=mat(col,.86);
+ const rings=[];
+ for(let i=0;i<3;i++){const mesh=new T.Mesh(new T.TorusGeometry(1.05+i*.38,.025+i*.008,8,48),ringMat.clone());mesh.rotation.x=Math.PI/2+(i-1)*.22;mesh.rotation.y=i*.7;group.add(mesh);rings.push(mesh)}
+ const core=new T.Mesh(new T.IcosahedronGeometry(.34,2),coreMat);group.add(core);
+ const shards=[];for(let i=0;i<8;i++){const mesh=new T.Mesh(new T.OctahedronGeometry(.12+R()*.1,0),shardMat.clone());group.add(mesh);shards.push(mesh)}
+ let mode=pw.includes('domain')||pw.includes('shrine')||pw.includes('garden')?'domain':pw.includes('dash')||pw.includes('rush')||pw.includes('step')?'dash':pw.includes('beam')||pw.includes('uzumaki')||pw==='dis'||pw==='cle'?'beam':pw.includes('guard')||pw.includes('shield')?'guard':pw.includes('swarm')||pw.includes('dogs')||pw.includes('rika')||pw.includes('rabbits')?'summon':'impact';
+ const beam=new T.Mesh(new T.CylinderGeometry(.055,.22,mode==='beam'?8:mode==='dash'?4:2.2,12,1,true),mat(col,.5));beam.position.copy(fw).multiplyScalar(mode==='beam'?4:mode==='dash'?1.5:1);beam.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),fw);group.add(beam);
+ if(mode==='domain'){group.scale.setScalar(.35);rings.forEach((r,i)=>r.scale.setScalar(2.4+i*.65))}
+ if(mode==='guard'){rings.forEach((r,i)=>r.scale.setScalar(1.3+i*.18))}
+ if(mode==='dash'){group.position.copy(pl.p).add(V(0,.8,0));beam.scale.set(1,1,1.8)}
+ scene.add(group);jjkVfx.push({group,rings,core,shards,beam,t:0,duration:mode==='domain'?2.1:mode==='summon'?1.35:1.05,mode,fw:fw.clone(),rt:rt.clone(),col});
+ if(jjkVfx.length>18){const q=jjkVfx.shift();scene.remove(q.group);q.group.traverse(n=>{if(n.geometry)n.geometry.dispose();if(n.material){if(Array.isArray(n.material))n.material.forEach(m=>m.dispose());else n.material.dispose()}})}
+ for(let i=0;i<12;i++){const a=i/12*Math.PI*2,d=rt.clone().multiplyScalar(Math.cos(a)).addScaledVector(Y,Math.sin(a)*.45).addScaledVector(fw,.35).normalize();part(origin.x,origin.y,origin.z,d.x*rr(2,6),d.y*rr(1,4),d.z*rr(2,6),rr(.22,.65),rr(.035,.075),col,0,1)}
+}
+function jjkVfxTick(dt){
+ for(let i=jjkVfx.length-1;i>=0;i--){const q=jjkVfx[i];q.t+=dt;const u=Math.min(1,q.t/q.duration),fade=Math.max(0,1-u),pulse=.8+Math.sin(q.t*23)*.18;
+ q.group.rotation.y+=dt*(q.mode==='domain'?1.1:4.5);q.group.rotation.z+=dt*(q.mode==='dash'?2:1.7);
+ if(q.mode==='domain'){const s=.35+u*2.5;q.group.scale.setScalar(s);q.rings.forEach((r,j)=>{r.rotation.z+=dt*(j%2?2.8:-2.2);r.material.opacity=fade*.8})}
+ else if(q.mode==='guard'){q.group.scale.setScalar(1+Math.sin(q.t*16)*.09);q.rings.forEach((r,j)=>{r.rotation.z+=dt*(j%2?2:-2);r.material.opacity=fade*.8})}
+ else{q.group.scale.setScalar((.55+u*1.3)*pulse);q.rings.forEach((r,j)=>{r.rotation.z+=dt*(j%2?5:-4);r.material.opacity=fade*.7});q.beam.material.opacity=fade*.55}
+ q.core.rotation.x+=dt*4;q.core.rotation.y+=dt*6;q.core.scale.setScalar((.65+Math.sin(q.t*29)*.2)*fade);
+ q.shards.forEach((m,j)=>{const a=q.t*(q.mode==='summon'?5:3)+j*Math.PI/4,r=.8+u*1.6;m.position.set(Math.cos(a)*r,Math.sin(a*1.4)*.7,Math.sin(a)*r);m.rotation.x+=dt*7;m.rotation.y+=dt*5;m.scale.setScalar(fade*(.8+Math.sin(q.t*18+j)*.25))});
+ if(u>=1){scene.remove(q.group);q.group.traverse(n=>{if(n.geometry)n.geometry.dispose();if(n.material){if(Array.isArray(n.material))n.material.forEach(m=>m.dispose());else n.material.dispose()}});jjkVfx.splice(i,1)}
+ }
+}
 function jjkUniqueFire(pw,o,fw,rt){
+ jjkAnimateCast(pw,o,fw,rt);
  const ray=(dmg=32,range=18,dir=fw)=>shoot(o,dir,dmg,'x',.7,1,range);
  const fan=(n,spread,dmg=28,range=20)=>{for(let i=0;i<n;i++){const u=n===1?0:i/(n-1)-.5,d=fw.clone().addScaledVector(rt,u*spread).normalize();ray(dmg,range,d)}};
  const pulse=(radius=7,power=2,stun=1.2,mode='push')=>{const c=pl.p.clone().addScaledVector(fw,Math.min(4,radius*.35));ents.forEach(e=>{const p=e.pts[3].p,dv=p.clone().sub(c),d=dv.length();if(d>radius||d<.01)return;dv.normalize();const k=(1-d/radius)*power;for(const q of e.pts){if(mode==='pull')q.q.addScaledVector(dv,k);else q.q.addScaledVector(dv,-k);if(mode==='lift')q.q.y-=k*1.8}e.stun=Math.max(e.stun,stun)});const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:0x9bc8ff,transparent:true,opacity:.32,wireframe:true}));m.position.copy(c);scene.add(m);fxs.push({m,t:0,R:radius});shake=Math.max(shake,.16)};
@@ -1069,7 +1100,7 @@ if(!xrOn){if(fcam)cam.position.copy(fpos);else if(window.__arEntityMode&&window.
  for(const p of pd){if(!p.a)continue;p.l-=dt;p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;
   if(p.k===0){if(p.y<.02||p.l<=0){if(p.y<.3)dec(p.x,p.z,p.s*rr(4,9),p.c);p.a=0}}
   else if(p.k===1||p.k===3){if(p.y<p.s){p.y=p.s;if(p.k===3&&p.vy<-.8)sfx('brass',V(p.x,p.y,p.z));p.vy*=-.35;p.vx*=.5;p.vz*=.5;if(p.k===1&&R()<.25)dec(p.x,p.z,p.s*1.4,p.c)}if(p.k===3&&p.l<=0)p.a=0}
-  else{if(p.y<.02){p.y=.02;p.vy=0}if(p.l<=0)p.a=0}}}}
+  else{if(p.y<.02){p.y=.02;p.vy=0}if(p.l<=0)p.a=0}}jjkVfxTick(dt)}
 $('#vig').style.opacity=0;
 function frame(t){const rd=Math.min((t-lt0)/1000,.05);lt0=t;
  if(!xrOn){if(lw!==innerWidth+'x'+innerHeight){lw=innerWidth+'x'+innerHeight;ren.setSize(innerWidth,innerHeight,false);if(arComposer)arComposer.setSize(innerWidth,innerHeight)}cam.aspect=innerWidth/innerHeight}cam.updateProjectionMatrix();
