@@ -988,7 +988,7 @@ jkWheelStyle.textContent='#ar-jjk-wheel .jk-ring{position:relative;width:min(76v
 document.head.appendChild(jkWheelStyle);
 const jkRing=document.createElement('div');jkRing.className='jk-ring';jkWheel.appendChild(jkRing);
 const jkCenter=document.createElement('div');jkCenter.className='jk-center';jkCenter.innerHTML='CURSED TECHNIQUE<b>SELECT</b>';jkRing.appendChild(jkCenter);
-const jkHint=document.createElement('div');jkHint.className='jk-hint';jkHint.textContent='MOVE MOUSE TO CHOOSE · RELEASE B TO CONFIRM';jkRing.appendChild(jkHint);
+const jkHint=document.createElement('div');jkHint.className='jk-hint';jkHint.textContent='MOVE MOUSE TO CHOOSE · RELEASE Y TO CONFIRM';jkRing.appendChild(jkHint);
 const jkSlots=[];
 JJK_KITS.forEach((kit,i)=>{const el=document.createElement('div');el.className='jk-slot';el.innerHTML=kit.name.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'<small>CHARACTER '+String(i+1).padStart(2,'0')+'</small>';const a=(-Math.PI/2)+(i/JJK_KITS.length)*Math.PI*2;el.style.left=(50+38*Math.cos(a))+'%';el.style.top=(50+38*Math.sin(a))+'%';jkRing.appendChild(el);jkSlots.push(el)});
 document.body.appendChild(jkWheel);
@@ -997,8 +997,8 @@ function jkWheelPaint(){jkSlots.forEach((el,i)=>el.classList.toggle('active',i==
 function jkWheelChoose(dx,dy){jkWheelX=Math.max(-150,Math.min(150,jkWheelX+dx));jkWheelY=Math.max(-150,Math.min(150,jkWheelY+dy));if(Math.hypot(jkWheelX,jkWheelY)<18)return;let a=Math.atan2(jkWheelY,jkWheelX)+Math.PI/2;if(a<0)a+=Math.PI*2;jkWheelPick=Math.round(a/(Math.PI*2)*JJK_KITS.length)%JJK_KITS.length;jkWheelPaint()}
 function jkWheelOpenNow(){if(jkWheelOpen||!jjk||!window.__arJJKCanSwitch())return;jkWheelOpen=true;jkWheelX=0;jkWheelY=0;jkWheelPick=jjkKit;jkWheel.style.display='flex';jkWheelPaint()}
 function jkWheelCloseNow(){if(!jkWheelOpen)return;jkWheelOpen=false;jkWheel.style.display='none';if(jjkKit!==jkWheelPick)setJJKKit(jkWheelPick)}
-window.addEventListener('keydown',e=>{if(e.code==='KeyB'&&jjk&&window.__arJJKCanSwitch()){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)jkWheelOpenNow()}},true);
-window.addEventListener('keyup',e=>{if(e.code==='KeyB'&&jkWheelOpen){e.preventDefault();e.stopImmediatePropagation();jkWheelCloseNow()}},true);
+window.addEventListener('keydown',e=>{if(e.code==='KeyY'&&jjk&&window.__arJJKCanSwitch()){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)jkWheelOpenNow()}},true);
+window.addEventListener('keyup',e=>{if(e.code==='KeyY'&&jkWheelOpen){e.preventDefault();e.stopImmediatePropagation();jkWheelCloseNow()}},true);
 window.addEventListener('mousemove',e=>{if(jkWheelOpen)jkWheelChoose(e.movementX||0,e.movementY||0)},true);
 window.addEventListener('blur',()=>{if(jkWheelOpen){jkWheelOpen=false;jkWheel.style.display='none'}},true);
 
