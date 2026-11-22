@@ -789,10 +789,10 @@ function jjkAnimateCast(pw,o,fw,rt){
  const kitMove=JJK_KITS.flatMap(k=>k.moves).find(m=>m[1]===pw),col=(JKFX[pw]&&JKFX[pw][1])||(kitMove&&kitMove[4])||0x9c7bff;
  const group=new T.Group(),isMove=pw.includes('dash')||pw.includes('rush')||pw.includes('step'),origin=o.clone().addScaledVector(fw,isMove?1.1:2.8);
  origin.y=Math.max(.35,origin.y);group.position.copy(origin);group.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),fw.clone().normalize());
- const parts=[],rings=[],mat=(color,opacity=.8,wire=false)=>new T.MeshBasicMaterial({color,transparent:true,opacity,wireframe:wire,depthWrite:false,side:T.DoubleSide,blending:T.AdditiveBlending});
+ const parts=[],rings=[],mat=(color,opacity=.8,wire=false)=>{const m=new T.MeshBasicMaterial({color,transparent:true,opacity,wireframe:wire,depthWrite:false,side:T.DoubleSide,blending:T.AdditiveBlending});m.userData.baseOpacity=opacity;return m};
  const add=(geo,color=col,opacity=.8,wire=false,x=0,y=0,z=0)=>{const m=new T.Mesh(geo,mat(color,opacity,wire));m.position.set(x,y,z);group.add(m);parts.push(m);return m};
  const ring=(r,t,color=col,opacity=.8,z=0)=>{const m=add(new T.TorusGeometry(r,t,8,64),color,opacity);m.position.z=z;rings.push(m);return m};
- const line=(pts,color=col,opacity=.9)=>{const g=new T.BufferGeometry().setFromPoints(pts.map(p=>new T.Vector3(p[0],p[1],p[2]||0))),m=new T.Line(g,new T.LineBasicMaterial({color,transparent:true,opacity,depthWrite:false,blending:T.AdditiveBlending}));group.add(m);parts.push(m);return m};
+ const line=(pts,color=col,opacity=.9)=>{const g=new T.BufferGeometry().setFromPoints(pts.map(p=>new T.Vector3(p[0],p[1],p[2]||0))),m=new T.Line(g,Object.assign(new T.LineBasicMaterial({color,transparent:true,opacity,depthWrite:false,blending:T.AdditiveBlending}),{userData:{baseOpacity:opacity}}));group.add(m);parts.push(m);return m};
  let family='impact',duration=1.05;
  if(pw==='blue'){family='blue';duration=1.45;add(new T.SphereGeometry(.42,24,18),0x168cff,.72);for(let i=0;i<4;i++)ring(.7+i*.28,.018,0x5bbcff,.85-i*.1,(i-1.5)*.12)}
  else if(pw==='red'||pw==='sukuna_flame'||pw==='sukuna_furnace'){family='red';duration=1.05;add(new T.SphereGeometry(.48,24,18),0xff321e,.8);add(new T.SphereGeometry(.25,18,12),0xffd0a0,.9);for(let i=0;i<3;i++)ring(.6+i*.45,.035,i===1?0xff9a45:0xff3020,.8-i*.16)}
