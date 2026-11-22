@@ -36,8 +36,12 @@ p{margin:6px 0;color:var(--mut)}
 button{font:600 16px "Barlow Condensed",sans-serif;color:var(--ink);background:linear-gradient(135deg,#273239,#151b1f);border:1px solid rgba(190,210,220,.2);border-left:3px solid var(--blood);border-radius:5px;padding:7px 13px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.2);transition:transform .16s,background .16s,border-color .16s}
 button:hover,button:focus-visible{background:linear-gradient(135deg,#35434b,#202a30);border-color:rgba(210,225,235,.42);transform:translateY(-1px);outline:none}
 .mode{display:flex;gap:8px}.mode button{flex:1;font-size:24px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:2px}.mode button small{font:400 14px "Barlow Condensed",sans-serif;color:var(--ink);opacity:.75}#go{background:var(--blood);border-color:var(--blood)}#vrb{background:#1d3a4a;border-color:#3aa0d8}button:disabled{opacity:.45;cursor:not-allowed}
+
+#ar-changelog{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}#ar-changelog .card{width:min(620px,92vw)}#ar-changelog h2{margin:16px 0 4px;font-size:22px}#ar-changelog .entry{padding:9px 0;border-bottom:1px solid var(--line)}#ar-changelog .entry b{color:#e5edf1}#ar-changelog .entry small{display:block;color:var(--mut);margin-top:3px}#ar-nuke-flash{position:fixed;inset:0;z-index:250;pointer-events:none;background:#fff;opacity:0}
 </style></head><body>
 <div id="ch"></div><div id="vit"></div><div id="bar"></div><div id="vig"></div><div id="am"></div><div id="scope"></div><div id="ed"></div><canvas id="mm" width="160" height="160"></canvas><div id="toast"></div><div class="lb" id="lb1"></div><div class="lb" id="lb2"></div><div id="cap"></div><div id="fx"></div><div id="sl"></div><div id="ce"><i></i></div><div id="fc">FREE CAM · WASD fly · Space up · C down · Shift fast · wheel speed · P return to body</div>
+
+<div id="ar-changelog"><div class="card"><h1 style="font-size:34px">CHANGELOG</h1><p>Recent updates to Anatomy Range</p><div class="entry"><b>Build 28 · Hidden trouble</b><small>Added a secret proximity Easter egg. Stay near the strange beacon and see what happens.</small></div><div class="entry"><b>Build 27 · JJK Secret Powers</b><small>Character ability kits, a selection wheel, creator unlock, and unique visual effects.</small></div><div class="entry"><b>Build 26 · Time control</b><small>Polished time-scale selector with 1×, 0.5×, and 0.25× speeds.</small></div><div class="entry"><b>Build 25 · World & atmosphere</b><small>Expanded city districts, day/night cycle, cinematic lighting, and environmental detail.</small></div><div class="entry"><b>Build 24 · Combat feedback</b><small>Improved impact particles, physics fragments, persistent scuffs, and camera response.</small></div><div class="g"><button id="ar-changelog-close">Close</button></div></div></div><div id="ar-nuke-flash"></div>
 <div id="menu"><div class="card">
 <h1>Anatomy Range</h1>
 <p>A sandbox with layered bodies: skin, bone, organs, blood pressure. Every wound has a cause and a consequence.</p>
@@ -1139,7 +1143,7 @@ if(!xrOn){if(fcam)cam.position.copy(fpos);else if(window.__arEntityMode&&window.
   else{if(p.y<.02){p.y=.02;p.vy=0}if(p.l<=0)p.a=0}}jjkVfxTick(dt)}}
 $('#vig').style.opacity=0;
 function frame(t){const rd=Math.min((t-lt0)/1000,.05);lt0=t;
- if(!xrOn){if(lw!==innerWidth+'x'+innerHeight){lw=innerWidth+'x'+innerHeight;ren.setSize(innerWidth,innerHeight,false);if(arComposer)arComposer.setSize(innerWidth,innerHeight)}cam.aspect=innerWidth/innerHeight}cam.updateProjectionMatrix();
+ if(!xrOn){if(lw!==innerWidth+'x'+innerHeight){lw=innerWidth+'x'+innerHeight;ren.setSize(innerWidth,innerHeight,false);if(arComposer)arComposer.setSize(innerWidth,innerHeight)}cam.aspect=innerWidth/innerHeight}cam.updateProjectionMatrix();arNukeTick(rd);
  if(gamePaused&&!pauseAllowed())gamePaused=false;if(!gamePaused){if(hitstop>0){hitstop=Math.max(0,hitstop-rd);acc=0}else{acc+=rd*ts;let n=0;while(acc>=1/60&&n++<4){tick(1/60);acc-=1/60}}}else acc=0;cinUpdate();
  ents.forEach(rend);
  let i=0;for(const p of pd){if(p.a){D1.position.set(p.x,p.y,p.z);D1.scale.setScalar(p.k===2?p.s*Math.max(0,p.l/p.l0):p.s)}else D1.scale.setScalar(0);D1.updateMatrix();pm.setMatrixAt(i++,D1.matrix)}pm.instanceMatrix.needsUpdate=true;
@@ -2053,7 +2057,8 @@ function render(){const s=st(),ward=mode==='ward';$l.innerHTML='';tabsEl.innerHT
   if(isCr())VAULT.forEach(([id,n,ty])=>{const has=s.vault.includes(id);rowEl(n,ty,mkBtn(has?'In inventory ✓':'Add to inventory',()=>{s.vault.push(id);save();grant();const wi=W.findIndex(x=>x.id===id);if(wi>=0)sel(wi);toast(n+' added');render()},has))})}}
 const card=document.querySelector('#menu .card'),row=document.createElement('div');row.className='g';
 const bW=mkBtn('Wardrobe',()=>{mode='ward';render();pan.style.display='flex';pvStart()}),bV=mkBtn('Creator Vault',()=>{mode='vault';render();pan.style.display='flex'});bV.style.display='none';const bS=mkBtn('Weapon Shop',()=>{mode='shop';render();pan.style.display='flex'});const bC=mkBtn('Creator Menu',()=>{mode='cm';render();pan.style.display='flex'});bC.style.display='none';
-const ver=document.createElement('small');ver.textContent='add-on build 27';ver.style.cssText='color:var(--mut);align-self:center';row.append(bW,bS,bV,bC,ver);card.insertBefore(row,card.querySelector('.mode'));
+const changeBtn=mkBtn('Changelog',()=>{document.querySelector('#ar-changelog').style.display='flex'});document.querySelector('#ar-changelog-close').onclick=()=>{document.querySelector('#ar-changelog').style.display='none'};document.querySelector('#ar-changelog').addEventListener('click',e=>{if(e.target.id==='ar-changelog')e.currentTarget.style.display='none'});
+const ver=document.createElement('small');ver.textContent='add-on build 28';ver.style.cssText='color:var(--mut);align-self:center';row.append(bW,bS,bV,bC,changeBtn,ver);card.insertBefore(row,card.querySelector('.mode'));
 const lockSetup=()=>{const u=document.querySelector('#ar-sb-url'),d=u&&u.closest('details'),bx=d&&d.parentElement;if(!bx)return;const ok=isCr()&&MP.acct&&MP.acct.name==='MRMR';bx.style.display=ok?'':'none';if(!ok)d.open=false};
 /* ---- auto login: remember every sign-in on this device and restore the cloud role on load ---- */
 const AUTO='ar_auto_v1',keep=(n,p)=>{try{if(MP.acct&&n&&p)localStorage.setItem(AUTO,JSON.stringify({n,p}))}catch(e){}};
@@ -2068,5 +2073,38 @@ const stat=()=>{ver.textContent='add-on build 27 · '+(MP.acct?MP.acct.name+' ('
 setTimeout(()=>{try{sel(cur)}catch(e){}},800);lockSetup();stat();setInterval(()=>{lockSetup();stat();bV.style.display=bC.style.display=isCr()?'':'none';grant();paintHud()},1000);paintHud();
 })();
 
+
+/* ---- secret proximity Easter egg ---- */
+let arEggStay=0,arEggCooldown=0,arEggTriggered=false;
+const arEggPos=V(18,1.35,-22);
+{
+ const base=new T.Mesh(new T.CylinderGeometry(.65,.85,.32,18),new T.MeshStandardMaterial({color:0x242b30,metalness:.7,roughness:.35}));
+ base.position.set(arEggPos.x,.16,arEggPos.z);base.castShadow=true;scene.add(base);
+ const core=new T.Mesh(new T.IcosahedronGeometry(.48,1),new T.MeshStandardMaterial({color:0x8b2020,emissive:0x5a0808,emissiveIntensity:1.8,metalness:.35,roughness:.2}));
+ core.position.copy(arEggPos);scene.add(core);
+ const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');
+ x.fillStyle='rgba(8,12,15,.88)';x.fillRect(0,0,512,96);x.strokeStyle='#d21e2b';x.lineWidth=4;x.strokeRect(2,2,508,92);
+ x.font='bold 34px Arial';x.textAlign='center';x.fillStyle='#fff';x.fillText('one to three four i declare a nuke war',256,60);
+ const tex=new T.CanvasTexture(c),label=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
+ label.position.set(arEggPos.x,2.45,arEggPos.z);label.scale.set(7.2,1.35,1);scene.add(label);
+ window.__arEggBeacon={position:arEggPos.clone(),label};
+}
+function arNukeTick(dt){
+ if(!pl||!pl.p)return;
+ arEggCooldown=Math.max(0,arEggCooldown-dt);
+ const near=pl.p.distanceTo(arEggPos)<4.2;
+ if(near&&!arEggTriggered&&arEggCooldown<=0){
+  arEggStay+=dt;
+  if(arEggStay>=5){
+   arEggStay=0;arEggTriggered=true;arEggCooldown=18;
+   const flash=document.querySelector('#ar-nuke-flash');if(flash){flash.style.transition='none';flash.style.opacity='1';requestAnimationFrame(()=>{flash.style.transition='opacity 1.25s ease-out';flash.style.opacity='0'})}
+   try{flashFx('#fff',1);shake=Math.max(shake,2.8);sfx('boom',null,1,3)}catch(e){}
+   const away=pl.p.clone().sub(arEggPos);away.y=0;if(away.lengthSq()<.01)away.set(1,0,0);away.normalize();
+   pl.v.addScaledVector(away,24);pl.v.y=10;pl.hp=Math.max(1,pl.hp-45);
+   toast('ONE TO THREE FOUR — I DECLARE A NUKE WAR. You got nuked.');setTimeout(()=>{arEggTriggered=false},2500);
+  }
+ }else arEggStay=0;
+ if(window.__arEggBeacon){const t=performance.now()*.001;window.__arEggBeacon.label.position.y=2.45+Math.sin(t*2)*.12;window.__arEggBeacon.label.material.opacity=.78+.22*Math.sin(t*3)}
+}
 })();
 </script></body></html>
