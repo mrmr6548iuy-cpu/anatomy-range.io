@@ -248,6 +248,36 @@ for(let i=0;i<8;i++)mapBox(48+i*6,.04,48,.28,.04,1.2,i%2?mapPaint:mRb2,false);
 flat(-13,13,18,54,mSand,.018);
 for(let i=0;i<9;i++){const z=20+i*3.8;mapBox(-13,.035,z,.18,.025,1.6,mapCurb,false);mapBox(13,.035,z,.18,.025,1.6,mapCurb,false)}
 
+
+/* ---------- THE CITY: expanded connected districts ---------- */
+const cityGround=new T.MeshStandardMaterial({color:0x343d3a,roughness:1}),cityRoad=new T.MeshStandardMaterial({color:0x292f33,roughness:.96}),citySide=new T.MeshStandardMaterial({color:0x747b7c,roughness:.95}),cityMark=new T.MeshBasicMaterial({color:0xd7d3bd}),cityGlassBlue=new T.MeshStandardMaterial({color:0x497789,emissive:0x142d38,emissiveIntensity:.5,metalness:.35,roughness:.22}),cityGlassGold=new T.MeshStandardMaterial({color:0xe5ad62,emissive:0x75451e,emissiveIntensity:.7,roughness:.25}),cityConcrete=new T.MeshStandardMaterial({color:0x62686a,roughness:.94}),cityBrick=new T.MeshStandardMaterial({color:0x66514a,roughness:.95}),cityRoof=new T.MeshStandardMaterial({color:0x252c30,metalness:.45,roughness:.7}),cityTreeTrunk=new T.MeshStandardMaterial({color:0x49372b,roughness:1}),cityLeaves=new T.MeshStandardMaterial({color:0x344b3b,roughness:1}),cityLampMat=new T.MeshStandardMaterial({color:0xffd49a,emissive:0xffa94d,emissiveIntensity:1.1});
+function cityBox(x,y,z,w,h,d,mat,collide=false){const o=new T.Mesh(new T.BoxGeometry(w,h,d),mat);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);if(collide)PL.push([x-w/2,x+w/2,z-d/2,z+d/2,y+h/2,y-h/2]);return o}
+function cityRoadX(x0,x1,z,width=12){flat(x0,x1,z-width/2,z+width/2,cityRoad,.018);flat(x0,x1,z-width/2-2,z-width/2,citySide,.035);flat(x0,x1,z+width/2,z+width/2+2,citySide,.035);for(let x=x0+4;x<x1;x+=12)cityBox(x,.035,z,5,.025,.18,cityMark)}
+function cityRoadZ(x,z0,z1,width=12){flat(x-width/2,x+width/2,z0,z1,cityRoad,.018);flat(x-width/2-2,x-width/2,z0,z1,citySide,.035);flat(x+width/2,x+width/2+2,z0,z1,citySide,.035);for(let z=z0+4;z<z1;z+=12)cityBox(x,.035,z,.18,.025,5,cityMark)}
+function cityBlock(x,z,w,d,h,mat,style=0){const x0=x-w/2,x1=x+w/2,z0=z-d/2,z1=z+d/2;bld(x0,x1,z0,z1,h,style===0?'s':style===1?'w':style===2?'n':'e',mat);cityBox(x,h+.18,z,w+.8,.28,d+.8,cityRoof);const floors=Math.max(1,Math.floor((h-1.2)/3));for(let f=0;f<floors;f++){const y=2+f*3.05;for(let k=0;k<Math.max(2,Math.floor(w/4));k++){const wx=x0+2.1+k*((w-4)/Math.max(1,Math.floor(w/4)-1));cityBox(wx,y,z0-.24,1.25,1.15,.07,(k+f)%4===0?cityGlassGold:cityGlassBlue);cityBox(wx,y,z1+.24,1.25,1.15,.07,(k+f)%5===0?cityGlassGold:cityGlassBlue)}}if(style===0){cityBox(x0+.7,1.1,z,1.1,2.2,.7,cityRoof);cityBox(x1-.7,1.1,z,1.1,2.2,.7,cityRoof)}if(h>15)cityBox(x,h+.75,z,1.2,1.2,1.2,cityLampMat,false)}
+function cityLamp(x,z){cityBox(x,2.8,z,.16,5.6,.16,mapTrim);cityBox(x+.65,5.35,z,1.3,.12,.14,mapTrim);cityBox(x+1.15,5.22,z,.55,.2,.42,cityLampMat)}
+function cityTree(x,z,k=1){cityBox(x,1.25*k,z,.42*k,2.5*k,.42*k,cityTreeTrunk);const a=new T.Mesh(new T.SphereGeometry(1.5*k,9,7),cityLeaves);a.position.set(x,3*k,z);a.castShadow=true;scene.add(a)}
+flat(-220,-105,-105,105,cityGround,.004);flat(105,220,-105,105,cityGround,.004);flat(-105,105,105,220,cityGround,.004);flat(-105,105,-220,-105,cityGround,.004);flat(-220,220,-220,220,cityGround,-.012);
+cityRoadX(-220,220,-24,14);cityRoadZ(0,-220,220,14);cityRoadX(-205,205,88,10);cityRoadX(-205,205,-145,10);cityRoadZ(-150,-190,190,10);cityRoadZ(150,-190,190,10);
+// Downtown East
+for(const [x,z,w,d,h] of [[122,-72,22,20,24],[158,-72,24,20,34],[194,-72,22,20,19],[122,-112,22,20,16],[158,-112,24,20,27],[194,-112,22,20,22],[122,22,22,20,20],[158,22,24,20,31],[194,22,22,20,25],[122,62,22,20,17],[158,62,24,20,26],[194,62,22,20,20]])cityBlock(x,z,w,d,h,cityConcrete,Math.abs(x+z)%4|0);
+flat(132,184,-2,42,mCn2,.025);cityBox(158,.25,20,38,.5,38,cityRoof);for(let i=0;i<8;i++){const a=i*Math.PI/4;cityTree(158+Math.cos(a)*15,20+Math.sin(a)*15,.8)}
+// West End residential
+for(const [x,z] of [[-132,-76],[-168,-76],[-196,-76],[-132,20],[-168,20],[-196,20],[-132,66],[-168,66],[-196,66]]){cityBlock(x,z,19,17,7,cityBrick,1);cityBox(x,7.3,z,20,.35,18,cityRoof);cityBox(x,1,z+11,24,2,.16,mapTrim);cityBox(x,1,z-11,24,2,.16,mapTrim);cityTree(x-7,z+7,.7);cityTree(x+7,z-7,.65)}
+// North Campus
+for(const [x,z,w,d,h] of [[-72,142,34,28,13],[-22,142,34,28,18],[30,142,34,28,13],[78,142,34,28,16],[-72,190,34,24,11],[30,190,34,24,12]])cityBlock(x,z,w,d,h,cityConcrete,2);
+flat(-54,58,154,180,mCn2,.028);for(let x=-42;x<=42;x+=14){cityTree(x,160,.85);cityTree(x,174,.85)}cityBox(0,.35,167,18,.7,8,cityRoof);cityBox(0,.75,167,12,.12,4,cityLampMat,false);
+// South Transit and industrial fringe
+flat(-92,92,-198,-166,cityRoad,.02);flat(-86,86,-194,-170,citySide,.06);cityBox(0,3,-181,108,6,2.2,cityRoof);cityBox(0,6.2,-181,112,.35,4,cityRoof);
+for(let x=-48;x<=48;x+=16){cityBox(x,2,-181,.55,4,.55,mapTrim);cityBox(x,4.2,-181,1,.2,.9,cityLampMat,false)}for(let x=-68;x<=68;x+=17){cityBox(x,.55,-193,12,1.1,4,cityRoof);cityBox(x,1.2,-193,8,.12,3,cityGlassBlue)}
+for(let i=0;i<5;i++){const x=112+i*22,z=-184+(i%2)*23;cityBlock(x,z,17,18,8+(i%3)*3,i%2?cityConcrete:cityBrick,3);cityBox(x,10,z,18,.35,19,cityRoof)}
+for(let x=112;x<210;x+=16){cityBox(x,.7,-154,1.1,1.4,1.1,mapTrim);cityBox(x,1.45,-154,1.3,.16,1.3,cityLampMat,false)}
+for(const [x,z] of [[-150,-24],[-150,88],[-150,-145],[150,-24],[150,88],[150,-145],[0,88],[0,-145]])cityLamp(x,z);
+for(const x of [-150,0,150])for(let i=0;i<7;i++)cityBox(x-4.5+i*1.5,.045,-24,.65,.03,4,cityMark,false);
+for(const z of [-145,88])for(let i=0;i<7;i++)cityBox(0,.045,z-4.5+i*1.5,4,.03,.65,cityMark,false);
+for(const [x,z] of [[158,-24],[-168,-24],[0,142],[0,-181]]){cityBox(x,2.4,z,5.5,4.8,.35,mapTrim);cityBox(x,2.7,z-.22,4.9,3.8,.12,cityGlassBlue,false)}
+// Four districts are connected to the original map with no loading transition.
+
 /* ---------- particles & decals ---------- */
 const NP=3500,pd=[];for(let i=0;i<NP;i++)pd.push({a:0,x:0,y:0,z:0,vx:0,vy:0,vz:0,l:0,l0:1,s:1,g:-9.8,k:0,c:0});
 const pm=new T.InstancedMesh(new T.IcosahedronGeometry(1,0),new T.MeshStandardMaterial({roughness:.22}),NP);pm.frustumCulled=false;pm.instanceMatrix.setUsage(T.DynamicDrawUsage);
