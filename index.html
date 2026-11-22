@@ -2126,5 +2126,40 @@ window.arNukeTick=arNukeTick;
 </script>
 
 
+
+<script>
+(function(){
+  if(window.__arWeatherInstalled)return;
+  window.__arWeatherInstalled=true;
+  const style=document.createElement('style');
+  style.textContent=`
+  #ar-weather-widget{position:fixed;top:78px;right:16px;z-index:99990;font:12px Arial,sans-serif;color:#eaf3ff;background:rgba(8,15,25,.82);border:1px solid rgba(151,190,220,.35);border-radius:12px;padding:9px 11px;backdrop-filter:blur(12px);box-shadow:0 8px 28px #0008;min-width:132px}
+  #ar-weather-widget .ar-weather-head{font-size:10px;letter-spacing:2px;color:#9bb8d3;margin-bottom:7px}
+  #ar-weather-toggle{width:100%;border:1px solid #54738f;border-radius:8px;background:linear-gradient(135deg,#20384d,#142334);color:#f3f8ff;padding:8px 10px;font-weight:700;cursor:pointer}
+  #ar-weather-toggle:hover{background:linear-gradient(135deg,#315574,#1a3045)}
+  #ar-weather-mode{display:block;text-align:center;color:#b9d3e8;margin-top:6px;font-size:11px}
+  #ar-weather-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:45;pointer-events:none;opacity:0;transition:opacity .5s}
+  @media(max-width:600px){#ar-weather-widget{top:68px;right:8px;min-width:116px;padding:7px}}
+  `;
+  document.head.appendChild(style);
+  const canvas=document.createElement('canvas');canvas.id='ar-weather-canvas';document.body.appendChild(canvas);
+  const ctx=canvas.getContext('2d');
+  const panel=document.createElement('div');panel.id='ar-weather-widget';
+  panel.innerHTML='<div class="ar-weather-head">ATMOSPHERE</div><button id="ar-weather-toggle" type="button">Enable Rain</button><span id="ar-weather-mode">CLEAR</span>';
+  document.body.appendChild(panel);
+  const modes=['CLEAR','RAIN','STORM'];let mode=0,drops=[],raf=0,last=0,stormTimer=0,flash=0;
+  function resize(){const d=Math.min(devicePixelRatio||1,2);canvas.width=Math.floor(innerWidth*d);canvas.height=Math.floor(innerHeight*d);ctx.setTransform(d,0,0,d,0,0);drops=Array.from({length:Math.min(240,Math.floor(innerWidth/5))},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,v:8+Math.random()*13,l:9+Math.random()*18,a:.12+Math.random()*.24}));}
+  function setMode(n){mode=n;canvas.style.opacity=mode?'1':'0';document.getElementById('ar-weather-mode').textContent=modes[mode];document.getElementById('ar-weather-toggle').textContent=mode===0?'Enable Rain':mode===1?'Make it Storm':'Clear Weather';if(mode&&!raf){last=performance.now();raf=requestAnimationFrame(draw);}}
+  function draw(t){raf=0;if(!mode||document.hidden)return;const dt=Math.min(2,(t-last)/16.67||1);last=t;const w=innerWidth,h=innerHeight;ctx.clearRect(0,0,w,h);
+    ctx.fillStyle=mode===2?'rgba(12,22,38,.13)':'rgba(20,32,48,.07)';ctx.fillRect(0,0,w,h);ctx.lineWidth=1;
+    for(const d of drops){ctx.strokeStyle='rgba(190,218,242,'+(d.a*(mode===2?1.35:1))+')';ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-3,d.y+d.l*(mode===2?1.35:1));ctx.stroke();d.x-=1.4*dt;d.y+=d.v*dt*(mode===2?1.35:1);if(d.y>h+20||d.x< -20){d.x=Math.random()*(w+40);d.y=-20-Math.random()*80;}}
+    if(mode===2){stormTimer-=dt;if(stormTimer<=0){stormTimer=100+Math.random()*190;flash=.65+Math.random()*.25;}if(flash>0){ctx.fillStyle='rgba(210,230,255,'+flash+')';ctx.fillRect(0,0,w,h);flash=Math.max(0,flash-.09*dt);}}
+    raf=requestAnimationFrame(draw);
+  }
+  document.getElementById('ar-weather-toggle').addEventListener('click',()=>setMode((mode+1)%3));
+  addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&mode&&!raf){last=performance.now();raf=requestAnimationFrame(draw);}});
+  resize();setMode(0);
+})();
+</script>
 </body>
 </html>
