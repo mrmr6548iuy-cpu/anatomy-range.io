@@ -2079,19 +2079,18 @@ setTimeout(()=>{try{sel(cur)}catch(e){}},800);lockSetup();stat();setInterval(()=
 /* ---- secret proximity Easter egg ---- */
 let arEggStay=0,arEggCooldown=0,arEggTriggered=false;
 const arEggPos=V(18,1.35,-22);
-/* ---- MRMR wall sign ---- */
+/* ---- single, easy-to-miss MRMR wall clue ---- */
 {
- const board=new T.Mesh(new T.BoxGeometry(7.4,1.75,.16),new T.MeshStandardMaterial({color:0x20282d,metalness:.42,roughness:.58}));
- board.position.set(-34,2.45,-27.88);board.castShadow=true;board.receiveShadow=true;scene.add(board);
+ const board=new T.Mesh(new T.BoxGeometry(3.15,.72,.09),new T.MeshStandardMaterial({color:0x171c1e,metalness:.18,roughness:.88}));
+ board.position.set(-39.9,1.15,-28.08);board.castShadow=true;board.receiveShadow=true;scene.add(board);
  const c=document.createElement('canvas');c.width=1024;c.height=256;const x=c.getContext('2d');
- x.fillStyle='#10171b';x.fillRect(0,0,1024,256);
- x.strokeStyle='#d21e2b';x.lineWidth=12;x.strokeRect(8,8,1008,240);
- x.font='bold 52px "Comic Sans MS", "Comic Sans", cursive';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#fff';
- x.shadowColor='#d21e2b';x.shadowBlur=10;
- x.fillText('one to three four i declare a nuke war -MRMR',512,130,940);
+ x.fillStyle='#171c1e';x.fillRect(0,0,1024,256);
+ x.strokeStyle='#493238';x.lineWidth=5;x.strokeRect(5,5,1014,246);
+ x.font='bold 48px "Comic Sans MS", "Comic Sans", cursive';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#aeb2b2';
+ x.fillText('one to three four i declare a nuke war -MRMR',512,130,960);
  const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;
- const sign=new T.Mesh(new T.PlaneGeometry(7.15,1.65),new T.MeshBasicMaterial({map:tex,side:T.DoubleSide}));
- sign.position.set(-34,2.45,-27.785);scene.add(sign);
+ const sign=new T.Mesh(new T.PlaneGeometry(3.02,.62),new T.MeshBasicMaterial({map:tex,side:T.DoubleSide}));
+ sign.position.set(-39.9,1.15,-28.025);scene.add(sign);
  window.__arMRMRWallSign=sign;
 }
 
@@ -2100,11 +2099,8 @@ const arEggPos=V(18,1.35,-22);
  base.position.set(arEggPos.x,.16,arEggPos.z);base.castShadow=true;scene.add(base);
  const core=new T.Mesh(new T.IcosahedronGeometry(.48,1),new T.MeshStandardMaterial({color:0x8b2020,emissive:0x5a0808,emissiveIntensity:1.8,metalness:.35,roughness:.2}));
  core.position.copy(arEggPos);scene.add(core);
- const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');
- x.fillStyle='rgba(8,12,15,.88)';x.fillRect(0,0,512,96);x.strokeStyle='#d21e2b';x.lineWidth=4;x.strokeRect(2,2,508,92);
- x.font='bold 34px Arial';x.textAlign='center';x.fillStyle='#fff';x.fillText('one to three four i declare a nuke war',256,60);
- const tex=new T.CanvasTexture(c),label=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
- label.position.set(arEggPos.x,2.45,arEggPos.z);label.scale.set(7.2,1.35,1);scene.add(label);
+ /* The wall plaque is the sole written clue; keep the trigger unmarked. */
+ const label=new T.Group();
  window.__arEggBeacon={position:arEggPos.clone(),label};
 }
 function arNukeTick(dt){
