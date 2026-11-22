@@ -194,9 +194,9 @@ const STAND=[[0,1.72,0],[0,1.55,0],[0,1.3,0],[0,.95,0],[-.22,1.5,0],[.22,1.5,0],
 const PRONE=[[0,.25,.85],[0,.22,.6],[0,.2,.3],[0,.15,-.15],[-.22,.2,.5],[.22,.2,.5],[-.34,.12,.7],[.34,.12,.7],[-.34,.08,.95],[.34,.08,.95],[-.12,.12,-.2],[.12,.12,-.2],[-.12,.1,-.6],[.12,.1,-.6],[-.12,.1,-1],[.12,.1,-1]];
 const PR=[.13,.07,.16,.15,.07,.07,.055,.055,.05,.05,.09,.09,.07,.07,.06,.06],JC=[0,0,1,2,1,1,1,1,0,0,2,2,2,2,2,2];
 const SD=[['Head',1,0,.12,50,0],['Chest',1,2,.17,90,1],['Abdomen',2,3,.15,90,1],['L upper arm',4,6,.06,60,1],['R upper arm',5,7,.06,60,1],['L forearm',6,8,.05,50,0],['R forearm',7,9,.05,50,0],['L thigh',10,12,.085,70,2],['R thigh',11,13,.085,70,2],['L shin',12,14,.06,60,2],['R shin',13,15,.06,60,2]];
-const ORG={0:[['Brain',.95,0,.09,25,0xe3a1a8]],1:[['Heart',.35,-.03,.05,25,0xa3121b],['L lung',.4,-.07,.07,30,0xd98f93],['R lung',.4,.07,.07,30,0xd98f93]],2:[['Stomach',.3,-.03,.07,35,0xc4896a],['Liver',.25,.06,.065,45,0x5c1b1b],['Intestines',.68,0,.09,60,0xd8a49c]]};
+const ORG={0:[['Brain',.95,0,.09,25,0xe3a1a8,.075,.07,.07]],1:[['Heart',.35,-.03,.05,25,0xa3121b,.045,.055,.045],['L lung',.4,-.07,.07,30,0xd98f93,.052,.09,.045],['R lung',.4,.07,.07,30,0xd98f93,.052,.09,.045],['Aorta',.58,0,.02,22,0x8f1822,.018,.09,.018],['Trachea',.86,0,.015,18,0xd6b7a8,.014,.07,.014]],2:[['Stomach',.3,-.03,.07,35,0xc4896a,.055,.06,.035],['Liver',.25,.06,.065,45,0x5c1b1b,.085,.065,.045],['Intestines',.68,0,.09,60,0xd8a49c,.07,.055,.055],['L kidney',.48,-.075,.02,26,0x8b3038,.027,.045,.022],['R kidney',.48,.075,.02,26,0x8b3038,.027,.045,.022],['Spleen',.42,.09,-.015,20,0x6f2730,.025,.035,.02],['Bladder',.9,0,.025,20,0xc58b9b,.035,.035,.03]]};
 const BRACE=[[2,4],[2,5],[4,5],[10,11],[2,10],[2,11],[0,2],[1,3],[1,10],[1,11],[4,11],[5,10]];
-const sphG=new T.SphereGeometry(1,24,16),cylG=new T.CylinderGeometry(1,1,1,18),fleshM=new T.MeshStandardMaterial({map:fleshT,bumpMap:fleshT,bumpScale:1.5,roughness:.28}),boneM=new T.MeshStandardMaterial({map:boneT,roughness:.6}),woundM=new T.MeshBasicMaterial({color:0x40060a});
+const sphG=new T.SphereGeometry(1,24,16),cylG=new T.CylinderGeometry(1,1,1,18),fleshM=new T.MeshStandardMaterial({map:fleshT,bumpMap:fleshT,bumpScale:1.5,roughness:.28}),boneM=new T.MeshStandardMaterial({map:boneT,roughness:.6}),muscleM=new T.MeshStandardMaterial({color:0x9b555b,roughness:.82}),tendonM=new T.MeshStandardMaterial({color:0xd5b9a8,roughness:.72}),cartilageM=new T.MeshStandardMaterial({color:0xb8a6a0,roughness:.8}),woundM=new T.MeshBasicMaterial({color:0x40060a});
 const bodyMat=(c,k)=>new T.MeshStandardMaterial({color:c,map:k?clothT:skinT,bumpMap:k?clothT:skinT,bumpScale:k?.6:.25,roughness:k?.92:.55});
 const coneG=new T.CylinderGeometry(.2,1,1,10),tapG=new T.CylinderGeometry(.74,1,1,16),tapR=new T.CylinderGeometry(1,.74,1,16),ribG=new T.TorusGeometry(.14,.006,7,24),Z=V(0,0,1),Zn=V(0,0,-1),eyeM=new T.MeshStandardMaterial({color:0xf4f0e8,roughness:.12}),irisM=new T.MeshStandardMaterial({color:0x2b5a8a,roughness:.2}),nerveM=new T.MeshStandardMaterial({color:0xd9a0a0,roughness:.3}),holeM=new T.MeshStandardMaterial({color:0x2a0306,roughness:.3});let lw='';
 const entryT=ctex(64,64,(x,w,h)=>{let g=x.createRadialGradient(32,32,2,32,32,31);g.addColorStop(0,'rgba(60,20,70,0)');g.addColorStop(.35,'rgba(90,30,90,.35)');g.addColorStop(1,'rgba(90,30,90,0)');x.fillStyle=g;x.fillRect(0,0,w,h);g=x.createRadialGradient(32,32,1,32,32,11);g.addColorStop(0,'#150204');g.addColorStop(.45,'#2a0508');g.addColorStop(.7,'#7a1218');g.addColorStop(1,'rgba(122,18,24,0)');x.fillStyle=g;x.beginPath();x.arc(32,32,11,0,7);x.fill()},0);
@@ -249,8 +249,56 @@ function mk(type,x,z){
  BRACE.forEach(([i,j])=>e.cons.push({i,j,l:L(i,j),k:.5,bone:0,seg:-1}));
  SD.forEach((d,si)=>{const mat=bodyMat(cols[d[5]],d[5]),G=new T.Group(),half=()=>{const g=new T.Group(),cyl=new T.Mesh(si>2?tapG:cylG,mat),cap=new T.Mesh(sphG,fleshM),stub=new T.Mesh(coneG,boneM),lin=new T.Mesh(cylG,liningM);lin.visible=false;cyl.castShadow=true;g.add(cyl,cap,stub,lin);g.visible=false;e.g.add(g);return{g,cyl,cap,stub,lin,p0:V(),p1:V(),r:d[3],w:[]}};
   const s={L0:L(d[1],d[2]),hp:d[4],max:d[4],bone:d[4]*.9,mat,base:new T.Color(cols[d[5]]),G,H:[half(),half()],org:[],open:false,brk:false,cut:false,burn:0,kink:V(),gone:false};
-  const bo=new T.Mesh(cylG,boneM);bo.scale.set(.032,1,.032);bo.visible=false;G.add(bo);s.bo=bo;s.bk=[0,1].map(()=>{const k=new T.Mesh(sphG,boneM);k.scale.setScalar(.05);k.visible=false;G.add(k);return k});s.rb=[];if(si===1)for(let k=0;k<6;k++){const rb=new T.Mesh(ribG,boneM);rb.rotation.x=Math.PI/2;rb.visible=false;G.add(rb);s.rb.push(rb)}const sp=new T.Mesh(coneG,boneM);sp.visible=false;e.g.add(sp);s.sp=sp;
-  (ORG[si]||[]).forEach(o=>{const m=new T.Mesh(sphG,new T.MeshStandardMaterial({color:o[5],roughness:.22,bumpMap:fleshT,bumpScale:1}));m.scale.setScalar(o[3]);m.visible=false;G.add(m);s.org.push({n:o[0],t:o[1],x:o[2],hp:o[4],max:o[4],m,dead:false})});
+  const bo=new T.Mesh(cylG,boneM);bo.scale.set(.032,1,.032);bo.visible=false;G.add(bo);s.bo=bo;s.bk=[0,1].map(()=>{const k=new T.Mesh(sphG,boneM);k.scale.setScalar(.05);k.visible=false;G.add(k);return k});s.rb=[];
+  // Anatomical detail layer: visible in X-ray or when a body segment is opened.
+  // It follows the same joint-driven segment transform as the outer body.
+  s.anatG=new T.Group();G.add(s.anatG);const ag=s.anatG,Lb=s.L0;
+  const an=(geo,mat,x,y,z,sx,sy,sz)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;ag.add(m);return m};
+  if(si===0){
+   // Cranial vault, jaw and paired cheek structures.
+   an(new T.SphereGeometry(1,20,16),boneM,0,Lb*.62,0,.105,.125,.092);
+   an(new T.BoxGeometry(1,1,1),boneM,0,Lb*.2,.025,.075,.045,.07);
+   [-1,1].forEach(q=>an(new T.SphereGeometry(1,12,10),boneM,q*.075,Lb*.43,.025,.035,.035,.035));
+  }else if(si===1){
+   // Sternum, vertebral column, clavicles and curved rib arches.
+   an(new T.BoxGeometry(1,1,1),boneM,0,Lb*.5,.052,.018,Lb*.72,.018);
+   for(let k=0;k<7;k++){
+    const yy=Lb*(.08+k*.135);
+    an(new T.SphereGeometry(1,12,10),boneM,0,yy,-.045,.022,.018,.022);
+    an(new T.SphereGeometry(1,10,8),cartilageM,0,yy-Lb*.045,-.045,.024,.008,.024);
+   }
+   [-1,1].forEach(side=>{
+    const clav=new T.CatmullRomCurve3([V(0,Lb*.91,.035),V(side*.045,Lb*.96,.045),V(side*.11,Lb*.91,.025)]);
+    an(new T.TubeGeometry(clav,12,.009,7,false),boneM,0,0,0,1,1,1);
+    for(let k=0;k<6;k++){
+     const yy=Lb*(.12+k*.135),pts=[[0,yy,.045],[side*.045,yy+Lb*.08,.06],[side*.105,yy+Lb*.035,.025],[side*.12,yy,-.015],[side*.08,yy-Lb*.04,-.055],[0,yy-Lb*.055,-.06]].map(p=>V(p[0],p[1],p[2]));
+     const rib=new T.CatmullRomCurve3(pts);an(new T.TubeGeometry(rib,16,.0065,6,false),boneM,0,0,0,1,1,1);
+    }
+    // Pectoral and intercostal muscle masses.
+    an(new T.SphereGeometry(1,16,12),muscleM,side*.062,Lb*.7,.055,.055,Lb*.22,.018);
+    an(new T.SphereGeometry(1,14,10),muscleM,side*.075,Lb*.42,.045,.032,Lb*.25,.014);
+   });
+  }else if(si===2){
+   // Abdominal wall layers and a simplified pelvic girdle.
+   [-1,1].forEach(side=>{
+    an(new T.SphereGeometry(1,16,12),muscleM,side*.072,Lb*.52,.045,.038,Lb*.38,.018);
+    an(new T.SphereGeometry(1,14,10),muscleM,side*.095,Lb*.5,-.015,.025,Lb*.34,.016);
+   });
+   const pelvis=new T.CatmullRomCurve3([V(-.12,Lb*.1,-.025),V(-.13,Lb*.02,.015),V(-.075,Lb*.02,.055),V(0,Lb*.07,.065),V(.075,Lb*.02,.055),V(.13,Lb*.02,.015),V(.12,Lb*.1,-.025)]);
+   an(new T.TubeGeometry(pelvis,28,.012,8,false),boneM,0,0,0,1,1,1);
+  }else{
+   // Paired muscle compartments and tendon insertions around each long bone.
+   const upper=si===3||si===4||si===7||si===8,arm=si>=3&&si<=6;
+   const w=arm?.027:upper?.043:.031, len=Lb*(upper?.32:.36), cy=Lb*.52;
+   [-1,1].forEach(side=>{
+    an(new T.SphereGeometry(1,16,12),muscleM,side*w,cy,.012,w*1.15,len,w*.9);
+    an(new T.SphereGeometry(1,14,10),muscleM,side*w*.72,cy,-.018,w*.9,len*.82,w*.8);
+   });
+   an(new T.SphereGeometry(1,12,10),tendonM,0,Lb*.08,0,.018,.035,.018);
+   an(new T.SphereGeometry(1,12,10),tendonM,0,Lb*.92,0,.018,.035,.018);
+  }
+  const sp=new T.Mesh(coneG,boneM);sp.visible=false;e.g.add(sp);s.sp=sp;
+  (ORG[si]||[]).forEach(o=>{const m=new T.Mesh(sphG,new T.MeshStandardMaterial({color:o[5],roughness:.42,bumpMap:fleshT,bumpScale:.35}));m.scale.set(o[6]||o[3],o[7]||o[3],o[8]||o[3]);m.visible=false;G.add(m);s.org.push({n:o[0],t:o[1],x:o[2],z:o[3]===undefined?0:o[3]*.0,hp:o[4],max:o[4],m,dead:false})});
   e.g.add(G);e.seg.push(s)});
  e.gf=0;if(type==='gunman'){e.gun=npcGun();e.g.add(e.gun)}e.eyes=[-1,1].map(side=>{const m=new T.Mesh(sphG,eyeM),ir=new T.Mesh(sphG,irisM),ne=new T.Mesh(cylG,nerveM),ho=new T.Mesh(sphG,holeM);m.scale.setScalar(.03);ir.scale.set(.55,.55,.3);ir.position.z=.85;m.add(ir);ne.visible=ho.visible=false;e.g.add(m,ne,ho);return{m,ne,ho,side,out:0,free:0,so:V(),p:V(),q:V()}});scene.add(e.g);ents.push(e);rend(e);return e}
 const tmp=V(),tmp2=V(),dir=V();
@@ -259,14 +307,14 @@ function rend(e){
  e.pts.forEach((q,i)=>{e.jm[i].position.copy(q.p);if(i===0)e.jm[i].rotation.y=e.root.h;});
  if(e.xr!==xr){e.xr=xr;[...e.seg.flatMap(s=>s.H.map(h=>h.cyl.material)),...e.jm.map(j=>j.material)].forEach(m=>{m.transparent=xr;m.opacity=xr?.2:1;m.depthWrite=!xr;m.needsUpdate=true})}
  e.seg.forEach((s,si)=>{const[,ia,ib,r]=SD[si],a=e.pts[ia].p,b=e.pts[ib].p,L=a.distanceTo(b)||.001,[h0,h1]=s.H;
-  s.G.position.copy(a);dir.subVectors(b,a).divideScalar(L);s.G.quaternion.setFromUnitVectors(Y,dir);
+  s.G.position.copy(a);dir.subVectors(b,a).divideScalar(L);s.G.quaternion.setFromUnitVectors(Y,dir);if(s.anatG)s.anatG.scale.y=L/s.L0;
   if(s.gone){h0.g.visible=h1.g.visible=false}
   else if(s.cut){const l0=s.L0,ct=s.ct||.5,e1=tmp.copy(a).addScaledVector(dir,l0*ct*.97),e2=tmp2.copy(b).addScaledVector(dir,-l0*(1-ct)*.97);sh(h0,a,e1,r,fleshM,true);sh(h1,b,e2,r,fleshM,true)}
   else if(s.brk&&si>2){tmp.copy(a).lerp(b,.5).addScaledVector(s.kink,L*.3);const m=tmp.clone();sh(h0,a,m,r,s.mat,false);sh(h1,m,b,r,null,false)}
   else{sh(h0,a,b,r,null,false);h1.g.visible=false}
   if(si>2){if(!h0.dg)h0.cyl.geometry=tapG;if(!h1.dg)h1.cyl.geometry=s.cut?tapR:tapG}s.sp.visible=s.brk&&s.open&&!s.cut&&!s.gone&&si>2;if(s.sp.visible){s.sp.position.copy(tmp).addScaledVector(s.kink,r*.9+.07);s.sp.quaternion.setFromUnitVectors(Y,s.kink);s.sp.scale.set(r*.5,.2,r*.5)}
-  const vis=(s.open||xr)&&!s.cut&&!s.gone;s.bo.visible=vis&&si>0;s.bo.scale.y=L;s.bo.position.y=L/2;s.bk.forEach((k,j)=>{k.visible=vis&&si>0;k.position.y=j?L:0});s.rb.forEach((k,j)=>{k.visible=vis;k.position.y=(.1+j*.14)*L});
-  s.org.forEach(o=>{o.m.visible=vis;o.m.position.set(o.x||0,o.t*L,0)});s.G.visible=true});
+  const vis=(s.open||xr)&&!s.cut&&!s.gone;if(s.anatG)s.anatG.visible=vis;s.bo.visible=vis&&si>0;s.bo.scale.y=L;s.bo.position.y=L/2;s.bk.forEach((k,j)=>{k.visible=vis&&si>0;k.position.y=j?L:0});s.rb.forEach((k,j)=>{k.visible=vis;k.position.y=(.1+j*.14)*L});
+  s.org.forEach(o=>{o.m.visible=vis;o.m.position.set(o.x||0,o.t*L,o.z||0)});s.G.visible=true});
  if(e.seg[0].gone)e.jm[0].visible=false;if(e.gun){const h=e.pts[9].p,d=(e.aim&&e.alive?dir.subVectors(pl.p,h):dir.subVectors(h,e.pts[7].p)).clone().normalize();e.gun.position.copy(h).addScaledVector(d,.1);e.gun.quaternion.setFromUnitVectors(Zn,d);e.gun.userData.fs.visible=e.gf>0;e.gf-=.016}eyeRend(e)}
 function afterInj(e){
  const lim=i=>e.seg[i].brk||e.seg[i].cut,m=e.m;m.fill(1);
