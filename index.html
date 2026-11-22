@@ -2079,6 +2079,22 @@ setTimeout(()=>{try{sel(cur)}catch(e){}},800);lockSetup();stat();setInterval(()=
 /* ---- secret proximity Easter egg ---- */
 let arEggStay=0,arEggCooldown=0,arEggTriggered=false;
 const arEggPos=V(18,1.35,-22);
+/* ---- MRMR wall sign ---- */
+{
+ const board=new T.Mesh(new T.BoxGeometry(7.4,1.75,.16),new T.MeshStandardMaterial({color:0x20282d,metalness:.42,roughness:.58}));
+ board.position.set(-34,2.45,-27.88);board.castShadow=true;board.receiveShadow=true;scene.add(board);
+ const c=document.createElement('canvas');c.width=1024;c.height=256;const x=c.getContext('2d');
+ x.fillStyle='#10171b';x.fillRect(0,0,1024,256);
+ x.strokeStyle='#d21e2b';x.lineWidth=12;x.strokeRect(8,8,1008,240);
+ x.font='bold 52px "Comic Sans MS", "Comic Sans", cursive';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#fff';
+ x.shadowColor='#d21e2b';x.shadowBlur=10;
+ x.fillText('one to three four i declare a nuke war -MRMR',512,130,940);
+ const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;
+ const sign=new T.Mesh(new T.PlaneGeometry(7.15,1.65),new T.MeshBasicMaterial({map:tex,side:T.DoubleSide}));
+ sign.position.set(-34,2.45,-27.785);scene.add(sign);
+ window.__arMRMRWallSign=sign;
+}
+
 {
  const base=new T.Mesh(new T.CylinderGeometry(.65,.85,.32,18),new T.MeshStandardMaterial({color:0x242b30,metalness:.7,roughness:.35}));
  base.position.set(arEggPos.x,.16,arEggPos.z);base.castShadow=true;scene.add(base);
