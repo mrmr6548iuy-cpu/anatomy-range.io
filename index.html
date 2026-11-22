@@ -952,16 +952,16 @@ function drawMM(){if(!mmx)return;if(!mmBuilt)mmStatic();mmx.drawImage(mmS,0,0);e
 /* ---------- cinematics ---------- */
 let cin=null,cinOn=true,tsPrev=1;const CINS=new Set(['pu','dom','cle','red']),ease=u=>u<0?0:u>1?1:u*u*(3-2*u),mix=(a,b,u)=>a+(b-a)*u,fxEl=$('#fx');
 function mkAvatar(){
- const g=new T.Group(),suit=new T.MeshStandardMaterial({color:0x202a38,roughness:.72,metalness:.18}),armor=new T.MeshStandardMaterial({color:0x394b60,roughness:.42,metalness:.55}),trim=new T.MeshStandardMaterial({color:0x64d9ef,emissive:0x164b60,emissiveIntensity:.65,metalness:.45,roughness:.25}),skin=new T.MeshStandardMaterial({color:0xc99578,roughness:.68}),visor=new T.MeshStandardMaterial({color:0x0b1b29,metalness:.8,roughness:.12,emissive:0x123c55,emissiveIntensity:.5}),boot=new T.MeshStandardMaterial({color:0x10151d,roughness:.85});
- const M=(geo,mat,x,y,z,sx,sy,sz,parent=g)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m};
- M(new T.CylinderGeometry(.19,.19,.62,18),suit,0,1.12,0,.95,1,0.72);M(new T.SphereGeometry(1,20,14),armor,0,1.2,.09,.19,.22,.09);
- M(new T.BoxGeometry(.31,.35,.07),armor,0,1.2,.13,1,1,1);M(new T.BoxGeometry(.23,.025,.012),trim,0,1.31,.17,1,1,1);M(new T.BoxGeometry(.13,.025,.012),trim,0,1.13,.17,1,1,1);
- M(new T.CylinderGeometry(.075,.09,.12,12),armor,0,1.43,0,1,1,1);M(new T.SphereGeometry(1,20,14),skin,0,1.62,0,.125,.15,.12);
- M(new T.SphereGeometry(1,18,12),armor,0,1.66,-.015,.145,.115,.135);M(new T.BoxGeometry(.2,.065,.045),visor,0,1.64,.105,1,1,1);M(new T.BoxGeometry(.13,.009,.008),trim,0,1.65,.131,1,1,1);
- [-1,1].forEach(side=>{M(new T.SphereGeometry(1,14,10),armor,side*.22,1.38,0,.14,.13,.14);M(new T.CylinderGeometry(.055,.055,.44,14),suit,side*.25,1.1,0,1,1,1);M(new T.CylinderGeometry(.045,.045,.35,14),armor,side*.25,.77,.015,1,1,1);M(new T.SphereGeometry(1,14,10),boot,side*.25,.42,.02,.09,.12,.11);M(new T.SphereGeometry(1,14,10),armor,side*.25,.08,.045,.105,.08,.17)});
- M(new T.BoxGeometry(.27,.34,.13),suit,0,.57,-.12,1,1,1);M(new T.BoxGeometry(.2,.25,.07),armor,0,.59,-.2,1,1,1);M(new T.BoxGeometry(.24,.035,.16),trim,0,.74,-.12,1,1,1);
- const arm=sx=>{const q=new T.Group();q.position.set(sx*.27,1.38,0);M(new T.CylinderGeometry(.055,.055,.42,14),suit,0,-.19,0,1,1,1,q);M(new T.SphereGeometry(1,14,10),armor,0,-.43,.015,.075,.075,.075,q);M(new T.CylinderGeometry(.045,.045,.31,14),armor,0,-.59,.015,1,1,1,q);M(new T.SphereGeometry(1,14,10),skin,0,-.77,.02,.055,.06,.055,q);g.add(q);return q};
- g.userData.ra=arm(1);g.userData.la=arm(-1);g.visible=false;scene.add(g);return g
+ // Reuse the same human character rig used by the game and wardrobe preview.
+ // This keeps cinematic shots visually consistent with the player's in-game model.
+ const e=mk('civilian',0,0),idx=ents.indexOf(e);
+ if(idx>=0)ents.splice(idx,1);
+ const g=e.g;
+ g.userData.characterRig=e;
+ g.userData.ra=e.jm[3]||g;
+ g.userData.la=e.jm[4]||g;
+ g.visible=false;
+ return g
 }
 const av=mkAvatar(),mkOrb=c=>{const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:c})),sp=new T.Sprite(new T.SpriteMaterial({map:flT,color:c,blending:T.AdditiveBlending,depthWrite:false,transparent:true}));sp.scale.setScalar(5);m.add(sp);m.visible=false;scene.add(m);return m},orbB=mkOrb(0x2a6bff),orbR=mkOrb(0xff2a2a),orbP=mkOrb(0xb36bff);
 function cap(txt,col){const c=$('#cap');c.innerHTML='<div style="color:'+col+'">'+txt+'</div>';c.style.opacity=1}
