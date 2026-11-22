@@ -1143,7 +1143,7 @@ if(!xrOn){if(fcam)cam.position.copy(fpos);else if(window.__arEntityMode&&window.
   else{if(p.y<.02){p.y=.02;p.vy=0}if(p.l<=0)p.a=0}}jjkVfxTick(dt)}}
 $('#vig').style.opacity=0;
 function frame(t){const rd=Math.min((t-lt0)/1000,.05);lt0=t;
- if(!xrOn){if(lw!==innerWidth+'x'+innerHeight){lw=innerWidth+'x'+innerHeight;ren.setSize(innerWidth,innerHeight,false);if(arComposer)arComposer.setSize(innerWidth,innerHeight)}cam.aspect=innerWidth/innerHeight}cam.updateProjectionMatrix();arNukeTick(rd);
+ if(!xrOn){if(lw!==innerWidth+'x'+innerHeight){lw=innerWidth+'x'+innerHeight;ren.setSize(innerWidth,innerHeight,false);if(arComposer)arComposer.setSize(innerWidth,innerHeight)}cam.aspect=innerWidth/innerHeight}cam.updateProjectionMatrix();if(typeof window.arNukeTick==='function')window.arNukeTick(rd);
  if(gamePaused&&!pauseAllowed())gamePaused=false;if(!gamePaused){if(hitstop>0){hitstop=Math.max(0,hitstop-rd);acc=0}else{acc+=rd*ts;let n=0;while(acc>=1/60&&n++<4){tick(1/60);acc-=1/60}}}else acc=0;cinUpdate();
  ents.forEach(rend);
  let i=0;for(const p of pd){if(p.a){D1.position.set(p.x,p.y,p.z);D1.scale.setScalar(p.k===2?p.s*Math.max(0,p.l/p.l0):p.s)}else D1.scale.setScalar(0);D1.updateMatrix();pm.setMatrixAt(i++,D1.matrix)}pm.instanceMatrix.needsUpdate=true;
@@ -2108,6 +2108,7 @@ function arNukeTick(dt){
  }else arEggStay=0;
  if(window.__arEggBeacon){const t=performance.now()*.001;window.__arEggBeacon.label.position.y=2.45+Math.sin(t*2)*.12;window.__arEggBeacon.label.material.opacity=.78+.22*Math.sin(t*3)}
 }
+window.arNukeTick=arNukeTick;
 
 })();
 </script></body></html>
