@@ -756,11 +756,33 @@ geto_volley:['orbit',0x8a75b8,42],geto_beam:['beam',0x7255a0,48],geto_wall:['gua
 toji_rush:['dash',0x9b8a72,0],toji_orbit:['orbit',0xc1b18f,42],toji_strike:['beam',0xb5a58e,46],toji_guard:['guard',0xd6c7a8,0],
 maki_throw:['projectile',0x6fbd8d,46],maki_wide:['burst',0x8bc9a0,42],maki_rush:['dash',0x53a879,0],maki_guard:['guard',0x9cddb0,0]
 };
-function setJJKKit(i){if(window.__arJJKCanSwitch&&!window.__arJJKCanSwitch()){toast('Only the JJK owner can switch kits');return JJK_KITS[jjkKit].name}jjkKit=(i+JJK_KITS.length)%JJK_KITS.length;const kit=JJK_KITS[jjkKit],slotStart=15;PW.splice(0,PW.length,...kit.moves);if(jjk){for(let j=0;j<8;j++){const q=kit.moves[j],w=W[slotStart+j];if(!q||!w)continue;w.k='c';w.n=q[0];w.pw=q[1];w.r=q[2];w.cost=q[3];w.c=q[4];w.a=0;w.z=w.z||[.1,.1,.3];const el=bar.children[slotStart+j];if(el)el.textContent=(j+1)+' '+w.n}sel(cur>=slotStart&&cur<slotStart+8?cur:slotStart);toast('ABILITY SET EQUIPPED: '+kit.name)}const ceBox=$('#ce');if(ceBox){let tag=ceBox.querySelector('.jjk-kit-name');if(!tag){tag=document.createElement('b');tag.className='jjk-kit-name';tag.style.cssText='display:block;color:#b9dfff;margin-top:4px';ceBox.appendChild(tag)}tag.textContent=kit.name+' · Hold Y to select'}return kit.name}
+function setJJKKit(i){
+ if(window.__arJJKCanSwitch&&!window.__arJJKCanSwitch()){toast('Only the JJK owner can switch kits');return JJK_KITS[jjkKit].name}
+ jjkKit=(i+JJK_KITS.length)%JJK_KITS.length;
+ const kit=JJK_KITS[jjkKit],slotStart=15;
+ // JJK powers occupy dedicated ability slots 15–22; replace the slot data, not just its label.
+ for(let j=0;j<8;j++){
+  const q=kit.moves[j];
+  const w={k:'c',n:q[0],pw:q[1],r:q[2],cost:q[3],c:q[4],a:0,z:[.1,.1,.3],id:'jjk_'+jjkKit+'_'+j};
+  W[slotStart+j]=w;
+  let el=bar.children[slotStart+j];
+  if(!el){el=document.createElement('span');bar.appendChild(el)}
+  el.textContent=(j+1)+' '+w.n;
+  el.onclick=()=>sel(slotStart+j);
+ }
+ // Remove stale extra JJK entries left by older builds, while preserving normal weapons.
+ while(W.length>slotStart+8){W.pop();if(bar.lastElementChild)bar.lastElementChild.remove()}
+ PW.splice(0,PW.length,...kit.moves);
+ if(cur<slotStart||cur>=slotStart+8)sel(slotStart);else sel(cur);
+ toast('ABILITIES REPLACED: '+kit.name);
+ const ceBox=$('#ce');
+ if(ceBox){let tag=ceBox.querySelector('.jjk-kit-name');if(!tag){tag=document.createElement('b');tag.className='jjk-kit-name';tag.style.cssText='display:block;color:#b9dfff;margin-top:4px';ceBox.appendChild(tag)}tag.textContent=kit.name+' · JJK abilities equipped'}
+ return kit.name
+}
 
 const ishell=new T.Mesh(sphG,new T.MeshBasicMaterial({color:0x8fe0ff,transparent:true,opacity:.1,depthWrite:false,side:T.DoubleSide}));ishell.scale.setScalar(1.5);ishell.visible=false;scene.add(ishell);
 function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(toast.h);toast.h=setTimeout(()=>{t.style.opacity=0},4200)}
-function unlockJJK(){if(jjk)return;if(window.__arJJKRequest&&!window.__arJJKGranting&&window.__arJJKRequest())return;jjk=true;ce=100;PW.forEach(q=>{const w={k:'c',n:q[0],pw:q[1],r:q[2],cost:q[3],c:q[4],a:0,z:[.1,.1,.3]};W.push(w);const i=W.length-1,sp=document.createElement('span');sp.textContent=(i<9?i+1:i==9?0:'·')+' '+w.n;sp.onclick=()=>sel(i);bar.appendChild(sp)});flash.l=2;shake=.5;sfx('boom',null,1,3);relic.visible=false;$('#ce').style.display='block';setJJKKit(jjkKit);toast('CURSED ENERGY AWAKENED · '+JJK_KITS[jjkKit].name);sel(15)}
+function unlockJJK(){if(jjk)return;if(window.__arJJKRequest&&!window.__arJJKGranting&&window.__arJJKRequest())return;jjk=true;ce=100;flash.l=2;shake=.5;sfx('boom',null,1,3);relic.visible=false;$('#ce').style.display='block';setJJKKit(jjkKit);toast('CURSED ENERGY AWAKENED · '+JJK_KITS[jjkKit].name);sel(15)}
 function ctProj(o,fw,col,sc,sp,k){const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:col}));m.scale.setScalar(sc);m.position.copy(o).addScaledVector(fw,1.2);scene.add(m);proj.push({m,v:fw.clone().multiplyScalar(sp),k,t:0})}
 function techFire(pw,o,fw){const rt=V().crossVectors(fw,Y).normalize(),fx=JKFX[pw];if(fx){const[k,col,power]=fx;if(k==='projectile'){ctProj(o,fw,col,.42,power/1.5,'jk');sfx('launch',o)}else if(k==='beam'){shoot(o,fw,power,'x',1,4,38);tracer(o.clone().addScaledVector(fw,.7),o.clone().addScaledVector(fw,12));sfx('swingh',o)}else if(k==='burst'){for(let i=-2;i<=2;i++){const d=fw.clone().addScaledVector(rt,i*.16).normalize();shoot(o,d,power,'x',.8,2,24);tracer(o.clone(),o.clone().addScaledVector(d,7))}shake=Math.max(shake,.22);sfx('boom',o,.7,2)}else if(k==='field'){const p=pl.p.clone().addScaledVector(fw,4);p.y=1.2;const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:col,transparent:true,opacity:.28,wireframe:true}));m.position.copy(p);scene.add(m);FLD.push({p,t:3.2,r:power,m});sfx('grab',p)}else if(k==='dash'){pl.p.addScaledVector(fw,7);pl.p.y=Math.max(0,pl.p.y);noise(pl.p.x,pl.p.z,22);for(let i=0;i<12;i++)part(pl.p.x,pl.p.y+.4,pl.p.z,rr(-2,2),rr(0,2),rr(-2,2),.35,.07,col,0,1);sfx('launch',pl.p)}else if(k==='guard'){inf=!inf;toast(inf?'Cursed guard active':'Cursed guard released');sfx('grab',o)}else if(k==='domain'){dom={t:6.5,p:pl.p.clone(),tt:0};sfx('boom',null,.8,5);toast('DOMAIN EXPANSION')}else if(k==='orbit'){for(let i=0;i<5;i++){const a=i/5*Math.PI*2,d=fw.clone().addScaledVector(rt,Math.cos(a)*.42).addScaledVector(Y,Math.sin(a)*.25).normalize();ctProj(o,d,col,.28,power/1.5,'jk')}sfx('launch',o)}return}
  if(pw==='blue'){const t=o.clone().addScaledVector(fw,9);t.y=Math.max(.8,t.y);const m=new T.Mesh(sphG,new T.MeshBasicMaterial({color:0x2a6bff}));m.scale.setScalar(.4);m.position.copy(t);scene.add(m);FLD.push({p:t,t:4.2,r:11,m});sfx('grab',t)}
