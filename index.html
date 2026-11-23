@@ -41,7 +41,7 @@ button:hover,button:focus-visible{background:linear-gradient(135deg,#35434b,#202
 </style></head><body>
 <div id="ch"></div><div id="vit"></div><div id="bar"></div><div id="vig"></div><div id="am"></div><div id="scope"></div><div id="ed"></div><canvas id="mm" width="160" height="160"></canvas><div id="toast"></div><div class="lb" id="lb1"></div><div class="lb" id="lb2"></div><div id="cap"></div><div id="fx"></div><div id="sl"></div><div id="ce"><i></i></div><div id="fc">FREE CAM · WASD fly · Space up · C down · Shift fast · wheel speed · P return to body</div>
 
-<div id="ar-changelog"><div class="card"><h1 style="font-size:34px">CHANGELOG</h1><p>Recent updates to Anatomy Range</p><div class="entry"><b>Build 31 · Smarter NPC navigation</b><small>Improved obstacle-aware path steering, stair traversal, and ground-height handling for NPCs.</small></div><div class="entry"><b>Build 30 · Emote Studio</b><small>Added selectable Griddy, Robot, and Hype dance previews with a stop control.</small></div><div class="entry"><b>Build 29 · Dynamic weather</b><small>Added clear, rain, and storm modes with animated rainfall and lightning flashes.</small></div><div class="entry"><b>Build 28 · Hidden trouble</b><small>Added a secret proximity Easter egg. Stay near the strange beacon and see what happens.</small></div><div class="entry"><b>Build 27 · JJK Secret Powers</b><small>Character ability kits, a selection wheel, creator unlock, and unique visual effects.</small></div><div class="entry"><b>Build 26 · Time control</b><small>Polished time-scale selector with 1×, 0.5×, and 0.25× speeds.</small></div><div class="entry"><b>Build 25 · World & atmosphere</b><small>Expanded city districts, day/night cycle, cinematic lighting, and environmental detail.</small></div><div class="entry"><b>Build 24 · Combat feedback</b><small>Improved impact particles, physics fragments, persistent scuffs, and camera response.</small></div><div class="g"><button id="ar-changelog-close">Close</button></div></div></div><div id="ar-nuke-flash"></div>
+<div id="ar-changelog"><div class="card"><h1 style="font-size:34px">CHANGELOG</h1><p>Recent updates to Anatomy Range</p><div class="entry"><b>Build 32 · Player emotes</b><small>Griddy, Robot, and Hype now animate your actual 3D character in third-person. Stop returns to first-person.</small></div><div class="entry"><b>Build 31 · Smarter NPC navigation</b><small>Improved obstacle-aware path steering, stair traversal, and ground-height handling for NPCs.</small></div><div class="entry"><b>Build 30 · Emote Studio</b><small>Added selectable Griddy, Robot, and Hype dance previews with a stop control.</small></div><div class="entry"><b>Build 29 · Dynamic weather</b><small>Added clear, rain, and storm modes with animated rainfall and lightning flashes.</small></div><div class="entry"><b>Build 28 · Hidden trouble</b><small>Added a secret proximity Easter egg. Stay near the strange beacon and see what happens.</small></div><div class="entry"><b>Build 27 · JJK Secret Powers</b><small>Character ability kits, a selection wheel, creator unlock, and unique visual effects.</small></div><div class="entry"><b>Build 26 · Time control</b><small>Polished time-scale selector with 1×, 0.5×, and 0.25× speeds.</small></div><div class="entry"><b>Build 25 · World & atmosphere</b><small>Expanded city districts, day/night cycle, cinematic lighting, and environmental detail.</small></div><div class="entry"><b>Build 24 · Combat feedback</b><small>Improved impact particles, physics fragments, persistent scuffs, and camera response.</small></div><div class="g"><button id="ar-changelog-close">Close</button></div></div></div><div id="ar-nuke-flash"></div>
 <div id="menu"><div class="card">
 <h1>Anatomy Range</h1>
 <p>A sandbox with layered bodies: skin, bone, organs, blood pressure. Every wound has a cause and a consequence.</p>
@@ -448,6 +448,57 @@ function rend(e){
   const vis=(s.open||xr)&&!s.cut&&!s.gone;if(s.anatG)s.anatG.visible=vis;s.bo.visible=vis&&si>0;s.bo.scale.y=L;s.bo.position.y=L/2;s.bk.forEach((k,j)=>{k.visible=vis&&si>0;k.position.y=j?L:0});s.rb.forEach((k,j)=>{k.visible=vis;k.position.y=(.1+j*.14)*L});
   s.org.forEach(o=>{o.m.visible=vis;o.m.position.set(o.x||0,o.t*L,o.z||0)});s.G.visible=true});
  if(e.seg[0].gone)e.jm[0].visible=false;if(e.gun){const h=e.pts[9].p,d=(e.aim&&e.alive?dir.subVectors(pl.p,h):dir.subVectors(h,e.pts[7].p)).clone().normalize();e.gun.position.copy(h).addScaledVector(d,.1);e.gun.quaternion.setFromUnitVectors(Zn,d);e.gun.userData.fs.visible=e.gf>0;e.gf-=.016}eyeRend(e)}
+
+/* ---------- player emotes: drive the real 3D civilian rig ---------- */
+const arPlayerEmoteRig=mk('civilian',0,0);
+{const k=ents.indexOf(arPlayerEmoteRig);if(k>=0)ents.splice(k,1);arPlayerEmoteRig.g.visible=false;arPlayerEmoteRig.alive=true;arPlayerEmoteRig.blood=100;}
+let arPlayerEmoteMode='stop';
+window.__arSetPlayerEmote=function(mode){
+ const next=['griddy','robot','hype'].includes(mode)?mode:'stop';
+ arPlayerEmoteMode=next;
+ window.__arEmoteThirdPerson=next!=='stop';
+ arPlayerEmoteRig.g.visible=next!=='stop';
+};
+function arUpdatePlayerEmote(){
+ const e=arPlayerEmoteRig,active=arPlayerEmoteMode!=='stop';
+ if(!active||xrOn||pl.dead>0){e.g.visible=false;return}
+ e.g.visible=true;e.root.x=pl.p.x;e.root.z=pl.p.z;e.root.h=pl.yaw;
+ const phase=performance.now()*.001,ground=pl.p.y-eyeH;
+ const wave=Math.sin(phase*(arPlayerEmoteMode==='robot'?4.5:8));
+ const alt=Math.sin(phase*(arPlayerEmoteMode==='robot'?2.2:4));
+ const lift=arPlayerEmoteMode==='hype'?Math.max(0,Math.sin(phase*8))*.2:0;
+ for(let i=0;i<STAND.length;i++){
+  let x=STAND[i][0],y=STAND[i][1],z=STAND[i][2];
+  if(arPlayerEmoteMode==='griddy'){
+   if(i===0||i===1)y+=Math.abs(wave)*.045;
+   if(i===4||i===6||i===8){x-=.12*wave;y+=i===8?.12*wave:0;z+=.12}
+   if(i===5||i===7||i===9){x+=.12*wave;y-=i===9?.12*wave:0;z+=.12}
+   if(i===12||i===14)y+=Math.max(0,alt)*.22;
+   if(i===13||i===15)y+=Math.max(0,-alt)*.22;
+   if(i===10||i===12)x-=.08*alt;
+   if(i===11||i===13)x+=.08*alt;
+  }else if(arPlayerEmoteMode==='robot'){
+   if(i===4||i===6||i===8)y+=.06*Math.round(wave);
+   if(i===5||i===7||i===9)y-=.06*Math.round(wave);
+   if(i===6||i===8)x-=.13;
+   if(i===7||i===9)x+=.13;
+   if(i===12||i===14)y+=Math.max(0,alt)*.08;
+   if(i===13||i===15)y+=Math.max(0,-alt)*.08;
+  }else{
+   y+=lift;
+   if(i===0)y+=lift*.25;
+   if(i===4||i===6||i===8){x-=.12;y+=i===4?.42:i===6?.62:.78;z+=.05}
+   if(i===5||i===7||i===9){x+=.12;y+=i===5?.42:i===7?.62:.78;z+=.05}
+   if(i===12||i===14)y+=Math.max(0,alt)*.12;
+   if(i===13||i===15)y+=Math.max(0,-alt)*.12;
+  }
+  const co=Math.cos(pl.yaw),si=Math.sin(pl.yaw);
+  e.pts[i].p.set(pl.p.x+x*co+z*si,ground+y,pl.p.z-x*si+z*co);
+  e.pts[i].q.copy(e.pts[i].p);
+ }
+ rend(e);
+}
+
 function afterInj(e){
  const lim=i=>e.seg[i].brk||e.seg[i].cut,m=e.m;m.fill(1);
  if(lim(3)){m[6]=m[8]=0}if(lim(5))m[8]=0;if(lim(4)){m[7]=m[9]=0}if(lim(6))m[9]=0;
@@ -1139,7 +1190,7 @@ mags.forEach(m=>{m.v.y-=9.8*dt;m.m.position.addScaledVector(m.v,dt);if(m.m.posit
   pl.v.x=(-sy*f+cy*s)*sp;pl.v.z=(-cy*f-sy*s)*sp;{const kb=window.__kb;if(kb){pl.v.x+=kb.x;pl.v.z+=kb.z}}if(phFlying){pl.v.y=(keys.Space?7:0)+(keys.KeyC?-7:0)}else{pl.v.y-=22*dt;if(keys.Space&&!fcam&&!cin&&pl.p.y<=gh(pl.p.x,pl.p.z)+eyeH+.01&&!crouch)pl.v.y=7}
   {const ft=pl.p.y-eyeH;if(!phFlying){if(gh(pl.p.x+pl.v.x*dt,pl.p.z)-ft>.75)pl.v.x=0;if(gh(pl.p.x,pl.p.z+pl.v.z*dt)-ft>.75)pl.v.z=0}}pl.p.addScaledVector(pl.v,dt);if(!phFlying){const gy=gh(pl.p.x,pl.p.z)+eyeH;if(pl.p.y<gy){if(pl.v.y<-9&&!xrOn){hitP(Math.min(95,(-pl.v.y-9)*9));shake=Math.max(shake,.5);sfx('thud')}pl.p.y=gy;pl.v.y=0}}pl.p.x=Math.max(-AR+.5,Math.min(AR-.5,pl.p.x));pl.p.z=Math.max(-AR+.5,Math.min(AR-.5,pl.p.z))}
  shake*=.9;cShakeV+=-cShake*48*dt;cShakeV*=Math.exp(-10*dt);cShake+=cShakeV*dt;cRollV+=-cRoll*42*dt;cRollV*=Math.exp(-11*dt);cRoll+=cRollV*dt;if(fcam&&!xrOn){const cp=Math.cos(pl.pit),fwd=V(-Math.sin(pl.yaw)*cp,Math.sin(pl.pit),-Math.cos(pl.yaw)*cp),rt=V(Math.cos(pl.yaw),0,-Math.sin(pl.yaw)),mv=V();if(keys.KeyW)mv.add(fwd);if(keys.KeyS)mv.sub(fwd);if(keys.KeyD)mv.add(rt);if(keys.KeyA)mv.sub(rt);if(keys.Space)mv.y+=1;if(keys.KeyC)mv.y-=1;if(mv.lengthSq())mv.normalize();fpos.addScaledVector(mv,fsp*(keys.ShiftLeft?3:1)*dt);fpos.y=Math.max(.15,fpos.y);pmark.position.set(pl.p.x,pl.p.y-eyeH,pl.p.z)}
-if(!xrOn){if(fcam)cam.position.copy(fpos);else if(window.__arEntityMode&&window.__arEntityThirdPerson){const fw=V(-Math.sin(pl.yaw),0,-Math.cos(pl.yaw)),rt=V(Math.cos(pl.yaw),0,-Math.sin(pl.yaw));cam.position.copy(pl.p).addScaledVector(fw,-6.2).addScaledVector(rt,2.8).add(V(0,1.05,0));}else{cam.position.copy(pl.p).add(V(rr(-1,1),rr(-1,1),0).multiplyScalar(shake*.2)).add(V(rr(-1,1)*cShake*.035,cShake*.025,rr(-1,1)*cShake*.035));if(pl.dead>0)cam.position.y=.3}}
+if(!xrOn){if(fcam)cam.position.copy(fpos);else if((window.__arEntityMode&&window.__arEntityThirdPerson)||window.__arEmoteThirdPerson){const fw=V(-Math.sin(pl.yaw),0,-Math.cos(pl.yaw)),rt=V(Math.cos(pl.yaw),0,-Math.sin(pl.yaw));cam.position.copy(pl.p).addScaledVector(fw,-5.4).addScaledVector(rt,1.35).add(V(0,.15,0));}else{cam.position.copy(pl.p).add(V(rr(-1,1),rr(-1,1),0).multiplyScalar(shake*.2)).add(V(rr(-1,1)*cShake*.035,cShake*.025,rr(-1,1)*cShake*.035));if(pl.dead>0)cam.position.y=.3}}
  if(!xrOn)cam.rotation.set((window.__arEntityMode&&window.__arEntityThirdPerson?Math.max(-.22,Math.min(.22,pl.pit)):pl.pit)+cShake*.006,pl.yaw,cRoll+(pl.dead>0?.8:0),'YXZ');
  window.__arUpdateEntityAvatar?.();
  /* grab */
@@ -1159,7 +1210,7 @@ $('#vig').style.opacity=0;
 function frame(t){const rd=Math.min((t-lt0)/1000,.05);lt0=t;
  if(!xrOn){if(lw!==innerWidth+'x'+innerHeight){lw=innerWidth+'x'+innerHeight;ren.setSize(innerWidth,innerHeight,false);if(arComposer)arComposer.setSize(innerWidth,innerHeight)}cam.aspect=innerWidth/innerHeight}cam.updateProjectionMatrix();if(typeof window.arNukeTick==='function')window.arNukeTick(rd);
  if(gamePaused&&!pauseAllowed())gamePaused=false;if(!gamePaused){if(hitstop>0){hitstop=Math.max(0,hitstop-rd);acc=0}else{acc+=rd*ts;let n=0;while(acc>=1/60&&n++<4){tick(1/60);acc-=1/60}}}else acc=0;cinUpdate();
- ents.forEach(rend);
+ ents.forEach(rend);arUpdatePlayerEmote();
  let i=0;for(const p of pd){if(p.a){D1.position.set(p.x,p.y,p.z);D1.scale.setScalar(p.k===2?p.s*Math.max(0,p.l/p.l0):p.s)}else D1.scale.setScalar(0);D1.updateMatrix();pm.setMatrixAt(i++,D1.matrix)}pm.instanceMatrix.needsUpdate=true;
  if(++fr%5==0){look();$('#ch').classList.remove('h')}
  $('#vig').style.opacity=Math.min(1,pl.flash*.8+(pl.dead>0?.8:(100-pl.hp)/160));
@@ -2182,41 +2233,26 @@ window.arNukeTick=arNukeTick;
  window.__arEmotesInstalled=true;
  const css=document.createElement('style');
  css.textContent=`
- #ar-emote-panel{position:fixed;right:16px;bottom:18px;z-index:99991;width:214px;padding:10px;border:1px solid #6b8296;border-radius:13px;background:rgba(8,14,23,.88);color:#edf5ff;font:12px Arial,sans-serif;box-shadow:0 10px 30px #0009;backdrop-filter:blur(12px)}
+ #ar-emote-panel{position:fixed;right:16px;bottom:18px;z-index:99991;width:214px;padding:10px;border:1px solid #6b8296;border-radius:13px;background:rgba(8,14,23,.9);color:#edf5ff;font:12px Arial,sans-serif;box-shadow:0 10px 30px #0009;backdrop-filter:blur(12px)}
  #ar-emote-panel .ar-emote-title{font-size:10px;letter-spacing:2px;color:#9dbbd4;margin:0 0 8px}
  #ar-emote-buttons{display:grid;grid-template-columns:1fr 1fr;gap:6px}
- #ar-emote-buttons button{border:1px solid #536d85;border-radius:8px;padding:8px 5px;background:#17283a;color:#eaf4ff;font-weight:700;cursor:pointer}
+ #ar-emote-buttons button{border:1px solid #536d85;border-radius:8px;padding:9px 5px;background:#17283a;color:#eaf4ff;font-weight:700;cursor:pointer}
  #ar-emote-buttons button.active{background:#315778;border-color:#9ac9ed}
- #ar-emote-stage{height:118px;margin-top:8px;border-radius:9px;background:radial-gradient(ellipse at 50% 85%,#28415a88,transparent 65%),#0b1420;overflow:hidden;position:relative}
- #ar-emote-stage canvas{width:100%;height:100%;display:block}
- #ar-emote-caption{position:absolute;left:0;right:0;bottom:5px;text-align:center;color:#b8d2e8;font-size:10px;letter-spacing:1px;pointer-events:none}
+ #ar-emote-status{margin-top:8px;color:#a9c4da;font-size:10px;letter-spacing:.5px;text-align:center}
  @media(max-width:600px){#ar-emote-panel{right:8px;bottom:8px;width:190px}}
  `;
  document.head.appendChild(css);
  const panel=document.createElement('section');panel.id='ar-emote-panel';
- panel.innerHTML='<div class="ar-emote-title">EMOTE STUDIO</div><div id="ar-emote-buttons"><button data-emote="griddy" class="active">🕺 Griddy</button><button data-emote="robot">🤖 Robot</button><button data-emote="hype">🔥 Hype</button><button data-emote="stop">Stop</button></div><div id="ar-emote-stage"><canvas></canvas><div id="ar-emote-caption">THE GRIDDY</div></div>';
+ panel.innerHTML='<div class="ar-emote-title">PLAYER EMOTES</div><div id="ar-emote-buttons"><button data-emote="griddy">🕺 Griddy</button><button data-emote="robot">🤖 Robot</button><button data-emote="hype">🔥 Hype</button><button data-emote="stop" class="active">Stop</button></div><div id="ar-emote-status">FIRST-PERSON · READY</div>';
  document.body.appendChild(panel);
- const canvas=panel.querySelector('canvas'),ctx=canvas.getContext('2d'),caption=panel.querySelector('#ar-emote-caption');
- let mode='griddy',start=performance.now(),raf=0;
- function size(){const d=Math.min(devicePixelRatio||1,2),w=canvas.clientWidth||194,h=canvas.clientHeight||118;canvas.width=w*d;canvas.height=h*d;ctx.setTransform(d,0,0,d,0,0);}
- function line(x1,y1,x2,y2,width=5){ctx.lineWidth=width;ctx.lineCap='round';ctx.strokeStyle='#d9edff';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
- function draw(t){raf=0;const w=canvas.clientWidth||194,h=canvas.clientHeight||118,phase=(t-start)/1000;ctx.clearRect(0,0,w,h);ctx.fillStyle='#8eb7d5';ctx.globalAlpha=.35;ctx.beginPath();ctx.ellipse(w/2,h-12,36,5,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
- const bob=mode==='stop'?0:Math.sin(phase*(mode==='robot'?5:8))*4;
- const x=w/2,y=42+bob,step=mode==='griddy'?Math.sin(phase*8):mode==='hype'?Math.sin(phase*10):Math.sin(phase*5)*.45;
- const arm=mode==='griddy'?Math.sin(phase*8):mode==='hype'?Math.sin(phase*10):Math.sin(phase*4)*.3;
- ctx.fillStyle='#8fc8f0';ctx.beginPath();ctx.arc(x,y-17,9,0,Math.PI*2);ctx.fill();
- line(x,y-7,x,y+22,6);
- if(mode==='robot'){line(x,y,x-18,y+3+arm*5,5);line(x,y,x+18,y+3-arm*5,5);}
- else{line(x,y,x-17,y-9+arm*10,5);line(x,y,x+17,y-9-arm*10,5);}
- line(x,y+22,x-12-step*9,y+48,6);line(x,y+22,x+12+step*9,y+48,6);
- ctx.fillStyle='#9ed6ff';ctx.font='bold 10px Arial';ctx.textAlign='center';ctx.fillText(mode==='griddy'?'STEP · STEP':mode==='robot'?'MECHANICAL GROOVE':mode==='hype'?'HYPE MODE':'',x,h-2);
- if(mode!=='stop')raf=requestAnimationFrame(draw);
+ const status=panel.querySelector('#ar-emote-status');
+ function setMode(mode){
+  window.__arSetPlayerEmote?.(mode);
+  panel.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.emote===mode));
+  status.textContent=mode==='stop'?'FIRST-PERSON · READY':mode.toUpperCase()+' · THIRD-PERSON';
  }
- function setMode(next){mode=next;start=performance.now();caption.textContent=next==='griddy'?'THE GRIDDY':next==='robot'?'ROBOT GROOVE':next==='hype'?'HYPE DANCE':'EMOTES PAUSED';panel.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.emote===next));if(raf)cancelAnimationFrame(raf);raf=0;if(next!=='stop')raf=requestAnimationFrame(draw);else{size();drawStopped();}}
- function drawStopped(){const w=canvas.clientWidth||194,h=canvas.clientHeight||118;ctx.clearRect(0,0,w,h);ctx.fillStyle='#8fc8f0';ctx.beginPath();ctx.arc(w/2,27,9,0,Math.PI*2);ctx.fill();line(w/2,36,w/2,66,6);line(w/2,44,w/2-17,49,5);line(w/2,44,w/2+17,49,5);line(w/2,66,w/2-12,92,6);line(w/2,66,w/2+12,92,6);}
  panel.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.emote)));
- addEventListener('resize',()=>{size();if(mode!=='stop'&&!raf)raf=requestAnimationFrame(draw);else if(mode==='stop')drawStopped();});
- size();setMode('griddy');
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)setMode('stop')});
 })();
 </script>
 </body>
